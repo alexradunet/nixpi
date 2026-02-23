@@ -1,29 +1,45 @@
-   {                                                                                                                                                                                                                            
-     description = "Nixpi development environment";                                                                                                                                                                       
-                                                                                                                                                                                                                                
-     inputs = {                                                                                                                                                                                                                 
-       nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";                                                                                                                                                                        
-       flake-utils.url = "github:numtide/flake-utils";                                                                                                                                                                          
-     };                                                                                                                                                                                                                   
-                                                                                                                                                                                                                                
-     outputs = { self, nixpkgs, flake-utils }:                                                                                                                                                                                  
-       flake-utils.lib.eachDefaultSystem (system:                                                                                                                                                                               
-         let                                                                                                                                                                                                                    
-           pkgs = import nixpkgs { inherit system; };                                                                                                                                                                           
-         in {                                                                                                                                                                                                                   
-           devShells.default = pkgs.mkShell {                                                                                                                                                                                   
-             packages = with pkgs; [                                                                                                                                                                                            
-               git                                                                                                                                                                                                              
-               nodejs_22                                                                                                                                                                                                        
-               sqlite                                                                                                                                                                                                      sqlite                                                                                                                                                                                                           
-               jq                                                                                                                                                                                                               
-               ripgrep                                                                                                                                                                                                          
-               fd                                                                                                                                                                                                               
-             ];
+{
+  description = "nixpi: reproducible dev shell + NixOS VM";
 
-             shellHook = ''
-               export PS1="(nixpi-dev) $PS1"
-             '';                                                                                                                                                                                                                    
-           };                                                                                                                                                                                                                   
-         });                                                                                                                                                                                                                    
-   }      
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    flake-utils.url = "github:numtide/flake-utils";
+    nixos-generators.url = "github:nix-community/nixos-generators";
+  };
+
+  outputs = { self, nixpkgs, flake-utils, nixos-generators }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          git
+          nodejs_22
+          sqlite
+          jq
+          ripgrep
+          fd
+        ];
+
+        shellHook = ''
+          export PS1="(nixpi-dev) $PS1"
+        '';
+      };
+
+      nixosConfigurations.nixpi-vm = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          ./infra/nixos/vm.nix
+        ];
+      };
+
+      packages.${system}.vm-qcow = nixos-generators.nixosGenerate {
+        inherit system;
+        format = "qcow";
+        modules = [
+          ./infra/nixos/vm.nix
+        ];
+      };
+    };
+}
