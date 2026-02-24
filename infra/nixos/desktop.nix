@@ -138,8 +138,8 @@ in
     user = "nixpi";
     host = "0.0.0.0";  # Listen on all interfaces
     port = 8443;
+    auth = "password";
     extraArguments = [
-      "--auth" "password"
       "--password" "Al3xandru@#"
     ];
   };
