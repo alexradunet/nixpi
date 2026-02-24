@@ -1,5 +1,9 @@
 { config, pkgs, ... }:
-
+let
+  pi = pkgs.writeShellScriptBin "pi" ''
+    exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.54.2 "$@"
+  '';
+in
 {
   networking.hostName = "nixpi-vm";
 
@@ -15,6 +19,9 @@
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "no";
 
+  # Enable Tailscale daemon (tailscale CLI included via package below)
+  services.tailscale.enable = true;
+
   users.users.nixpi = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ];
@@ -23,10 +30,13 @@
 
   environment.systemPackages = with pkgs; [
     git
+    gh
+    tailscale
     curl
     wget
     vim
     nodejs_22
+    pi
   ];
 
   system.stateVersion = "25.11";
