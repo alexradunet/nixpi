@@ -108,13 +108,13 @@ in
     enable = true;
     host = "127.0.0.1";  # Only listen on localhost
     port = 4822;
-    userMappingXml = ./guacamole-user-mapping.xml;
   };
 
   # Guacamole web interface
   services.guacamole-client = {
     enable = true;
     enableWebserver = true;  # Enable built-in Tomcat on port 8080
+    userMappingXml = ./guacamole-user-mapping.xml;
     settings = {
       guacd-hostname = "127.0.0.1";
       guacd-port = "4822";
