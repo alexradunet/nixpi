@@ -13,6 +13,9 @@ in
   # Allow unfree packages (required for claude-code)
   nixpkgs.config.allowUnfree = true;
 
+  # Allow running dynamically linked executables (e.g. Claude Code native installer)
+  programs.nix-ld.enable = true;
+
   # Networking
   networking.networkmanager.enable = true;
   networking.nftables.enable = true;
@@ -217,7 +220,7 @@ in
     vscodium     # Lightweight VS Code without telemetry (binary: 'codium')
 
     # AI coding tools
-    claude-code  # Official nixpkgs package (Anthropic) (binary: 'claude')
+    # claude-code installed via native installer (auto-updates to latest version)
     pi           # npx wrapper - Pi Coding Agent (not in nixpkgs yet) (binary: 'pi')
   ];
 
