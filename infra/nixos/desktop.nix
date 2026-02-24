@@ -31,10 +31,10 @@ in
     LC_TIME = "ro_RO.UTF-8";
   };
 
-  # X11 and LXDE Desktop (lightweight)
+  # X11 and XFCE Desktop (lightweight)
   services.xserver.enable = true;
   services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.lxde.enable = true;
+  services.xserver.desktopManager.xfce.enable = true;
   services.xserver.xkb = {
     layout = "us";
     variant = "";
