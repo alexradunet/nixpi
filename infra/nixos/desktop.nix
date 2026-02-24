@@ -95,6 +95,12 @@ in
       tcp dport 22000 drop
       udp dport 22000 drop
 
+      # Allow VS Code Server web editor (port 8443) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 8443 accept
+      ip saddr 192.168.0.0/16 tcp dport 8443 accept
+      ip saddr 10.0.0.0/8 tcp dport 8443 accept
+      tcp dport 8443 drop
+
       # RDP is restricted to localhost only (no external access needed)
       # Guacamole connects to xrdp via localhost, so no firewall rule needed
     '';
@@ -148,6 +154,19 @@ in
         relaysEnabled = true;  # Allow relay servers for connectivity
       };
     };
+  };
+
+  # VS Code Server (web-based code editor)
+  services.code-server = {
+    enable = true;
+    user = "nixpi";
+    host = "0.0.0.0";  # Listen on all interfaces
+    port = 8443;
+    auth = "password";
+    password = "Al3xandru@#";
+    extraArguments = [
+      "--bind-addr" "0.0.0.0:8443"
+    ];
   };
 
   # User configuration
