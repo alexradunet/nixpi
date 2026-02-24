@@ -1,14 +1,28 @@
 { config, pkgs, lib, ... }:
 
 let
-  # Pi Coding Agent - npx wrapper (not yet in nixpkgs)
-  pi = pkgs.writeShellScriptBin "pi" ''
-    exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@latest "$@"
+  piSystemPrompt = ''
+    You are an AI assistant running on nixpi, a NixOS-based AI-first workstation.
+
+    ## Environment
+    - OS: NixOS (declarative, flake-based)
+    - Config repo: ~/Development/NixPi
+    - Rebuild: sudo nixos-rebuild switch --flake ~/Development/NixPi#nixpi
+    - VPN: Tailscale (services restricted to Tailscale + LAN)
+    - File sync: Syncthing
+
+    ## Guidelines
+    - Follow AGENTS.md conventions
+    - Prefer declarative Nix changes over imperative system mutation
+    - Never modify /etc or systemd units directly; edit NixOS config instead
+    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files
   '';
 in
 {
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.substituters = [ "https://cache.numtide.com" ];
+  nix.settings.trusted-public-keys = [ "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ber+6GZLDmYMbx7JKXHIUSHozk=" ];
 
   # Allow unfree packages (required for claude-code)
   nixpkgs.config.allowUnfree = true;
@@ -166,9 +180,12 @@ in
     tree
     htop
 
-    # AI coding tools
-    # claude-code installed via native installer (auto-updates to latest version)
-    pi           # npx wrapper - Pi Coding Agent (not in nixpkgs yet) (binary: 'pi')
+    # Terminal multiplexer (recommended for pi background tasks)
+    tmux
+
+    # AI coding tools (Nix-packaged via llm-agents.nix)
+    pkgs.llm-agents.claude-code
+    pkgs.llm-agents.pi
   ];
 
   # Ensure ~/.local/bin is in PATH
@@ -176,6 +193,31 @@ in
     export PATH="$HOME/.local/bin:$PATH"
   '';
 
+
+  # Seed pi-coding-agent config (non-destructive: only creates if missing)
+  system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
+    PI_DIR="/home/nixpi/.pi/agent"
+    mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+
+    # Seed SYSTEM.md if absent
+    if [ ! -f "$PI_DIR/SYSTEM.md" ]; then
+      cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
+${piSystemPrompt}
+SYSEOF
+    fi
+
+    # Seed settings.json if absent
+    if [ ! -f "$PI_DIR/settings.json" ]; then
+      cat > "$PI_DIR/settings.json" <<'SETEOF'
+{
+  "provider": "github-copilot",
+  "model": "claude-haiku-4.5"
+}
+SETEOF
+    fi
+
+    chown -R nixpi:users "$PI_DIR"
+  '';
 
   # Automatic garbage collection
   nix.gc = {

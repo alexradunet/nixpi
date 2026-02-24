@@ -26,6 +26,12 @@
 - Docs live in `docs/`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
+## Pi Integration
+- `pi` is Nix-packaged via [llm-agents.nix](https://github.com/numtide/llm-agents.nix) (not npx).
+- Config directory: `~/.pi/agent/` (auth managed by `pi login`).
+- System prompt seeded by NixOS activation script in `desktop.nix`.
+- Update path: `nix flake update llm-agents` then `sudo nixos-rebuild switch --flake .#nixpi`.
+
 ## Agent Behavior in This Repo
 - Ask before changing system-level config or installing/removing major dependencies.
 - For code/file changes: read first, then edit surgically.

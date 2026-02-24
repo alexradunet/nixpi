@@ -7,8 +7,8 @@ nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 | Component | Description |
 |-----------|-------------|
 | **NixOS Desktop** | Declarative XFCE desktop config (`infra/nixos/desktop.nix`) |
-| **`pi` command** | Wrapper for [pi-coding-agent](https://github.com/nicholasgasior/pi-coding-agent) (installed system-wide) |
-| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) (installed via native installer) |
+| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged) |
+| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
@@ -94,6 +94,15 @@ nix flake check --no-build
 
 # Project check script
 ./scripts/check.sh
+```
+
+## Updating AI Tools
+
+Pi and Claude Code are pinned in `flake.lock` via the llm-agents.nix input. To update:
+
+```bash
+nix flake update llm-agents
+sudo nixos-rebuild switch --flake .#nixpi
 ```
 
 ## Core Principles

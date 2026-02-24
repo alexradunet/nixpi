@@ -3,12 +3,16 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, llm-agents }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ llm-agents.overlays.default ];
+      };
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
@@ -30,6 +34,7 @@
       nixosConfigurations.nixpi = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
+          { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
           ./infra/nixos/desktop.nix
           ./infra/nixos/hosts/desktop.nix
         ];
