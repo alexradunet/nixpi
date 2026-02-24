@@ -24,6 +24,12 @@
 
         shellHook = ''
           export PS1="(nixpi-dev) $PS1"
+          export PATH="$PWD/node_modules/.bin:$PATH"
+
+          if [ -f package-lock.json ] && [ ! -x node_modules/.bin/pi ]; then
+            echo "[nixpi] Installing project dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
+          fi
         '';
       };
 
