@@ -63,23 +63,37 @@ in
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+      X11Forwarding = false;
+      MaxAuthTries = 3;
+      ClientAliveInterval = 300;
+      ClientAliveCountMax = 2;
     };
   };
 
-  # Firewall: restrict inbound to Tailscale and local network only
+  # xrdp for remote desktop access
+  services.xrdp = {
+    enable = true;
+    defaultWindowManager = "startxfce4";
+    openFirewall = false;
+  };
+
+  # Firewall: restrict SSH, RDP, and Syncthing to Tailscale and local network
   networking.firewall = {
     enable = true;
 
     extraInputRules = ''
-      # Allow SSH from Tailscale interface (100.x.x.x)
+      # Allow SSH from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 22 accept
-
-      # Allow SSH from local network (192.168.0.0/16 and 10.0.0.0/8)
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
-
-      # Drop SSH from anywhere else
       tcp dport 22 drop
+
+      # Allow RDP from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 3389 accept
+      ip saddr 192.168.0.0/16 tcp dport 3389 accept
+      ip saddr 10.0.0.0/8 tcp dport 3389 accept
+      tcp dport 3389 drop
 
       # Allow Syncthing sync (port 22000) from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 22000 accept
@@ -98,6 +112,8 @@ in
     enable = true;
     permitCertUid = "nixpi";
   };
+  networking.firewall.trustedInterfaces = [ "tailscale0" ];
+  networking.firewall.allowedUDPPorts = [ 41641 ];
 
   # Syncthing for file synchronization
   services.syncthing = {
@@ -110,7 +126,7 @@ in
     settings = {
       gui = {
         enabled = true;
-        address = "127.0.0.1:8384";  # Local only, accessible via SSH tunnel or local network
+        address = "127.0.0.1:8384";  # Loopback only, accessible via SSH tunnel
       };
       options = {
         relaysEnabled = true;  # Allow relay servers for connectivity
@@ -121,6 +137,7 @@ in
   # User configuration
   users.users.nixpi = {
     isNormalUser = true;
+    home = "/home/nixpi";
     description = "Nixpi";
     extraGroups = [ "wheel" "networkmanager" ];
   };
@@ -159,6 +176,13 @@ in
     export PATH="$HOME/.local/bin:$PATH"
   '';
 
+
+  # Automatic garbage collection
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
 
   system.stateVersion = "25.11";
 }

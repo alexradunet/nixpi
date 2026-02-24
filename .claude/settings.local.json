@@ -46,7 +46,12 @@
       "Bash(nix eval:*)",
       "Bash(git push:*)",
       "Bash(sudo mkdir:*)",
-      "Bash(sudo openssl req:*)"
+      "Bash(sudo openssl req:*)",
+      "Bash(grep:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(nix flake:*)"
     ]
   }
 }

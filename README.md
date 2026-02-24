@@ -6,56 +6,66 @@ nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 
 | Component | Description |
 |-----------|-------------|
-| **NixOS VM** | QEMU/KVM guest with declarative config (`infra/nixos/vm.nix`) |
+| **NixOS Desktop** | Declarative XFCE desktop config (`infra/nixos/desktop.nix`) |
 | **`pi` command** | Wrapper for [pi-coding-agent](https://github.com/nicholasgasior/pi-coding-agent) (installed system-wide) |
-| **`claude` command** | Wrapper for [Claude Code](https://github.com/anthropics/claude-code) (installed system-wide) |
-| **code-server** | Browser-accessible VS Code on port 8080 |
+| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) (installed via native installer) |
+| **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
+| **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
-| **SSH** | OpenSSH with root login disabled |
+| **Syncthing** | File synchronization (GUI on loopback, accessible via SSH tunnel) |
+
+## Access Methods
+
+```
+Local Network / Tailscale → SSH  (port 22)   → Terminal / VS Code Remote SSH
+Local Network / Tailscale → RDP  (port 3389) → XFCE Desktop
+```
+
+All inbound ports are restricted to Tailscale (100.0.0.0/8) and local network (192.168.0.0/16, 10.0.0.0/8) via nftables rules.
 
 ## Project Structure
 
 ```
 nixpi/
-  AGENTS.md              # Agent behavior guidelines
-  flake.nix              # Flake: dev shell, NixOS config, VM image build
+  AGENTS.md                    # Agent behavior guidelines
+  flake.nix                    # Flake: dev shell + NixOS configuration
   flake.lock
   infra/nixos/
-    vm.nix               # Shared VM module (packages, services, agent wrappers)
-    hosts/nixpi.nix      # Host-specific boot/disk config (machine-local)
+    desktop.nix                # Primary config (packages, services, firewall)
+    hosts/desktop.nix          # Host-specific hardware (boot, disk, CPU)
   scripts/
-    check.sh             # Runs `nix flake check --no-build`
-  docs/
-    README.md            # Documentation index
+    check.sh                   # Runs `nix flake check --no-build`
 ```
 
 ## Getting Started
 
-### Build the VM image
-
-```bash
-nix build .#vm-qcow
-```
-
-This produces a QEMU qcow2 image you can boot in QEMU, libvirt, or GNOME Boxes.
-
 ### Rebuild NixOS after config changes
 
-From inside the running VM (run from the repo root):
+From the repo root:
 
 ```bash
 sudo nixos-rebuild switch --flake .#nixpi
 ```
 
-### Access code-server
-
-code-server runs on port 8080 with no auth by default. For secure access, use an SSH tunnel:
+### Connect via SSH
 
 ```bash
-ssh -L 8080:localhost:8080 nixpi@<vm-ip>
+ssh nixpi@<tailscale-ip>
 ```
 
-Then open `http://localhost:8080` in your browser.
+### Connect via RDP
+
+Use any RDP client (Windows Remote Desktop, Remmina, etc.) to connect to `<tailscale-ip>:3389`.
+
+### Access Syncthing web UI
+
+Syncthing listens on loopback only. Use an SSH tunnel:
+
+```bash
+ssh -L 8384:localhost:8384 nixpi@<tailscale-ip>
+```
+
+Then open `http://localhost:8384` in your browser.
 
 ### Use the AI agents
 
@@ -90,21 +100,11 @@ nix flake check --no-build
 
 - **Safety first**: strict risk tiers, protected paths, approval for high-risk actions
 - **Reproducibility**: declarative config and version pinning (Nix flakes)
-- **Recoverability**: rollback via NixOS generations + VM snapshots
+- **Recoverability**: rollback via NixOS generations
 - **Auditability**: every important action has traceable intent and outcome
 
 ## Operational Safety Defaults
 
 - No plaintext user password is committed in NixOS config.
-- Repo bootstrap-on-boot is disabled by default (opt-in in `infra/nixos/vm.nix`).
-- Automatic repo pull timer is disabled by default to avoid unreviewed drift.
-- Manual repo bootstrap and sync are available via systemd services:
-  ```bash
-  sudo systemctl start nixpi-repo-bootstrap.service
-  sudo systemctl start nixpi-repo-update.service
-  ```
-
-## Repository Notes
-
-- `infra/nixos/vm.nix` is the shared VM module (packages, services, agent tooling).
-- `infra/nixos/hosts/nixpi.nix` is host-specific (boot disk + filesystem UUIDs) and should be treated as machine-local.
+- All inbound services are restricted to Tailscale and local network via nftables.
+- Automatic Nix garbage collection runs weekly (removes generations older than 30 days).
