@@ -85,6 +85,16 @@ in
       ip saddr 10.0.0.0/8 tcp dport 8080 accept
       tcp dport 8080 drop
 
+      # Allow Syncthing sync (port 22000) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 22000 accept
+      ip saddr 100.0.0.0/8 udp dport 22000 accept
+      ip saddr 192.168.0.0/16 tcp dport 22000 accept
+      ip saddr 192.168.0.0/16 udp dport 22000 accept
+      ip saddr 10.0.0.0/8 tcp dport 22000 accept
+      ip saddr 10.0.0.0/8 udp dport 22000 accept
+      tcp dport 22000 drop
+      udp dport 22000 drop
+
       # RDP is restricted to localhost only (no external access needed)
       # Guacamole connects to xrdp via localhost, so no firewall rule needed
     '';
@@ -121,6 +131,24 @@ in
     };
   };
 
+  # Syncthing for file synchronization
+  services.syncthing = {
+    enable = true;
+    user = "nixpi";
+    dataDir = "/home/nixpi/.local/share/syncthing";
+    configDir = "/home/nixpi/.config/syncthing";
+    overrideFolders = false;  # Allow user to configure folders via web UI
+    overrideDevices = false;  # Allow user to configure devices via web UI
+    settings = {
+      gui = {
+        enabled = true;
+        address = "127.0.0.1:8384";  # Local only, accessible via SSH tunnel or local network
+      };
+      options = {
+        relaysEnabled = true;  # Allow relay servers for connectivity
+      };
+    };
+  };
 
   # User configuration
   users.users.nixpi = {
