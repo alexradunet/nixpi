@@ -63,11 +63,11 @@ in
     };
   };
 
-  # Firewall: restrict inbound SSH to Tailscale and local network only
+  # Firewall: restrict inbound SSH and Guacamole to Tailscale and local network only
   networking.firewall = {
     enable = true;
 
-    # Allow SSH only from specific networks (inbound)
+    # Allow SSH and Guacamole only from specific networks (inbound)
     extraInputRules = ''
       # Allow SSH from Tailscale interface (100.x.x.x)
       ip saddr 100.0.0.0/8 tcp dport 22 accept
@@ -78,6 +78,15 @@ in
 
       # Drop SSH from anywhere else
       tcp dport 22 drop
+
+      # Allow Guacamole web interface (port 8080) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 8080 accept
+      ip saddr 192.168.0.0/16 tcp dport 8080 accept
+      ip saddr 10.0.0.0/8 tcp dport 8080 accept
+      tcp dport 8080 drop
+
+      # RDP is restricted to localhost only (no external access needed)
+      # Guacamole connects to xrdp via localhost, so no firewall rule needed
     '';
   };
 
@@ -85,6 +94,31 @@ in
   services.tailscale = {
     enable = true;
     permitCertUid = "nixpi";
+  };
+
+  # xrdp for RDP access to XFCE desktop
+  services.xrdp = {
+    enable = true;
+    defaultWindowManager = "${pkgs.xfce.xfce4-session}/bin/xfce4-session";
+    openFirewall = false;  # We'll manage firewall rules manually
+  };
+
+  # Guacamole proxy daemon
+  services.guacamole-server = {
+    enable = true;
+    host = "127.0.0.1";  # Only listen on localhost
+    port = 4822;
+    userMappingXml = ./guacamole-user-mapping.xml;
+  };
+
+  # Guacamole web interface
+  services.guacamole-client = {
+    enable = true;
+    enableWebserver = true;  # Enable built-in Tomcat on port 8080
+    settings = {
+      guacd-hostname = "127.0.0.1";
+      guacd-port = "4822";
+    };
   };
 
 
