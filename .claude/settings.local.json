@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo view:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(nix-shell -p git --run \"git clone:*)",
+      "Bash(git add:*)",
+      "Bash(nix-shell -p git --run \"git add -A && git status\")"
+    ]
+  }
+}
