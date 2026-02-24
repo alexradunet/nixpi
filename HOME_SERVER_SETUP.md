@@ -59,16 +59,84 @@ Three services. No Java, no web apps, no databases.
 GNOME is great locally but heavy over remote. On an N150 (4 Alder Lake-N E-cores),
 the freed-up RAM and CPU go to actual server workloads.
 
-### Direct RDP over Guacamole
+### Remote access options
 
-Apache Guacamole gives browser-based access but adds a full Java/Tomcat stack,
-a guacd daemon, and XML or database config. For a personal server, a native RDP
-client is simpler:
+The core question: **browser only** vs **native client**.
 
-- **Microsoft Remote Desktop** — free on Mac, iOS, Android, Windows
-- **Remmina** — free on Linux
+#### Guacamole
 
-One app, one connection to `100.x.x.x`, done.
+HTML5 gateway that proxies RDP/VNC/SSH through a web browser. No client app needed — open a URL and you're in.
+
+| | |
+|---|---|
+| **Access** | Any browser, any device — including ones you can't install apps on |
+| **Protocols** | RDP, VNC, SSH — all in one |
+| **Stack** | Java/Tomcat + guacd daemon + config (XML or database) |
+| **NixOS** | `services.guacamole-server` + `services.guacamole-client` (available, but more config) |
+| **Performance** | Good — HTML5 canvas rendering, slightly more latency than native |
+| **Upside** | Zero client install, works on locked-down devices (work laptop, library PC) |
+| **Downside** | Heavier server-side stack; needs a reverse proxy (nginx) in front for HTTPS |
+
+To keep it secure: put Guacamole on `localhost` and expose it only over Tailscale via nginx with HTTPS.
+
+#### Direct RDP (XRDP)
+
+Native RDP server, connect with a dedicated client app.
+
+| | |
+|---|---|
+| **Access** | Requires RDP client (Microsoft Remote Desktop, Remmina) |
+| **Stack** | XRDP + desktop — that's it |
+| **NixOS** | `services.xrdp` — minimal config |
+| **Performance** | Best — RDP is a purpose-built protocol, lower latency |
+| **Upside** | Simpler server setup, faster feel |
+| **Downside** | Client app required on every device |
+
+#### noVNC
+
+Lightweight browser-based VNC viewer. Runs a VNC server on the machine + a small websocket proxy, the browser connects directly.
+
+| | |
+|---|---|
+| **Access** | Browser only — like Guacamole but much lighter |
+| **Stack** | VNC server (TigerVNC) + websockify proxy — no Java |
+| **NixOS** | `services.tigervnc` + `services.websockify` or manual setup |
+| **Performance** | Decent — VNC is less efficient than RDP, noticeable over high latency |
+| **Upside** | Much simpler than Guacamole, still browser-only |
+| **Downside** | VNC has no built-in encryption — must be tunnelled over Tailscale |
+
+#### Rustdesk (self-hosted)
+
+Open-source TeamViewer/AnyDesk alternative. Has a self-hosted relay server and native clients.
+
+| | |
+|---|---|
+| **Access** | Native client (Windows, Mac, Linux, iOS, Android) + experimental web client |
+| **Stack** | `hbbr` + `hbbs` relay/rendezvous servers |
+| **Performance** | Excellent — proprietary protocol tuned for low latency |
+| **Upside** | Works without Tailscale — handles NAT traversal itself |
+| **Downside** | Needs client install; web client is beta and limited |
+
+#### Comparison summary
+
+| Option     | Browser-only | Server complexity | Performance | NixOS support |
+|------------|:------------:|:-----------------:|:-----------:|:-------------:|
+| Guacamole  | Yes          | High (Java stack) | Good        | Yes           |
+| noVNC      | Yes          | Low               | Fair        | Partial       |
+| XRDP       | No           | Low               | Best        | Yes           |
+| Rustdesk   | Partial      | Medium            | Excellent   | Community     |
+
+#### Recommendation
+
+If browser-only access matters (no app installs, access from any device), **Guacamole** is the right call despite the heavier stack. The setup on NixOS:
+
+```
+Tailscale → nginx (HTTPS, :443) → Guacamole (:8080) → guacd → XRDP/VNC/SSH
+```
+
+Everything stays on `localhost` except nginx on the Tailscale interface. No public ports.
+
+If you only ever connect from your own devices and don't mind installing one app, direct RDP is simpler and faster.
 
 ### Tailscale over VPN / port forwarding
 
