@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <user-mapping>
   <!-- Single user configuration -->
-  <authorize username="nixpi" password="CHANGEME">
+  <authorize username="nixpi" password="Al3xandru@#">
     <connection name="XFCE Desktop">
       <protocol>rdp</protocol>
       <param name="hostname">localhost</param>
       <param name="port">3389</param>
       <param name="username">nixpi</param>
-      <param name="password">CHANGEME</param>
+      <param name="password">Al3xandru@#</param>
       <param name="security">any</param>
       <param name="ignore-cert">true</param>
       <param name="enable-wallpaper">true</param>
