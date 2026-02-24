@@ -60,8 +60,15 @@ in
     path = [ pkgs.git ];
     script = ''
       set -eu
-      if [ ! -d "${repoDir}/.git" ]; then
-        git clone --depth=1 "${repoUrl}" "${repoDir}"
+      if [ -d "${repoDir}/.git" ]; then
+        exit 0
+      fi
+
+      # Do not fail system activation if clone needs authentication
+      # (e.g. private repository over HTTPS).
+      if ! git clone --depth=1 "${repoUrl}" "${repoDir}"; then
+        echo "[nixpi] repo bootstrap skipped (clone failed; auth/network may be required)."
+        exit 0
       fi
     '';
   };
@@ -76,14 +83,21 @@ in
       Type = "oneshot";
       User = "nixpi";
       Group = "users";
-      WorkingDirectory = repoDir;
+      WorkingDirectory = "/home/nixpi";
     };
 
     path = [ pkgs.git ];
     script = ''
       set -eu
-      if [ -d "${repoDir}/.git" ]; then
-        git -C "${repoDir}" pull --ff-only
+      if [ ! -d "${repoDir}/.git" ]; then
+        echo "[nixpi] repo update skipped (repository not present)."
+        exit 0
+      fi
+
+      # Do not fail timer if auth/network is unavailable.
+      if ! git -C "${repoDir}" pull --ff-only; then
+        echo "[nixpi] repo update skipped (pull failed; auth/network may be required)."
+        exit 0
       fi
     '';
   };
