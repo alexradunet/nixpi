@@ -33,10 +33,12 @@
         '';
       };
 
-      nixosConfigurations.nixpi-vm = nixpkgs.lib.nixosSystem {
+      # Host configuration for this installed VM (safe target for nixos-rebuild switch)
+      nixosConfigurations.nixpi = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
           ./infra/nixos/vm.nix
+          ./infra/nixos/hosts/nixpi.nix
         ];
       };
 
