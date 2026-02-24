@@ -8,6 +8,10 @@ let
   pi = pkgs.writeShellScriptBin "pi" ''
     exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.54.2 "$@"
   '';
+
+  claude = pkgs.writeShellScriptBin "claude" ''
+    exec ${pkgs.nodejs_22}/bin/npx --yes @anthropic-ai/claude-code@latest "$@"
+  '';
 in
 {
   networking.hostName = lib.mkDefault "nixpi-vm";
@@ -43,7 +47,26 @@ in
     vim
     nodejs_22
     pi
+    claude
+    code-server
   ];
+
+  # code-server: VS Code accessible via browser on port 8080
+  services.code-server = {
+    enable = true;
+    user = "nixpi";
+    host = "0.0.0.0";
+    port = 8080;
+    auth = "none";  # Change to "password" for production
+  };
+
+  # Ensure ~/.local/bin is in PATH for all users
+  environment.shellInit = ''
+    export PATH="$HOME/.local/bin:$PATH"
+  '';
+
+  # Open firewall for code-server
+  networking.firewall.allowedTCPPorts = [ 8080 ];
 
   # Optional repository bootstrap on first boot.
   systemd.services.nixpi-repo-bootstrap = lib.mkIf enableRepoBootstrap {
