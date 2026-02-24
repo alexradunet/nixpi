@@ -1,2 +1,6 @@
 /node_modules
 /result
+/.pi/npm/node_modules
+/.pi/npm/node_modules/
+/.pi/npm/node_modules/**
+/.pi/npm/.package-lock.json
