@@ -169,20 +169,18 @@ in
         '';
       };
     };
+    preStart = ''
+      mkdir -p /etc/nginx/certs
+      if [ ! -f /etc/nginx/certs/code-server.crt ]; then
+        ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -keyout /etc/nginx/certs/code-server.key \
+          -out /etc/nginx/certs/code-server.crt \
+          -subj "/CN=code-server" 2>/dev/null || true
+        chmod 644 /etc/nginx/certs/code-server.crt
+        chmod 600 /etc/nginx/certs/code-server.key
+      fi
+    '';
   };
-
-  # Generate self-signed certificates for nginx
-  system.activationScripts.createNginxCerts = lib.stringAfter [ "var" ] ''
-    mkdir -p /etc/nginx/certs
-    if [ ! -f /etc/nginx/certs/code-server.crt ]; then
-      ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /etc/nginx/certs/code-server.key \
-        -out /etc/nginx/certs/code-server.crt \
-        -subj "/CN=code-server" 2>/dev/null || true
-      chmod 644 /etc/nginx/certs/code-server.crt
-      chmod 600 /etc/nginx/certs/code-server.key
-    fi
-  '';
 
   # User configuration
   users.users.nixpi = {
