@@ -79,12 +79,6 @@ in
       # Drop SSH from anywhere else
       tcp dport 22 drop
 
-      # Allow Guacamole web interface (port 8080) from Tailscale and local network
-      ip saddr 100.0.0.0/8 tcp dport 8080 accept
-      ip saddr 192.168.0.0/16 tcp dport 8080 accept
-      ip saddr 10.0.0.0/8 tcp dport 8080 accept
-      tcp dport 8080 drop
-
       # Allow Syncthing sync (port 22000) from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 22000 accept
       ip saddr 100.0.0.0/8 udp dport 22000 accept
@@ -119,24 +113,6 @@ in
     openFirewall = false;  # We'll manage firewall rules manually
   };
 
-  # Guacamole proxy daemon
-  services.guacamole-server = {
-    enable = true;
-    host = "127.0.0.1";  # Only listen on localhost
-    port = 4822;
-  };
-
-  # Guacamole web interface
-  services.guacamole-client = {
-    enable = true;
-    enableWebserver = true;  # Enable built-in Tomcat on port 8080
-    userMappingXml = ./guacamole-user-mapping.xml;
-    settings = {
-      guacd-hostname = "127.0.0.1";
-      guacd-port = "4822";
-    };
-  };
-
   # Syncthing for file synchronization
   services.syncthing = {
     enable = true;
@@ -162,10 +138,9 @@ in
     user = "nixpi";
     host = "0.0.0.0";  # Listen on all interfaces
     port = 8443;
-    auth = "password";
-    password = "Al3xandru@#";
     extraArguments = [
-      "--bind-addr" "0.0.0.0:8443"
+      "--auth" "password"
+      "--password" "Al3xandru@#"
     ];
   };
 
