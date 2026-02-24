@@ -99,7 +99,7 @@ in
   # xrdp for RDP access to XFCE desktop
   services.xrdp = {
     enable = true;
-    defaultWindowManager = "${pkgs.xfce.xfce4-session}/bin/xfce4-session";
+    defaultWindowManager = "startxfce4";
     openFirewall = false;  # We'll manage firewall rules manually
   };
 
