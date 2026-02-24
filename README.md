@@ -1,61 +1,97 @@
 # nixpi
 
-nixpi is an autonomous AI personal agent project built on top of **pi.dev**.
+nixpi is an AI-first operating environment built on NixOS. The AI agent is the primary control layer; Linux provides the execution layer underneath.
 
-## Project Goal
+## What's Included
 
-Build an AI-first operating environment where:
+| Component | Description |
+|-----------|-------------|
+| **NixOS VM** | QEMU/KVM guest with declarative config (`infra/nixos/vm.nix`) |
+| **`pi` command** | Wrapper for [pi-coding-agent](https://github.com/nicholasgasior/pi-coding-agent) (installed system-wide) |
+| **`claude` command** | Wrapper for [Claude Code](https://github.com/anthropics/claude-code) (installed system-wide) |
+| **code-server** | Browser-accessible VS Code on port 8080 |
+| **Tailscale** | VPN for secure remote access |
+| **SSH** | OpenSSH with root login disabled |
 
-- **Linux/NixOS is the execution layer** (kernel, filesystem, services, networking)
-- **The AI agent is the control layer** (planning, orchestration, automation)
-- **Policy and safety guardrails** prevent destructive or unsafe actions
+## Project Structure
 
-In practice, the user gives goals, and the agent continuously:
+```
+nixpi/
+  AGENTS.md              # Agent behavior guidelines
+  flake.nix              # Flake: dev shell, NixOS config, VM image build
+  flake.lock
+  infra/nixos/
+    vm.nix               # Shared VM module (packages, services, agent wrappers)
+    hosts/nixpi.nix      # Host-specific boot/disk config (machine-local)
+  scripts/
+    check.sh             # Runs `nix flake check --no-build`
+  docs/
+    README.md            # Documentation index
+```
 
-1. Observes system state
-2. Plans actions
-3. Executes approved operations
-4. Verifies outcomes
-5. Logs decisions and results
-6. Rolls back when needed
+## Getting Started
+
+### Build the VM image
+
+```bash
+nix build .#vm-qcow
+```
+
+This produces a QEMU qcow2 image you can boot in QEMU, libvirt, or GNOME Boxes.
+
+### Rebuild NixOS after config changes
+
+From inside the running VM (run from the repo root):
+
+```bash
+sudo nixos-rebuild switch --flake .#nixpi
+```
+
+### Access code-server
+
+code-server runs on port 8080 with no auth by default. For secure access, use an SSH tunnel:
+
+```bash
+ssh -L 8080:localhost:8080 nixpi@<vm-ip>
+```
+
+Then open `http://localhost:8080` in your browser.
+
+### Use the AI agents
+
+Both commands are available system-wide:
+
+```bash
+pi          # pi-coding-agent
+claude      # Claude Code
+```
+
+## Dev Shell
+
+A local development shell is available via the flake:
+
+```bash
+nix develop
+```
+
+Provides: git, Node.js 22, sqlite, jq, ripgrep, fd.
+
+## Build & Check
+
+```bash
+# Validate flake outputs
+nix flake check --no-build
+
+# Project check script
+./scripts/check.sh
+```
 
 ## Core Principles
 
 - **Safety first**: strict risk tiers, protected paths, approval for high-risk actions
 - **Reproducibility**: declarative config and version pinning (Nix flakes)
-- **Recoverability**: rollback via NixOS generations + VM/filesystem snapshots
+- **Recoverability**: rollback via NixOS generations + VM snapshots
 - **Auditability**: every important action has traceable intent and outcome
-
-## Initial Direction
-
-- Host OS: Fedora workstation
-- Target environment: NixOS VM
-- Agent runtime: pi SDK + custom pi extensions
-- Control model: policy-gated autonomy (not unrestricted root shell)
-
-## Status
-
-Early design phase. No implementation committed yet.
-
-## Repository Notes
-
-- `infra/nixos/vm.nix` is a reusable VM-oriented module.
-- `infra/nixos/hosts/nixpi.nix` is host-specific (boot disk + filesystem UUIDs) and should be treated as machine-local.
-
-## Build & Check
-
-- Validate flake outputs:
-  ```bash
-  nix flake check --no-build
-  ```
-- Project check script:
-  ```bash
-  ./scripts/check.sh
-  ```
-- Build VM image (qemu qcow output):
-  ```bash
-  nix build .#vm-qcow
-  ```
 
 ## Operational Safety Defaults
 
@@ -67,3 +103,8 @@ Early design phase. No implementation committed yet.
   sudo systemctl start nixpi-repo-bootstrap.service
   sudo systemctl start nixpi-repo-update.service
   ```
+
+## Repository Notes
+
+- `infra/nixos/vm.nix` is the shared VM module (packages, services, agent tooling).
+- `infra/nixos/hosts/nixpi.nix` is host-specific (boot disk + filesystem UUIDs) and should be treated as machine-local.
