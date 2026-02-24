@@ -163,10 +163,10 @@ in
       locations."/" = {
         proxyPass = "http://127.0.0.1:8080";
         proxyWebsockets = true;
-        extraProxyHeaders = {
-          "Connection" = "upgrade";
-          "Upgrade" = "$http_upgrade";
-        };
+        extraConfig = ''
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        '';
       };
     };
   };
