@@ -1,10 +1,20 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   pi = pkgs.writeShellScriptBin "pi" ''
     exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.54.2 "$@"
   '';
 in
 {
+  # Defaults so this config can be switched directly on a simple VM install.
+  # (Image builders can override these values.)
+  boot.loader.grub.enable = lib.mkDefault true;
+  boot.loader.grub.device = lib.mkDefault "/dev/vda";
+
+  fileSystems."/" = lib.mkDefault {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+
   networking.hostName = "nixpi-vm";
 
   networking.networkmanager.enable = true;
