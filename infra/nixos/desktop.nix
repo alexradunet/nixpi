@@ -139,9 +139,9 @@ in
     host = "0.0.0.0";  # Listen on all interfaces
     port = 8443;
     auth = "password";
-    extraArguments = [
-      "--password" "Al3xandru@#"
-    ];
+    extraEnvironment = {
+      PASSWORD = "Al3xandru@#";
+    };
   };
 
   # User configuration
