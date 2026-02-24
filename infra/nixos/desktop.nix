@@ -15,6 +15,7 @@ in
 
   # Networking
   networking.networkmanager.enable = true;
+  networking.nftables.enable = true;
 
   # Timezone and locale
   time.timeZone = "Europe/Bucharest";
@@ -81,7 +82,10 @@ in
   };
 
   # Tailscale VPN
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    permitCertUid = "nixpi";
+  };
 
 
   # User configuration
@@ -116,11 +120,11 @@ in
     htop
 
     # Code editors
-    vscodium     # Lightweight VS Code without telemetry
+    vscodium     # Lightweight VS Code without telemetry (binary: 'codium')
 
     # AI coding tools
-    claude-code  # Official nixpkgs package (Anthropic)
-    pi           # npx wrapper - Pi Coding Agent (not in nixpkgs yet)
+    claude-code  # Official nixpkgs package (Anthropic) (binary: 'claude')
+    pi           # npx wrapper - Pi Coding Agent (not in nixpkgs yet) (binary: 'pi')
   ];
 
   # Ensure ~/.local/bin is in PATH
