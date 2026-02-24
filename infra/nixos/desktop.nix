@@ -89,11 +89,13 @@ in
       tcp dport 22000 drop
       udp dport 22000 drop
 
-      # Allow VS Code Server web editor (port 8080) from Tailscale and local network
-      ip saddr 100.0.0.0/8 tcp dport 8080 accept
-      ip saddr 192.168.0.0/16 tcp dport 8080 accept
-      ip saddr 10.0.0.0/8 tcp dport 8080 accept
-      tcp dport 8080 drop
+      # Allow VS Code Server web editor via HTTPS (port 8443) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 8443 accept
+      ip saddr 192.168.0.0/16 tcp dport 8443 accept
+      ip saddr 10.0.0.0/8 tcp dport 8443 accept
+      tcp dport 8443 drop
+
+      # code-server listens only on localhost (8080), nginx proxies via HTTPS
 
       # RDP is restricted to localhost only (no external access needed)
       # Guacamole connects to xrdp via localhost, so no firewall rule needed
@@ -136,7 +138,7 @@ in
   services.code-server = {
     enable = true;
     user = "nixpi";
-    host = "0.0.0.0";  # Listen on all interfaces
+    host = "127.0.0.1";  # Listen only on localhost
     port = 8080;
     auth = "password";
     extraEnvironment = {
@@ -145,6 +147,28 @@ in
     extraArguments = [
       "--disable-telemetry"
     ];
+  };
+
+  # Nginx reverse proxy for code-server with HTTPS via Tailscale certificates
+  services.nginx = {
+    enable = true;
+    recommendedProxySettings = true;
+    virtualHosts."code-server" = {
+      listen = [
+        { addr = "0.0.0.0"; port = 8443; ssl = true; }
+      ];
+      serverName = "_";
+      sslCertificate = "/var/lib/tailscale/certs/nixpi.crt";
+      sslCertificateKey = "/var/lib/tailscale/certs/nixpi.key";
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:8080";
+        proxyWebsockets = true;
+        extraProxyHeaders = {
+          "Connection" = "upgrade";
+          "Upgrade" = "$http_upgrade";
+        };
+      };
+    };
   };
 
   # User configuration
