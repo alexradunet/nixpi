@@ -28,11 +28,13 @@ All inbound ports are restricted to Tailscale (100.0.0.0/8) and local network (1
 ```
 nixpi/
   AGENTS.md                    # Agent behavior guidelines
-  flake.nix                    # Flake: dev shell + NixOS configuration
+  flake.nix                    # Flake: dev shell + NixOS configurations
   flake.lock
   infra/nixos/
     desktop.nix                # Primary config (packages, services, firewall)
-    hosts/desktop.nix          # Host-specific hardware (boot, disk, CPU)
+    hosts/
+      desktop.nix              # Physical desktop hardware (boot, disk, CPU)
+      vm.nix                   # VM hardware template (QEMU/KVM guest)
   scripts/
     check.sh                   # Runs `nix flake check --no-build`
 ```
@@ -41,10 +43,10 @@ nixpi/
 
 ### Rebuild NixOS after config changes
 
-From the repo root:
+From the repo root (`nixos-rebuild` auto-selects the config matching your hostname):
 
 ```bash
-sudo nixos-rebuild switch --flake .#nixpi
+sudo nixos-rebuild switch --flake .
 ```
 
 ### Connect via SSH
@@ -96,13 +98,30 @@ nix flake check --no-build
 ./scripts/check.sh
 ```
 
+## VM Setup
+
+To run this config in a QEMU/KVM virtual machine:
+
+1. Install NixOS in a VM, then clone this repo.
+2. Generate hardware config to find your root UUID:
+   ```bash
+   nixos-generate-config --show-hardware-config
+   ```
+3. Copy the root filesystem UUID into `infra/nixos/hosts/vm.nix`.
+4. Rebuild:
+   ```bash
+   sudo nixos-rebuild switch --flake .#nixpi-vm
+   ```
+
+On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` will auto-select `nixpi-vm` by hostname.
+
 ## Updating AI Tools
 
 Pi and Claude Code are pinned in `flake.lock` via the llm-agents.nix input. To update:
 
 ```bash
 nix flake update llm-agents
-sudo nixos-rebuild switch --flake .#nixpi
+sudo nixos-rebuild switch --flake .
 ```
 
 ## Core Principles

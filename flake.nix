@@ -30,13 +30,23 @@
         '';
       };
 
-      # Desktop host configuration
+      # Physical desktop host configuration
       nixosConfigurations.nixpi = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
           { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
           ./infra/nixos/desktop.nix
           ./infra/nixos/hosts/desktop.nix
+        ];
+      };
+
+      # VM host configuration
+      nixosConfigurations.nixpi-vm = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
+          ./infra/nixos/desktop.nix
+          ./infra/nixos/hosts/vm.nix
         ];
       };
     };

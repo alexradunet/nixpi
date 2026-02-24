@@ -7,7 +7,7 @@ let
     ## Environment
     - OS: NixOS (declarative, flake-based)
     - Config repo: ~/Development/NixPi
-    - Rebuild: sudo nixos-rebuild switch --flake ~/Development/NixPi#nixpi
+    - Rebuild: sudo nixos-rebuild switch --flake ~/Development/NixPi
     - VPN: Tailscale (services restricted to Tailscale + LAN)
     - File sync: Syncthing
 
@@ -24,10 +24,10 @@ in
   nix.settings.substituters = [ "https://cache.numtide.com" ];
   nix.settings.trusted-public-keys = [ "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ber+6GZLDmYMbx7JKXHIUSHozk=" ];
 
-  # Allow unfree packages (required for claude-code)
+  # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Allow running dynamically linked executables (e.g. Claude Code native installer)
+  # Allow running dynamically linked executables
   programs.nix-ld.enable = true;
 
   # Networking

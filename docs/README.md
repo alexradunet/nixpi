@@ -2,13 +2,14 @@
 
 ## Architecture
 
-nixpi runs as a NixOS desktop workstation. All system configuration is declarative and lives in this repo.
+nixpi runs as a NixOS desktop workstation (physical or VM). All system configuration is declarative and lives in this repo.
 
 **Key config files:**
 
 - [`flake.nix`](../flake.nix) — Flake definition: dev shell, NixOS configuration, llm-agents.nix input
 - [`infra/nixos/desktop.nix`](../infra/nixos/desktop.nix) — Primary config: packages, services, firewall, pi activation script
-- [`infra/nixos/hosts/desktop.nix`](../infra/nixos/hosts/desktop.nix) — Host-specific hardware (boot, disk, CPU)
+- [`infra/nixos/hosts/desktop.nix`](../infra/nixos/hosts/desktop.nix) — Physical desktop hardware (boot, disk, CPU)
+- [`infra/nixos/hosts/vm.nix`](../infra/nixos/hosts/vm.nix) — VM hardware template (QEMU/KVM guest)
 - [`AGENTS.md`](../AGENTS.md) — Agent behavior guidelines and safety rules
 
 ## Services

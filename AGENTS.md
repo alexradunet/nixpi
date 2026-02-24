@@ -22,7 +22,7 @@
 - Document rollback steps for risky operations.
 
 ## Repository Conventions
-- Project root: `~/Development/nixpi`
+- Project root: `~/Development/NixPi`
 - Docs live in `docs/`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
