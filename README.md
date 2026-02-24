@@ -36,3 +36,34 @@ In practice, the user gives goals, and the agent continuously:
 ## Status
 
 Early design phase. No implementation committed yet.
+
+## Repository Notes
+
+- `infra/nixos/vm.nix` is a reusable VM-oriented module.
+- `infra/nixos/hosts/nixpi.nix` is host-specific (boot disk + filesystem UUIDs) and should be treated as machine-local.
+
+## Build & Check
+
+- Validate flake outputs:
+  ```bash
+  nix flake check --no-build
+  ```
+- Project check script:
+  ```bash
+  ./scripts/check.sh
+  ```
+- Build VM image (qemu qcow output):
+  ```bash
+  nix build .#vm-qcow
+  ```
+
+## Operational Safety Defaults
+
+- No plaintext user password is committed in NixOS config.
+- Repo bootstrap-on-boot is disabled by default (opt-in in `infra/nixos/vm.nix`).
+- Automatic repo pull timer is disabled by default to avoid unreviewed drift.
+- Manual repo bootstrap and sync are available via systemd services:
+  ```bash
+  sudo systemctl start nixpi-repo-bootstrap.service
+  sudo systemctl start nixpi-repo-update.service
+  ```

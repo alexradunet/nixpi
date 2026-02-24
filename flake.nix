@@ -3,14 +3,20 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    flake-utils.url = "github:numtide/flake-utils";
-    nixos-generators.url = "github:nix-community/nixos-generators";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nixos-generators }:
+  outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
+
+      # Image-oriented VM configuration (no host-specific disk UUIDs)
+      vmImageConfig = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          ./infra/nixos/vm.nix
+        ];
+      };
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
@@ -42,12 +48,7 @@
         ];
       };
 
-      packages.${system}.vm-qcow = nixos-generators.nixosGenerate {
-        inherit system;
-        format = "qcow";
-        modules = [
-          ./infra/nixos/vm.nix
-        ];
-      };
+      # Upstream image build output (replaces deprecated nixos-generators path)
+      packages.${system}.vm-qcow = vmImageConfig.config.system.build.images.qemu;
     };
 }
