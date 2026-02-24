@@ -91,7 +91,8 @@ in
     extraGroups = [ "wheel" "networkmanager" ];
   };
 
-  # Remove bloated desktop packages - will use terminal tools instead
+  # Browser
+  programs.firefox.enable = true;
 
   # System packages
   environment.systemPackages = with pkgs; [
