@@ -42,7 +42,11 @@
       "Bash(curl:*)",
       "Bash(systemctl show:*)",
       "Bash(systemctl cat:*)",
-      "Bash(nix-doc:*)"
+      "Bash(nix-doc:*)",
+      "Bash(nix eval:*)",
+      "Bash(git push:*)",
+      "Bash(sudo mkdir:*)",
+      "Bash(sudo openssl req:*)"
     ]
   }
 }

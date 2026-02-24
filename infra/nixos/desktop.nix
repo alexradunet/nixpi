@@ -66,11 +66,10 @@ in
     };
   };
 
-  # Firewall: restrict inbound SSH and Guacamole to Tailscale and local network only
+  # Firewall: restrict inbound to Tailscale and local network only
   networking.firewall = {
     enable = true;
 
-    # Allow SSH and Guacamole only from specific networks (inbound)
     extraInputRules = ''
       # Allow SSH from Tailscale interface (100.x.x.x)
       ip saddr 100.0.0.0/8 tcp dport 22 accept
@@ -91,17 +90,6 @@ in
       ip saddr 10.0.0.0/8 udp dport 22000 accept
       tcp dport 22000 drop
       udp dport 22000 drop
-
-      # Allow VS Code Server web editor via HTTPS (port 8443) from Tailscale and local network
-      ip saddr 100.0.0.0/8 tcp dport 8443 accept
-      ip saddr 192.168.0.0/16 tcp dport 8443 accept
-      ip saddr 10.0.0.0/8 tcp dport 8443 accept
-      tcp dport 8443 drop
-
-      # code-server listens only on localhost (8080), nginx proxies via HTTPS
-
-      # RDP is restricted to localhost only (no external access needed)
-      # Guacamole connects to xrdp via localhost, so no firewall rule needed
     '';
   };
 
@@ -109,13 +97,6 @@ in
   services.tailscale = {
     enable = true;
     permitCertUid = "nixpi";
-  };
-
-  # xrdp for RDP access to XFCE desktop
-  services.xrdp = {
-    enable = true;
-    defaultWindowManager = "startxfce4";
-    openFirewall = false;  # We'll manage firewall rules manually
   };
 
   # Syncthing for file synchronization
@@ -135,54 +116,6 @@ in
         relaysEnabled = true;  # Allow relay servers for connectivity
       };
     };
-  };
-
-  # VS Code Server (web-based code editor)
-  services.code-server = {
-    enable = true;
-    user = "nixpi";
-    host = "127.0.0.1";  # Listen only on localhost
-    port = 8080;
-    auth = "password";
-    extraEnvironment = {
-      PASSWORD = "Al3xandru@#";
-    };
-    extraArguments = [
-      "--disable-telemetry"
-    ];
-  };
-
-  # Nginx reverse proxy for code-server with HTTPS via self-signed certificates
-  services.nginx = {
-    enable = true;
-    recommendedProxySettings = true;
-    virtualHosts."code-server" = {
-      listen = [
-        { addr = "0.0.0.0"; port = 8443; ssl = true; }
-      ];
-      serverName = "_";
-      sslCertificate = "/etc/nginx/certs/code-server.crt";
-      sslCertificateKey = "/etc/nginx/certs/code-server.key";
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:8080";
-        proxyWebsockets = true;
-        extraConfig = ''
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
-        '';
-      };
-    };
-    preStart = ''
-      mkdir -p /etc/nginx/certs
-      if [ ! -f /etc/nginx/certs/code-server.crt ]; then
-        ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-          -keyout /etc/nginx/certs/code-server.key \
-          -out /etc/nginx/certs/code-server.crt \
-          -subj "/CN=code-server" 2>/dev/null || true
-        chmod 644 /etc/nginx/certs/code-server.crt
-        chmod 600 /etc/nginx/certs/code-server.key
-      fi
-    '';
   };
 
   # User configuration
@@ -215,9 +148,6 @@ in
     fd
     tree
     htop
-
-    # Code editors
-    vscodium     # Lightweight VS Code without telemetry (binary: 'codium')
 
     # AI coding tools
     # claude-code installed via native installer (auto-updates to latest version)
