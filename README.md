@@ -108,6 +108,23 @@ nix flake check --no-build
 ./scripts/check.sh
 ```
 
+## Development Rules
+
+- Development model and contribution policy: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Agent behavior policy: [`AGENTS.md`](./AGENTS.md)
+- Pi TDD skill: [`infra/pi/skills/tdd/SKILL.md`](./infra/pi/skills/tdd/SKILL.md)
+- Runtime/maintainer operating model: [`docs/OPERATING_MODEL.md`](./docs/OPERATING_MODEL.md)
+- Emoji concept dictionary (visual communication): [`docs/EMOJI_DICTIONARY.md`](./docs/EMOJI_DICTIONARY.md)
+
+## Runtime Model (High Level)
+
+- **End users do not need `pi install`** for core Nixpi — `pi` is provided declaratively by NixOS config.
+- First boot: run `pi` (TUI), connect provider/auth, configure resources, then use runtime assistant.
+- Nixpi uses a dual-agent model:
+  - **Runtime assistant** (user-facing, background tasks)
+  - **Maintainer agent** (development/evolution in controlled repo context)
+- Runtime does not directly rewrite live core; it creates evolution requests handled through tested/reviewable changes.
+
 ## Adding a New Machine
 
 The flake auto-discovers hosts from `infra/nixos/hosts/`. Just add a file and rebuild:
