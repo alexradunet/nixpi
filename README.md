@@ -15,6 +15,20 @@ nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the mai
 | **Tailscale** | VPN for secure remote access |
 | **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale and LAN via nftables) |
 
+## Services Reference
+
+| Service | Config location | Notes |
+|---------|----------------|-------|
+| SSH | `base.nix` — `services.openssh` | Hardened; restricted to Tailscale + LAN |
+| Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
+| Syncthing | `base.nix` — `services.syncthing` | File sync; GUI restricted to Tailscale + LAN |
+| Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
+| XFCE | `desktop.nix` — `services.xserver` | Lightweight desktop environment |
+| RDP | `desktop.nix` — `services.xrdp` | XFCE desktop; restricted to Tailscale + LAN |
+| Audio | `desktop.nix` — `services.pipewire` | PipeWire audio stack |
+| pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+| Claude Code | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+
 ## Access Methods
 
 ```
@@ -36,8 +50,6 @@ nixpi/
     desktop.nix                # UI layer (XFCE, audio, RDP, printing)
     hosts/
       nixpi.nix                # Physical desktop hardware (boot, disk, CPU)
-  docs/
-    README.md                  # Architecture overview and service reference
   scripts/
     add-host.sh                # Generate a new host config from hardware
     check.sh                   # Runs `nix flake check --no-build`

@@ -1,5 +1,15 @@
+# Base NixOS module — shared config loaded by every host.
+#
+# `{ config, pkgs, lib, ... }:` is the NixOS module function signature.
+# NixOS calls this function and passes in:
+#   config — the fully resolved system config (for reading other modules' values)
+#   pkgs   — the Nix package set
+#   lib    — helper functions (merging, filtering, etc.)
+#   ...    — catches any extra args so the module stays forward-compatible
 { config, pkgs, lib, ... }:
 
+# `let ... in` binds local variables. Everything between `let` and `in`
+# is only visible within this file.
 let
   piSystemPrompt = ''
     You are an AI assistant running on nixpi, a NixOS-based AI-first workstation.
@@ -21,17 +31,24 @@ in
 {
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # Binary cache: pre-built packages from numtide so we don't compile llm-agents
+  # from source. The public key verifies the cache hasn't been tampered with.
   nix.settings.substituters = [ "https://cache.numtide.com" ];
   nix.settings.trusted-public-keys = [ "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ber+6GZLDmYMbx7JKXHIUSHozk=" ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Allow running dynamically linked executables
+  # nix-ld provides a dynamic linker shim so pre-compiled binaries (e.g. VS Code
+  # remote server, downloaded tools) can run on NixOS, which normally lacks the
+  # standard /lib/ld-linux path that most Linux binaries expect.
   programs.nix-ld.enable = true;
 
   # Networking
   networking.networkmanager.enable = true;
+  # nftables is the modern Linux firewall (successor to iptables).
+  # NixOS can generate rules from its firewall options and also accept raw
+  # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
 
   # Timezone and locale
@@ -63,7 +80,10 @@ in
     };
   };
 
-  # Firewall: restrict SSH and Syncthing to Tailscale and local network
+  # Firewall: restrict SSH and Syncthing to Tailscale and local network.
+  # extraInputRules accepts raw nftables syntax that NixOS injects into the
+  # input chain. Multiple modules can set extraInputRules — NixOS concatenates
+  # them all (e.g. desktop.nix adds RDP rules on top of these).
   networking.firewall = {
     enable = true;
 
@@ -94,7 +114,9 @@ in
 
   # Tailscale VPN
   services.tailscale.enable = true;
+  # trustedInterfaces: all traffic from tailscale0 bypasses firewall rules entirely.
   networking.firewall.trustedInterfaces = [ "tailscale0" ];
+  # Tailscale needs UDP 41641 for direct WireGuard connections between nodes.
   networking.firewall.allowedUDPPorts = [ 41641 ];
 
   # Syncthing for file synchronization
@@ -103,8 +125,11 @@ in
     user = "nixpi";
     dataDir = "/home/nixpi/.local/share/syncthing";
     configDir = "/home/nixpi/.config/syncthing";
-    overrideFolders = false;  # Allow user to configure folders via web UI
-    overrideDevices = false;  # Allow user to configure devices via web UI
+    # overrideFolders/overrideDevices = false: let the user add folders/devices
+    # via the Syncthing web UI without NixOS wiping them on each rebuild.
+    # When true, NixOS would enforce only the folders/devices declared here.
+    overrideFolders = false;
+    overrideDevices = false;
     settings = {
       gui = {
         enabled = true;
@@ -128,6 +153,8 @@ in
   programs.chromium.enable = true;
 
   # System packages
+  # `with pkgs;` brings all pkgs attributes into scope so we can write `git`
+  # instead of `pkgs.git` for every package in the list.
   environment.systemPackages = with pkgs; [
     # Development tools
     git
@@ -160,7 +187,9 @@ in
   environment.localBinInPath = true;
 
 
-  # Seed pi-coding-agent config (non-destructive: only creates if missing)
+  # Activation scripts run as root during `nixos-rebuild switch`, after the
+  # system is built but before services start. They're used for one-time setup.
+  # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     PI_DIR="/home/nixpi/.pi/agent"
     mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
@@ -182,5 +211,8 @@ SYSEOF
     options = "--delete-older-than 30d";
   };
 
+  # stateVersion tells NixOS which version's defaults to use for stateful data
+  # (databases, state directories). It does NOT control package versions.
+  # Never change this after install — it would break existing state assumptions.
   system.stateVersion = "25.11";
 }

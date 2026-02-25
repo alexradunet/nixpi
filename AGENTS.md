@@ -23,7 +23,6 @@
 
 ## Repository Conventions
 - Project root: `~/Development/NixPi`
-- Docs live in `docs/`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
 ## Pi Integration
