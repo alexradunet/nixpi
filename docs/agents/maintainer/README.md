@@ -19,6 +19,6 @@ Implement approved evolution plans in controlled development context.
 - Apply system changes directly without approval workflow.
 
 ## Outputs
-- Reviewable patch/diff.
+- Reviewable patch/diff. See [Handoff Template §3](../HANDOFF_TEMPLATES.md#3-hephaestus-maintainer---themis-reviewer).
 - Test evidence and command outputs.
 - Implementation notes and risks.

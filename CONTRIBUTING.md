@@ -1,6 +1,10 @@
 # Contributing to nixpi
 
+Related: [AGENTS.md](./AGENTS.md) · [Source of Truth](./docs/meta/SOURCE_OF_TRUTH.md) · [TDD Skill](./infra/pi/skills/tdd/SKILL.md) · [Docs Home](./docs/README.md)
+
 This project is NixOS-first and AI-assisted. Keep changes reproducible, test-driven, and easy to review.
+
+All project-wide policies (TDD, safety, Nix/NixOS conventions, standards-first, pre-release simplicity) are defined in [AGENTS.md](./AGENTS.md). This file covers the developer workflow and contribution process.
 
 ## Development Operating Model
 - Build in **Nixpi** (repo + shell + tests).
@@ -8,23 +12,6 @@ This project is NixOS-first and AI-assisted. Keep changes reproducible, test-dri
 - Use **Pi** (`pi` / `pi -p`) as the underlying SDK/advanced CLI when needed.
 - Repository files + tests + git history are the source of truth.
 - If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
-
-## Mandatory TDD Workflow
-Use this cycle for every behavior change:
-1. **Red**: write the smallest failing test first.
-2. **Green**: implement the minimal code to pass.
-3. **Refactor**: improve structure while tests stay green.
-
-### Bug Fixes (Required)
-- Add a failing bug reproduction test first.
-- Apply minimal fix.
-- Add at least one neighboring edge-case regression test.
-
-### Features (Required)
-- Add tests first for:
-  - happy path
-  - failure path
-  - at least one edge case
 
 ## Validation
 Run relevant tests for changed code, and for repo-wide checks run:
@@ -39,25 +26,6 @@ Run relevant tests for changed code, and for repo-wide checks run:
 # Optional direct flake validation
 nix flake check --no-build
 ```
-
-## Nix/NixOS Rules
-- Prefer declarative Nix changes over imperative mutations.
-- Do not edit `/etc` or systemd units directly.
-- For system-level changes, include validation and rollback notes.
-
-## Standards-First Rule (Mandatory)
-- We only work with standards-first solutions by default.
-- Prefer open, interoperable formats/protocols over proprietary or tool-specific ones.
-- If deviating from standards, explain and document the trade-off in the PR.
-
-## Pre-Release Simplicity Rule (Mandatory)
-- Before first stable release, do not introduce or keep legacy code paths and backward-compatibility shims.
-- Implement clean single-path behavior whenever possible.
-- If a temporary compatibility layer is unavoidable, document rationale and planned removal in the PR.
-
-## Safety
-- Never run destructive commands without explicit confirmation.
-- Do not access secrets (`~/.ssh`, tokens, credentials, `.env`, `~/.pi/agent/auth.json`).
 
 ## Commit and PR Expectations
 - Use clear scoped commit messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).

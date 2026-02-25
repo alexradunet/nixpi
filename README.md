@@ -66,7 +66,10 @@ nixpi/
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
     verify-nixpi-modes.sh      # Post-rebuild nixpi wrapper smoke test
+    new-handoff.sh             # Scaffold a standards-compliant handoff file
+    list-handoffs.sh           # List handoff files (supports type/date filters)
   tests/
+    helpers.sh                 # Shared test assertion helpers
     test_*.sh                  # Policy/tooling regression tests
 ```
 
@@ -157,20 +160,11 @@ nix flake check --no-build
 
 ## Runtime Model (High Level)
 
-- Agent identity codenames:
-  - Hermes = Runtime
-  - Athena = Technical Architect
-  - Hephaestus = Maintainer
-  - Themis = Reviewer
+See the full runtime and evolution workflow in the [Operating Model](./docs/runtime/OPERATING_MODEL.md) and agent role contracts in [Agents Overview](./docs/agents/README.md).
+
 - **End users do not need `pi install`** for core Nixpi — `nixpi` and `pi` are provided declaratively by NixOS config.
-- First boot: run `nixpi` (runtime mode), connect provider/auth if needed (`pi login` compatibility), configure resources, then use runtime assistant.
-- Developer workflow: run `nixpi dev` for Pi-native development mode with Nixpi skills/rules and coding practices preloaded.
-- Nixpi uses a multi-agent model:
-  - **Hermes** (Runtime agent: user-facing/background tasks)
-  - **Athena** (Technical Architect: planning/conformance)
-  - **Hephaestus** (Maintainer: development/evolution in controlled repo context)
-  - **Themis** (Reviewer: independent quality/security review)
-- Runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
+- `nixpi` → runtime mode (primary user command). `nixpi dev` → developer mode.
+- Nixpi uses a multi-agent model (Hermes, Athena, Hephaestus, Themis) where the runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
 
 ## Adding a New Machine
 
@@ -202,12 +196,7 @@ sudo nixos-rebuild switch --flake .
 
 ## Core Principles
 
-- **Safety first**: strict risk tiers, protected paths, approval for high-risk actions
-- **Reproducibility**: declarative config and version pinning (Nix flakes)
-- **Recoverability**: rollback via NixOS generations
-- **Auditability**: every important action has traceable intent and outcome
-- **Standards-first**: prefer open, interoperable standards and portable formats
-- **Pre-release simplicity**: avoid legacy/backward-compatibility layers until first stable release
+Safety, reproducibility, recoverability, auditability, standards-first, and pre-release simplicity. Full policy definitions are in [AGENTS.md](./AGENTS.md).
 
 ## Operational Safety Defaults
 

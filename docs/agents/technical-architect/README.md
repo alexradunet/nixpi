@@ -18,6 +18,6 @@ Translate evolution requests into a concrete implementation plan aligned with Ni
 - Approve architecture that violates security/declarative constraints.
 
 ## Outputs
-- Architecture/implementation plan.
+- Architecture/implementation plan. See [Handoff Template §2](../HANDOFF_TEMPLATES.md#2-athena-technical-architect---hephaestus-maintainer).
 - Explicit acceptance checklist.
-- Final conformance verdict before apply.
+- Final conformance verdict before apply. See [Handoff Template §5](../HANDOFF_TEMPLATES.md#5-athena-technical-architect---human-approval-gate).

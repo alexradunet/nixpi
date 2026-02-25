@@ -19,4 +19,4 @@ User-facing assistant that runs in production and handles normal operations/chan
 
 ## Outputs
 - User responses/actions.
-- Evolution requests (problem, expected behavior, constraints, acceptance criteria).
+- Evolution requests (problem, expected behavior, constraints, acceptance criteria). See [Handoff Template §1](../HANDOFF_TEMPLATES.md#1-hermes-runtime---athena-technical-architect).

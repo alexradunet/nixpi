@@ -19,5 +19,5 @@ Provide independent post-implementation review focused on quality, security, and
 - Skip reporting material risks.
 
 ## Outputs
-- Structured review report (findings, severity, recommendations).
+- Structured review report (findings, severity, recommendations). See [Handoff Template §4](../HANDOFF_TEMPLATES.md#4-themis-reviewer---athena--human).
 - Clear pass/fail/rework recommendation.

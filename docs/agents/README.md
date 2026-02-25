@@ -31,11 +31,6 @@ This section defines each Nixpi agent role as a modular contract.
 - Hephaestus (Maintainer) implements changes in controlled development context using strict TDD.
 - Themis (Reviewer) performs independent quality/security/pattern review.
 
-## Evolution Hand-off (Summary)
-1. Hermes (Runtime) creates evolution request.
-2. Athena (Technical Architect) produces implementation plan with user preferences.
-3. Hephaestus (Maintainer) implements via TDD and returns patch/diff.
-4. Themis (Reviewer) performs independent review (quality + security).
-5. Athena validates conformance to architecture and rules.
-6. Human approves.
-7. Apply declaratively via NixOS rebuild workflow.
+## Evolution Hand-off
+
+See the canonical 7-step evolution workflow in the [Operating Model](../runtime/OPERATING_MODEL.md#evolution-workflow). Use [Handoff Templates](./HANDOFF_TEMPLATES.md) for standardized artifacts between steps.
