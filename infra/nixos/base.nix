@@ -241,6 +241,12 @@ in
     vim
     neovim
 
+    # Language servers and linters
+    nixd                          # Nix LSP
+    bash-language-server          # Bash LSP
+    shellcheck                    # Shell linter (used by bash-language-server)
+    typescript-language-server    # TS/JS LSP
+
     # Network tools
     curl
     wget

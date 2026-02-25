@@ -60,6 +60,12 @@
           jq
           ripgrep
           fd
+
+          # Language servers and linters
+          nixd
+          bash-language-server
+          shellcheck
+          nodePackages.typescript-language-server
         ];
 
         shellHook = ''
