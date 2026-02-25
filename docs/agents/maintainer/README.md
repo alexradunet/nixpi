@@ -1,8 +1,10 @@
-# Maintainer Agent
+# Hephaestus — Maintainer Agent
 
 Related: [Agents Home](../README.md) · [Technical Architect Agent](../technical-architect/README.md)
 
 ## Purpose
+Codename: **Hephaestus**.
+
 Implement approved evolution plans in controlled development context.
 
 ## Responsibilities

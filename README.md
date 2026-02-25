@@ -70,6 +70,12 @@ nixpi/
     test_*.sh                  # Policy/tooling regression tests
 ```
 
+## Flake Layout Policy
+
+- The canonical flake entrypoint is kept at repository root: `./flake.nix` and `./flake.lock`.
+- This keeps `nix flake check`, `nix develop`, and `nixos-rebuild --flake .` standard and predictable.
+- If subflakes are introduced later, root flake remains the primary pre-release interface.
+
 ## Getting Started
 
 ### Rebuild NixOS after config changes
@@ -151,14 +157,19 @@ nix flake check --no-build
 
 ## Runtime Model (High Level)
 
+- Agent identity codenames:
+  - Hermes = Runtime
+  - Athena = Technical Architect
+  - Hephaestus = Maintainer
+  - Themis = Reviewer
 - **End users do not need `pi install`** for core Nixpi — `nixpi` and `pi` are provided declaratively by NixOS config.
 - First boot: run `nixpi` (runtime mode), connect provider/auth if needed (`pi login` compatibility), configure resources, then use runtime assistant.
 - Developer workflow: run `nixpi dev` for Pi-native development mode with Nixpi skills/rules and coding practices preloaded.
 - Nixpi uses a multi-agent model:
-  - **Runtime agent** (user-facing, background tasks)
-  - **Technical Architect agent** (planning/conformance)
-  - **Maintainer agent** (development/evolution in controlled repo context)
-  - **Reviewer agent** (independent quality/security review)
+  - **Hermes** (Runtime agent: user-facing/background tasks)
+  - **Athena** (Technical Architect: planning/conformance)
+  - **Hephaestus** (Maintainer: development/evolution in controlled repo context)
+  - **Themis** (Reviewer: independent quality/security review)
 - Runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
 
 ## Adding a New Machine

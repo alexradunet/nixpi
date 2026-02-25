@@ -21,7 +21,7 @@ After `nixos-rebuild switch`, both commands are available.
 2. User launches runtime mode with `nixpi`.
 3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
 4. User enables desired resources/extensions via `pi config`.
-5. Runtime assistant runs in background and waits for events/tasks/channels.
+5. Hermes (Runtime) runs in background and waits for events/tasks/channels.
 
 ### Runtime vs Developer mode
 - `nixpi` → normal/runtime mode (primary end-user path).
@@ -39,17 +39,17 @@ After `nixos-rebuild switch`, both commands are available.
 See role contracts in [Agents Overview](../agents/README.md).
 Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HANDOFF_TEMPLATES.md).
 
-- [Runtime Agent](../agents/runtime/README.md)
-- [Technical Architect Agent](../agents/technical-architect/README.md)
-- [Maintainer Agent](../agents/maintainer/README.md)
-- [Reviewer Agent](../agents/reviewer/README.md)
+- [Hermes (Runtime Agent)](../agents/runtime/README.md)
+- [Athena (Technical Architect Agent)](../agents/technical-architect/README.md)
+- [Hephaestus (Maintainer Agent)](../agents/maintainer/README.md)
+- [Themis (Reviewer Agent)](../agents/reviewer/README.md)
 
 ## Evolution Workflow
-1. Runtime agent identifies improvement opportunity and creates an evolution request.
-2. Technical Architect agent analyzes request, gathers user preferences, and produces an implementation plan.
-3. Maintainer agent executes in controlled dev context with strict TDD and validation.
-4. Reviewer agent performs independent quality/security/policy review.
-5. Technical Architect agent performs final conformance review against plan and standards.
+1. Hermes (Runtime) identifies improvement opportunity and creates an evolution request.
+2. Athena (Technical Architect) analyzes request, gathers user preferences, and produces an implementation plan.
+3. Hephaestus (Maintainer) executes in controlled dev context with strict TDD and validation.
+4. Themis (Reviewer) performs independent quality/security/policy review.
+5. Athena performs final conformance review against plan and standards.
 6. Human approval gate decides apply/no-apply.
 7. Approved system changes are applied declaratively (`nixos-rebuild switch --flake ...`) with rollback available.
 

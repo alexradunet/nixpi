@@ -1,8 +1,10 @@
-# Runtime Agent
+# Hermes — Runtime Agent
 
 Related: [Agents Home](../README.md) · [Operating Model](../../runtime/OPERATING_MODEL.md)
 
 ## Purpose
+Codename: **Hermes**.
+
 User-facing assistant that runs in production and handles normal operations/channels.
 
 ## Responsibilities

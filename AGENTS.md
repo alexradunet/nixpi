@@ -29,6 +29,8 @@
 ## Nix/NixOS Conventions
 - Prefer flakes over channels.
 - Keep reproducibility artifacts committed (`flake.nix`, `flake.lock`, `package-lock.json` when applicable).
+- Keep the canonical flake entrypoint at repository root (`./flake.nix`, `./flake.lock`).
+- If subflakes are added later, keep root flake as the primary interface pre-release.
 - Validate before apply for system changes.
 - Document rollback steps for risky operations.
 
@@ -73,9 +75,14 @@
 - Keep emoji usage minimal and consistent (avoid decorative noise).
 
 ## Agent Role Policy
-- Runtime assistant must not directly self-modify Nixpi core/system config.
-- Runtime assistant should create evolution requests when core improvements are needed.
-- Technical Architect agent plans evolution work and validates conformance to architecture/rules.
-- Maintainer/dev agent performs code evolution in controlled repo context with strict TDD and validation before apply.
-- Reviewer agent performs independent quality/security/policy review before apply.
+- Agent codenames follow Greek mythology identity:
+  - Hermes = Runtime
+  - Athena = Technical Architect
+  - Hephaestus = Maintainer
+  - Themis = Reviewer
+- Hermes (Runtime) must not directly self-modify Nixpi core/system config.
+- Hermes should create evolution requests when core improvements are needed.
+- Athena plans evolution work and validates conformance to architecture/rules.
+- Hephaestus performs code evolution in controlled repo context with strict TDD and validation before apply.
+- Themis performs independent quality/security/policy review before apply.
 - See role contracts in `docs/agents/`.

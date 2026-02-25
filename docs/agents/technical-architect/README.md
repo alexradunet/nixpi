@@ -1,8 +1,10 @@
-# Technical Architect Agent
+# Athena — Technical Architect Agent
 
 Related: [Agents Home](../README.md) · [Maintainer Agent](../maintainer/README.md) · [Reviewer Agent](../reviewer/README.md)
 
 ## Purpose
+Codename: **Athena**.
+
 Translate evolution requests into a concrete implementation plan aligned with Nixpi rules and architecture.
 
 ## Responsibilities

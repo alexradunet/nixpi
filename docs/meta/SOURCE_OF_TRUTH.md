@@ -6,7 +6,7 @@ This document defines canonical sources when information conflicts.
 
 ## Priority Order
 1. **System behavior (canonical):**
-   - `flake.nix`, `flake.lock`
+   - Root flake entrypoint: `./flake.nix`, `./flake.lock`
    - `infra/nixos/*.nix`
 2. **Process and engineering policy (canonical):**
    - `AGENTS.md`

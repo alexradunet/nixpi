@@ -36,7 +36,7 @@ Supported handoff types:
 - Optional machine-readable block may be included as JSON.
 - Keep one handoff per file/message; avoid mixed intents.
 
-## 1) Runtime -> Technical Architect
+## 1) Hermes (Runtime) -> Athena (Technical Architect)
 
 ### Template
 
@@ -68,7 +68,7 @@ Supported handoff types:
 - Links/logs/screenshots:
 ```
 
-## 2) Technical Architect -> Maintainer
+## 2) Athena (Technical Architect) -> Hephaestus (Maintainer)
 
 ### Template
 
@@ -109,7 +109,7 @@ Supported handoff types:
 - [ ] Risks documented
 ```
 
-## 3) Maintainer -> Reviewer
+## 3) Hephaestus (Maintainer) -> Themis (Reviewer)
 
 ### Template
 
@@ -139,7 +139,7 @@ Supported handoff types:
 - Operational considerations:
 ```
 
-## 4) Reviewer -> Technical Architect (+ Human)
+## 4) Themis (Reviewer) -> Athena (+ Human)
 
 ### Template
 
@@ -168,7 +168,7 @@ Supported handoff types:
 - Approve / Request changes / Reject
 ```
 
-## 5) Technical Architect -> Human Approval Gate
+## 5) Athena (Technical Architect) -> Human Approval Gate
 
 ### Template
 
@@ -202,6 +202,8 @@ Use when sending through APIs/queues.
   "handoffType": "evolution-request|implementation-plan|change-package|review-report|final-conformance",
   "fromRole": "runtime|technical-architect|maintainer|reviewer",
   "toRole": "technical-architect|maintainer|reviewer|human",
+  "fromCodeName": "Hermes|Athena|Hephaestus|Themis",
+  "toCodeName": "Athena|Hephaestus|Themis|human",
   "id": "handoff-uuid",
   "timestamp": "ISO-8601",
   "payload": {}

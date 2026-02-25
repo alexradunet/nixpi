@@ -52,11 +52,11 @@ A compact visual language for Nixpi user communication.
 - ⏪ NixOS generation rollback path
 
 ## Agent Roles
-- 🤖 Runtime agent action (user-facing operations)
-- 🧭 Technical Architect action (planning/conformance)
-- 🧑‍💻 Maintainer/development agent action
-- 🔎 Reviewer agent action (quality/security review)
-- 📨 Evolution request created by runtime
+- 🤖 Hermes (Runtime) action (user-facing operations)
+- 🧭 Athena (Technical Architect) action (planning/conformance)
+- 🧑‍💻 Hephaestus (Maintainer) action
+- 🔎 Themis (Reviewer) action (quality/security review)
+- 📨 Evolution request created by Hermes
 - 🧾 Reviewable diff/PR artifact
 
 ## Decision & Approval Signals

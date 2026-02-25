@@ -1,8 +1,10 @@
-# Reviewer Agent
+# Themis — Reviewer Agent
 
 Related: [Agents Home](../README.md) · [Technical Architect Agent](../technical-architect/README.md)
 
 ## Purpose
+Codename: **Themis**.
+
 Provide independent post-implementation review focused on quality, security, and policy conformance.
 
 ## Responsibilities
