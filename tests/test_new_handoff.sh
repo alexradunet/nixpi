@@ -1,24 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/helpers.sh"
 
 SCRIPT="scripts/new-handoff.sh"
-
-fail() {
-  echo "FAIL: $*" >&2
-  exit 1
-}
-
-assert_contains() {
-  local file="$1"
-  local needle="$2"
-  grep -Fq "$needle" "$file" || fail "expected '$needle' in $file"
-}
-
-assert_nonempty() {
-  local value="$1"
-  local msg="$2"
-  [ -n "$value" ] || fail "$msg"
-}
 
 # Happy path: generate an evolution request handoff file with deterministic timestamp.
 TMP_DIR="$(mktemp -d)"
@@ -32,8 +16,8 @@ created_path="$(cat "$stdout_file")"
 assert_nonempty "$created_path" "script did not print output path"
 [ -f "$created_path" ] || fail "expected generated file at $created_path"
 
-assert_contains "$created_path" "# Evolution Request"
-assert_contains "$created_path" "## Acceptance Criteria"
+assert_file_contains "$created_path" "# Evolution Request"
+assert_file_contains "$created_path" "## Acceptance Criteria"
 
 # Failure path: unknown handoff type should fail with clear error.
 set +e

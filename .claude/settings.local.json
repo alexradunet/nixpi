@@ -59,7 +59,8 @@
       "Bash(npm view:*)",
       "Bash(git:*)",
       "WebFetch(domain:nixos.org)",
-      "WebFetch(domain:search.nixos.org)"
+      "WebFetch(domain:search.nixos.org)",
+      "Bash(./scripts/test.sh:*)"
     ]
   }
 }

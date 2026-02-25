@@ -1,26 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/helpers.sh"
 
 SCRIPT="scripts/list-handoffs.sh"
-
-fail() {
-  echo "FAIL: $*" >&2
-  exit 1
-}
-
-assert_contains() {
-  local haystack="$1"
-  local needle="$2"
-  printf '%s' "$haystack" | grep -Fq "$needle" || fail "expected output to contain '$needle'"
-}
-
-assert_not_contains() {
-  local haystack="$1"
-  local needle="$2"
-  if printf '%s' "$haystack" | grep -Fq "$needle"; then
-    fail "did not expect output to contain '$needle'"
-  fi
-}
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT

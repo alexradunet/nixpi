@@ -11,6 +11,13 @@
 # `let ... in` binds local variables. Everything between `let` and `in`
 # is only visible within this file.
 let
+  # Shared guidelines referenced by both runtime and dev system prompts.
+  sharedGuidelines = ''
+    - Prefer declarative Nix changes over imperative system mutation
+    - Never modify /etc or systemd units directly; edit NixOS config instead
+    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files
+  '';
+
   piSystemPrompt = ''
     You are an AI assistant running on nixpi, a NixOS-based AI-first workstation.
 
@@ -23,9 +30,7 @@ let
 
     ## Guidelines
     - Follow AGENTS.md conventions
-    - Prefer declarative Nix changes over imperative system mutation
-    - Never modify /etc or systemd units directly; edit NixOS config instead
-    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files
+    ${sharedGuidelines}
   '';
 
   piDevSystemPrompt = ''
@@ -38,9 +43,7 @@ let
     ## Mandatory rules
     - Follow AGENTS.md conventions and strict TDD (Red -> Green -> Refactor).
     - For features: include happy path, failure path, and at least one edge case.
-    - Prefer declarative Nix changes over imperative system mutation.
-    - Never modify /etc or systemd units directly; edit NixOS config instead.
-    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files.
+    ${sharedGuidelines}
   '';
 
   nixpiCli = pkgs.writeShellScriptBin "nixpi" ''
@@ -144,7 +147,7 @@ in
     enable = true;
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = true;
+      PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       X11Forwarding = false;
       MaxAuthTries = 3;
@@ -187,8 +190,10 @@ in
 
   # Tailscale VPN
   services.tailscale.enable = true;
-  # trustedInterfaces: all traffic from tailscale0 bypasses firewall rules entirely.
-  networking.firewall.trustedInterfaces = [ "tailscale0" ];
+  # Note: we intentionally do NOT set trustedInterfaces = [ "tailscale0" ] here.
+  # Instead, Tailscale traffic is controlled by the explicit IP-based rules above
+  # (100.0.0.0/8), giving us per-service granularity over what Tailscale peers
+  # can access rather than blanket-trusting all traffic on the interface.
   # Tailscale needs UDP 41641 for direct WireGuard connections between nodes.
   networking.firewall.allowedUDPPorts = [ 41641 ];
 
@@ -264,6 +269,12 @@ in
   # Activation scripts run as root during `nixos-rebuild switch`, after the
   # system is built but before services start. They're used for one-time setup.
   # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
+  #
+  # IMPORTANT: These seeds are write-once. Files are only created if absent.
+  # If you update piSystemPrompt/piDevSystemPrompt/settings above, existing
+  # deployments will NOT receive the changes. To apply updates manually:
+  #   rm ~/.pi/agent/SYSTEM.md ~/.pi/agent-dev/SYSTEM.md
+  #   sudo nixos-rebuild switch --flake .
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     RUNTIME_PI_DIR="/home/nixpi/.pi/agent"
     DEV_PI_DIR="/home/nixpi/.pi/agent-dev"
