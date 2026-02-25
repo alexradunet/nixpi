@@ -9,7 +9,7 @@ nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the mai
 | **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, Tailscale, Syncthing, packages |
 | **NixOS Desktop** | UI layer (`infra/nixos/desktop.nix`): XFCE, audio, RDP |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged) |
-| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged) | Optional for development as Pi does not support Claude oAuth |
+| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
@@ -36,6 +36,8 @@ nixpi/
     desktop.nix                # UI layer (XFCE, audio, RDP, printing)
     hosts/
       nixpi.nix                # Physical desktop hardware (boot, disk, CPU)
+  docs/
+    README.md                  # Architecture overview and service reference
   scripts/
     add-host.sh                # Generate a new host config from hardware
     check.sh                   # Runs `nix flake check --no-build`
