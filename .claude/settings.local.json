@@ -61,7 +61,9 @@
       "WebFetch(domain:nixos.org)",
       "WebFetch(domain:search.nixos.org)",
       "Bash(./scripts/test.sh:*)",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Bash(nixd:*)",
+      "Bash(nix develop:*)"
     ]
   }
 }
