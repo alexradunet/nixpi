@@ -127,7 +127,7 @@ A local development shell is available via the flake:
 nix develop
 ```
 
-Provides: git, Node.js 22, sqlite, jq, ripgrep, fd.
+Provides: git, Node.js 22, sqlite, jq, ripgrep, fd, and language servers (nixd, bash-language-server, shellcheck, typescript-language-server).
 
 ## Build & Check
 
