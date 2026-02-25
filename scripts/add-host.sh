@@ -5,6 +5,13 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOSTS_DIR="$REPO_ROOT/infra/nixos/hosts"
 
 HOSTNAME="${1:-$(hostname)}"
+
+# Validate hostname (RFC 952: alphanumeric and hyphens only)
+if [[ ! "$HOSTNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$ ]]; then
+  echo "error: invalid hostname '$HOSTNAME' (must be alphanumeric/hyphens, no leading/trailing hyphen)" >&2
+  exit 1
+fi
+
 HOST_FILE="$HOSTS_DIR/$HOSTNAME.nix"
 
 if [ -f "$HOST_FILE" ]; then

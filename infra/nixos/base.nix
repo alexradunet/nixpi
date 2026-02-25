@@ -7,7 +7,7 @@ let
     ## Environment
     - OS: NixOS (declarative, flake-based)
     - Config repo: ~/Development/NixPi
-    - Rebuild: sudo nixos-rebuild switch --flake ~/Development/NixPi
+    - Rebuild: cd ~/Development/NixPi && sudo nixos-rebuild switch --flake .
     - VPN: Tailscale (services restricted to Tailscale + LAN)
     - File sync: Syncthing
 
@@ -93,10 +93,7 @@ in
   };
 
   # Tailscale VPN
-  services.tailscale = {
-    enable = true;
-    permitCertUid = "nixpi";
-  };
+  services.tailscale.enable = true;
   networking.firewall.trustedInterfaces = [ "tailscale0" ];
   networking.firewall.allowedUDPPorts = [ 41641 ];
 
@@ -155,8 +152,8 @@ in
     tmux
 
     # AI coding tools (Nix-packaged via llm-agents.nix)
-    pkgs.llm-agents.claude-code
-    pkgs.llm-agents.pi
+    llm-agents.claude-code
+    llm-agents.pi
   ];
 
   # Ensure ~/.local/bin is in PATH
@@ -173,16 +170,6 @@ in
       cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
-    fi
-
-    # Seed settings.json if absent
-    if [ ! -f "$PI_DIR/settings.json" ]; then
-      cat > "$PI_DIR/settings.json" <<'SETEOF'
-{
-  "provider": "github-copilot",
-  "model": "claude-haiku-4.5"
-}
-SETEOF
     fi
 
     chown -R nixpi:users "$PI_DIR"

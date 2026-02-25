@@ -58,7 +58,8 @@
       "WebFetch(domain:michael.stapelberg.ch)",
       "Bash(npm view:*)",
       "Bash(git:*)",
-      "WebFetch(domain:nixos.org)"
+      "WebFetch(domain:nixos.org)",
+      "WebFetch(domain:search.nixos.org)"
     ]
   }
 }
