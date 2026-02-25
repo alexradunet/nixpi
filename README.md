@@ -35,8 +35,9 @@ nixpi/
     base.nix                   # Headless config (packages, SSH, Tailscale, Syncthing, firewall)
     desktop.nix                # UI layer (XFCE, audio, RDP, printing)
     hosts/
-      desktop.nix              # Physical desktop hardware (boot, disk, CPU)
+      nixpi.nix                # Physical desktop hardware (boot, disk, CPU)
   scripts/
+    add-host.sh                # Generate a new host config from hardware
     check.sh                   # Runs `nix flake check --no-build`
 ```
 
@@ -62,13 +63,7 @@ Use any RDP client (Windows Remote Desktop, Remmina, etc.) to connect to `<tails
 
 ### Access Syncthing web UI
 
-Syncthing listens on loopback only. Use an SSH tunnel:
-
-```bash
-ssh -L 8384:localhost:8384 nixpi@<tailscale-ip>
-```
-
-Then open `http://localhost:8384` in your browser.
+Open `http://<tailscale-ip>:8384` in your browser. The GUI is restricted to Tailscale and local network via nftables.
 
 ### Use the AI agents
 
@@ -101,32 +96,22 @@ nix flake check --no-build
 
 ## Adding a New Machine
 
-To run this config on a new machine (physical or VM):
+The flake auto-discovers hosts from `infra/nixos/hosts/`. Just add a file and rebuild:
 
-1. Install NixOS, then clone this repo.
-2. Generate hardware config:
+1. Install NixOS, clone this repo, then run:
    ```bash
-   nixos-generate-config --show-hardware-config
+   ./scripts/add-host.sh            # uses current hostname
+   ./scripts/add-host.sh myhost     # or specify one
    ```
-3. Save the output as `infra/nixos/hosts/<hostname>.nix` (set `networking.hostName`).
-4. Add a new `nixosConfigurations.<hostname>` entry in `flake.nix`:
-   ```nix
-   nixosConfigurations.<hostname> = nixpkgs.lib.nixosSystem {
-     inherit system;
-     modules = [
-       { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
-       ./infra/nixos/base.nix        # always include
-       # ./infra/nixos/desktop.nix   # omit for headless
-       ./infra/nixos/hosts/<hostname>.nix
-     ];
-   };
-   ```
-5. Rebuild:
+2. Review the generated file, then:
    ```bash
+   git add infra/nixos/hosts/<hostname>.nix
    sudo nixos-rebuild switch --flake .
    ```
 
-On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` will auto-select the config by hostname.
+To include the desktop UI layer, add the hostname to `desktopHosts` in `flake.nix`.
+
+On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
 
 ## Updating AI Tools
 

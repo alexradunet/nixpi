@@ -74,6 +74,12 @@ in
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
 
+      # Allow Syncthing GUI (port 8384) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 8384 accept
+      ip saddr 192.168.0.0/16 tcp dport 8384 accept
+      ip saddr 10.0.0.0/8 tcp dport 8384 accept
+      tcp dport 8384 drop
+
       # Allow Syncthing sync (port 22000) from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 22000 accept
       ip saddr 100.0.0.0/8 udp dport 22000 accept
@@ -105,7 +111,7 @@ in
     settings = {
       gui = {
         enabled = true;
-        address = "127.0.0.1:8384";  # Loopback only, accessible via SSH tunnel
+        address = "0.0.0.0:8384";
       };
       options = {
         relaysEnabled = true;  # Allow relay servers for connectivity

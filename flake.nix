@@ -8,10 +8,32 @@
 
   outputs = { self, nixpkgs, llm-agents }:
     let
+      lib = nixpkgs.lib;
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         overlays = [ llm-agents.overlays.default ];
+      };
+
+      # Auto-discover hosts from infra/nixos/hosts/*.nix
+      hostDir = ./infra/nixos/hosts;
+      hostFiles = builtins.readDir hostDir;
+      hostNames = map (lib.removeSuffix ".nix")
+        (builtins.filter (n: lib.hasSuffix ".nix" n)
+          (builtins.attrNames hostFiles));
+
+      # Hosts that include the desktop UI layer
+      desktopHosts = [ "nixpi" ];
+
+      mkHost = name: nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
+          ./infra/nixos/base.nix
+          (hostDir + "/${name}.nix")
+        ] ++ lib.optionals (builtins.elem name desktopHosts) [
+          ./infra/nixos/desktop.nix
+        ];
       };
     in {
       devShells.${system}.default = pkgs.mkShell {
@@ -30,15 +52,6 @@
         '';
       };
 
-      # Physical desktop host configuration
-      nixosConfigurations.nixpi = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
-          ./infra/nixos/base.nix
-          ./infra/nixos/desktop.nix
-          ./infra/nixos/hosts/desktop.nix
-        ];
-      };
+      nixosConfigurations = lib.genAttrs hostNames mkHost;
     };
 }
