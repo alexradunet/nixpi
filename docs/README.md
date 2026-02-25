@@ -7,21 +7,24 @@ nixpi runs as a NixOS desktop workstation (physical or VM). All system configura
 **Key config files:**
 
 - [`flake.nix`](../flake.nix) — Flake definition: dev shell, NixOS configuration, llm-agents.nix input
-- [`infra/nixos/desktop.nix`](../infra/nixos/desktop.nix) — Primary config: packages, services, firewall, pi activation script
+- [`infra/nixos/base.nix`](../infra/nixos/base.nix) — Headless config: packages, SSH, Tailscale, Syncthing, firewall, pi activation script
+- [`infra/nixos/desktop.nix`](../infra/nixos/desktop.nix) — UI layer: XFCE, audio, RDP, printing
 - [`infra/nixos/hosts/desktop.nix`](../infra/nixos/hosts/desktop.nix) — Physical desktop hardware (boot, disk, CPU)
-- [`infra/nixos/hosts/vm.nix`](../infra/nixos/hosts/vm.nix) — VM hardware template (QEMU/KVM guest)
 - [`AGENTS.md`](../AGENTS.md) — Agent behavior guidelines and safety rules
 
 ## Services
 
 | Service | Config location | Notes |
 |---------|----------------|-------|
-| SSH | `desktop.nix` — `services.openssh` | Hardened; restricted to Tailscale + LAN |
+| SSH | `base.nix` — `services.openssh` | Hardened; restricted to Tailscale + LAN |
+| Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
+| Syncthing | `base.nix` — `services.syncthing` | File sync; GUI on loopback (SSH tunnel) |
+| Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
+| XFCE | `desktop.nix` — `services.xserver` | Lightweight desktop environment |
 | RDP | `desktop.nix` — `services.xrdp` | XFCE desktop; restricted to Tailscale + LAN |
-| Tailscale | `desktop.nix` — `services.tailscale` | VPN for secure remote access |
-| Syncthing | `desktop.nix` — `services.syncthing` | File sync; GUI on loopback (SSH tunnel) |
-| pi | `desktop.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
-| Claude Code | `desktop.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+| Audio | `desktop.nix` — `services.pipewire` | PipeWire audio stack |
+| pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+| Claude Code | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
 
 ## Planned Docs
 

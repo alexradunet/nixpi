@@ -1,14 +1,15 @@
 # nixpi
 
-nixpi is an AI-first operating environment built on NixOS. The AI agent is the primary control layer; Linux provides the execution layer underneath.
+nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the main AI agent harness, that is considered a first-class citizen. The AI agent is the primary control layer; Linux provides the execution layer underneath.
 
 ## What's Included
 
 | Component | Description |
 |-----------|-------------|
-| **NixOS Desktop** | Declarative XFCE desktop config (`infra/nixos/desktop.nix`) |
+| **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, Tailscale, Syncthing, packages |
+| **NixOS Desktop** | UI layer (`infra/nixos/desktop.nix`): XFCE, audio, RDP |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged) |
-| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged) |
+| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged) | Optional for development as Pi does not support Claude oAuth |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
@@ -31,10 +32,10 @@ nixpi/
   flake.nix                    # Flake: dev shell + NixOS configurations
   flake.lock
   infra/nixos/
-    desktop.nix                # Primary config (packages, services, firewall)
+    base.nix                   # Headless config (packages, SSH, Tailscale, Syncthing, firewall)
+    desktop.nix                # UI layer (XFCE, audio, RDP, printing)
     hosts/
       desktop.nix              # Physical desktop hardware (boot, disk, CPU)
-      vm.nix                   # VM hardware template (QEMU/KVM guest)
   scripts/
     check.sh                   # Runs `nix flake check --no-build`
 ```
@@ -98,22 +99,34 @@ nix flake check --no-build
 ./scripts/check.sh
 ```
 
-## VM Setup
+## Adding a New Machine
 
-To run this config in a QEMU/KVM virtual machine:
+To run this config on a new machine (physical or VM):
 
-1. Install NixOS in a VM, then clone this repo.
-2. Generate hardware config to find your root UUID:
+1. Install NixOS, then clone this repo.
+2. Generate hardware config:
    ```bash
    nixos-generate-config --show-hardware-config
    ```
-3. Copy the root filesystem UUID into `infra/nixos/hosts/vm.nix`.
-4. Rebuild:
+3. Save the output as `infra/nixos/hosts/<hostname>.nix` (set `networking.hostName`).
+4. Add a new `nixosConfigurations.<hostname>` entry in `flake.nix`:
+   ```nix
+   nixosConfigurations.<hostname> = nixpkgs.lib.nixosSystem {
+     inherit system;
+     modules = [
+       { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
+       ./infra/nixos/base.nix        # always include
+       # ./infra/nixos/desktop.nix   # omit for headless
+       ./infra/nixos/hosts/<hostname>.nix
+     ];
+   };
+   ```
+5. Rebuild:
    ```bash
-   sudo nixos-rebuild switch --flake .#nixpi-vm
+   sudo nixos-rebuild switch --flake .
    ```
 
-On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` will auto-select `nixpi-vm` by hostname.
+On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` will auto-select the config by hostname.
 
 ## Updating AI Tools
 
