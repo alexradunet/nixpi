@@ -51,7 +51,13 @@
       "Bash(git check-ignore:*)",
       "Bash(head:*)",
       "Bash(wc:*)",
-      "Bash(nix flake:*)"
+      "Bash(nix flake:*)",
+      "WebFetch(domain:shittycodingagent.ai)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:mariozechner.at)",
+      "WebFetch(domain:michael.stapelberg.ch)",
+      "Bash(npm view:*)",
+      "Bash(git:*)"
     ]
   }
 }
