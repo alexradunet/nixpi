@@ -4,8 +4,10 @@ This project is NixOS-first and AI-assisted. Keep changes reproducible, test-dri
 
 ## Development Operating Model
 - Build in **Nixpi** (repo + shell + tests).
-- Use **Pi** (TUI or `pi -p`) as assistant support.
+- Use **`nixpi dev`** as the primary developer-mode assistant interface.
+- Use **Pi** (`pi` / `pi -p`) as the underlying SDK/advanced CLI when needed.
 - Repository files + tests + git history are the source of truth.
+- If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
 
 ## Mandatory TDD Workflow
 Use this cycle for every behavior change:
@@ -28,15 +30,30 @@ Use this cycle for every behavior change:
 Run relevant tests for changed code, and for repo-wide checks run:
 
 ```bash
-nix flake check --no-build
-# or
+# Run repository tests
+./scripts/test.sh
+
+# Full checks (tests + flake validation)
 ./scripts/check.sh
+
+# Optional direct flake validation
+nix flake check --no-build
 ```
 
 ## Nix/NixOS Rules
 - Prefer declarative Nix changes over imperative mutations.
 - Do not edit `/etc` or systemd units directly.
 - For system-level changes, include validation and rollback notes.
+
+## Standards-First Rule (Mandatory)
+- We only work with standards-first solutions by default.
+- Prefer open, interoperable formats/protocols over proprietary or tool-specific ones.
+- If deviating from standards, explain and document the trade-off in the PR.
+
+## Pre-Release Simplicity Rule (Mandatory)
+- Before first stable release, do not introduce or keep legacy code paths and backward-compatibility shims.
+- Implement clean single-path behavior whenever possible.
+- If a temporary compatibility layer is unavoidable, document rationale and planned removal in the PR.
 
 ## Safety
 - Never run destructive commands without explicit confirmation.

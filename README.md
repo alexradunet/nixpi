@@ -1,6 +1,6 @@
 # nixpi
 
-nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the main AI agent harness, that is considered a first-class citizen. The AI agent is the primary control layer; Linux provides the execution layer underneath.
+nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the product/user-facing assistant layer, and **Pi** is the underlying SDK/agent harness. The AI agent is the primary control layer; Linux provides the execution layer underneath.
 
 ## What's Included
 
@@ -8,7 +8,8 @@ nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the mai
 |-----------|-------------|
 | **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, Tailscale, Syncthing, packages |
 | **NixOS Desktop** | UI layer (`infra/nixos/desktop.nix`): XFCE, audio, RDP |
-| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged) |
+| **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
+| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
@@ -26,7 +27,8 @@ nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the mai
 | XFCE | `desktop.nix` — `services.xserver` | Lightweight desktop environment |
 | RDP | `desktop.nix` — `services.xrdp` | XFCE desktop; restricted to Tailscale + LAN |
 | Audio | `desktop.nix` — `services.pipewire` | PipeWire audio stack |
-| pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+| nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`, `nixpi dev`) |
+| pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix (SDK/advanced CLI) |
 | Claude Code | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
 
 ## Access Methods
@@ -42,17 +44,30 @@ All inbound ports are restricted to Tailscale (100.0.0.0/8) and local network (1
 
 ```
 nixpi/
-  AGENTS.md                    # Agent behavior guidelines
+  AGENTS.md                    # Agent behavior + policy for assistants
+  CONTRIBUTING.md              # Developer workflow and contribution rules
   flake.nix                    # Flake: dev shell + NixOS configurations
   flake.lock
-  infra/nixos/
-    base.nix                   # Headless config (packages, SSH, Tailscale, Syncthing, firewall)
-    desktop.nix                # UI layer (XFCE, audio, RDP, printing)
-    hosts/
-      nixpi.nix                # Physical desktop hardware (boot, disk, CPU)
+  docs/
+    README.md                  # Docs hub
+    runtime/OPERATING_MODEL.md # Runtime/evolution operating model
+    agents/                    # Agent role contracts + handoff templates
+    ux/EMOJI_DICTIONARY.md     # Visual communication dictionary
+    meta/                      # Docs style + source-of-truth map
+  infra/
+    nixos/
+      base.nix                 # Headless config + nixpi wrapper + profile seeding
+      desktop.nix              # UI layer (XFCE, audio, RDP, printing)
+      hosts/
+        nixpi.nix              # Physical desktop hardware (boot, disk, CPU)
+    pi/skills/                 # Pi/Nixpi skills (tdd, claude-consult)
   scripts/
     add-host.sh                # Generate a new host config from hardware
-    check.sh                   # Runs `nix flake check --no-build`
+    test.sh                    # Run repository shell test suite
+    check.sh                   # Run tests + flake checks
+    verify-nixpi-modes.sh      # Post-rebuild nixpi wrapper smoke test
+  tests/
+    test_*.sh                  # Policy/tooling regression tests
 ```
 
 ## Getting Started
@@ -81,12 +96,19 @@ Open `http://<tailscale-ip>:8384` in your browser. The GUI is restricted to Tail
 
 ### Use the AI agents
 
-Both commands are available system-wide:
+Commands available system-wide:
 
 ```bash
-pi          # pi-coding-agent
-claude      # Claude Code
+nixpi           # Nixpi normal/runtime mode (primary user command)
+nixpi dev       # Nixpi developer mode (Pi-native + Nixpi skills/rules)
+pi              # Pi SDK/advanced CLI
+claude          # Claude Code
 ```
+
+`pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
+
+### Is Nixpi preinstalled?
+Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi` and `claude`). No separate `pi install` step is required for core Nixpi.
 
 ## Dev Shell
 
@@ -101,11 +123,17 @@ Provides: git, Node.js 22, sqlite, jq, ripgrep, fd.
 ## Build & Check
 
 ```bash
-# Validate flake outputs
+# Run repository tests
+./scripts/test.sh
+
+# Full project checks (tests + flake checks)
+./scripts/check.sh
+
+# Optional direct flake validation
 nix flake check --no-build
 
-# Project check script
-./scripts/check.sh
+# Post-rebuild smoke check for nixpi runtime/dev wrapper modes
+./scripts/verify-nixpi-modes.sh
 ```
 
 ## Development Rules
@@ -113,17 +141,25 @@ nix flake check --no-build
 - Development model and contribution policy: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Agent behavior policy: [`AGENTS.md`](./AGENTS.md)
 - Pi TDD skill: [`infra/pi/skills/tdd/SKILL.md`](./infra/pi/skills/tdd/SKILL.md)
-- Runtime/maintainer operating model: [`docs/OPERATING_MODEL.md`](./docs/OPERATING_MODEL.md)
-- Emoji concept dictionary (visual communication): [`docs/EMOJI_DICTIONARY.md`](./docs/EMOJI_DICTIONARY.md)
+- Documentation hub: [`docs/README.md`](./docs/README.md)
+- Runtime operating model: [`docs/runtime/OPERATING_MODEL.md`](./docs/runtime/OPERATING_MODEL.md)
+- Agents overview and responsibilities: [`docs/agents/README.md`](./docs/agents/README.md)
+- Source-of-truth precedence: [`docs/meta/SOURCE_OF_TRUTH.md`](./docs/meta/SOURCE_OF_TRUTH.md)
+- Emoji concept dictionary (visual communication): [`docs/ux/EMOJI_DICTIONARY.md`](./docs/ux/EMOJI_DICTIONARY.md)
+- Documentation style guide: [`docs/meta/DOCS_STYLE.md`](./docs/meta/DOCS_STYLE.md)
+- Pi skills: [`infra/pi/skills/`](./infra/pi/skills/)
 
 ## Runtime Model (High Level)
 
-- **End users do not need `pi install`** for core Nixpi — `pi` is provided declaratively by NixOS config.
-- First boot: run `pi` (TUI), connect provider/auth, configure resources, then use runtime assistant.
-- Nixpi uses a dual-agent model:
-  - **Runtime assistant** (user-facing, background tasks)
+- **End users do not need `pi install`** for core Nixpi — `nixpi` and `pi` are provided declaratively by NixOS config.
+- First boot: run `nixpi` (runtime mode), connect provider/auth if needed (`pi login` compatibility), configure resources, then use runtime assistant.
+- Developer workflow: run `nixpi dev` for Pi-native development mode with Nixpi skills/rules and coding practices preloaded.
+- Nixpi uses a multi-agent model:
+  - **Runtime agent** (user-facing, background tasks)
+  - **Technical Architect agent** (planning/conformance)
   - **Maintainer agent** (development/evolution in controlled repo context)
-- Runtime does not directly rewrite live core; it creates evolution requests handled through tested/reviewable changes.
+  - **Reviewer agent** (independent quality/security review)
+- Runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
 
 ## Adding a New Machine
 
@@ -159,6 +195,8 @@ sudo nixos-rebuild switch --flake .
 - **Reproducibility**: declarative config and version pinning (Nix flakes)
 - **Recoverability**: rollback via NixOS generations
 - **Auditability**: every important action has traceable intent and outcome
+- **Standards-first**: prefer open, interoperable standards and portable formats
+- **Pre-release simplicity**: avoid legacy/backward-compatibility layers until first stable release
 
 ## Operational Safety Defaults
 

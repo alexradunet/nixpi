@@ -4,3 +4,7 @@
 /.pi/npm/node_modules/
 /.pi/npm/node_modules/**
 /.pi/npm/.package-lock.json
+
+# Generated agent handoff artifacts (local operational data)
+/docs/agents/handoffs/*.md
+!/docs/agents/handoffs/.gitkeep

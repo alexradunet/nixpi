@@ -36,10 +36,30 @@
 - Project root: `~/Development/NixPi`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
+## Documentation Conventions
+- Treat docs as modular knowledge units (split by concept).
+- In `docs/`, use standard Markdown links as the canonical linking format.
+- Follow precedence rules in `docs/meta/SOURCE_OF_TRUTH.md` when resolving conflicts.
+- Update `docs/README.md` when introducing major documentation pages.
+
+## Standards Policy (Mandatory)
+- We work with standards-first approaches by default.
+- Prefer open standards and portable formats/protocols over proprietary or tool-specific syntax.
+- If a non-standard solution is proposed, document why standards are insufficient.
+
+## Pre-Release Simplicity Rule (Mandatory)
+- Until first stable release, do **not** keep legacy code paths or backward-compatibility shims.
+- Prefer clean replacements over dual-path implementations.
+- If compatibility is temporarily unavoidable, document why and add a removal task/milestone.
+
 ## Pi Integration
 - `pi` is Nix-packaged via [llm-agents.nix](https://github.com/numtide/llm-agents.nix) (not npx).
-- Config directory: `~/.pi/agent/` (auth managed by `pi login`).
-- System prompt seeded by NixOS activation script in `base.nix`.
+- `nixpi` is the primary wrapper command (runtime + dev mode) built declaratively in `base.nix`.
+- Config directories:
+  - Runtime mode: `~/.pi/agent/`
+  - Developer mode: `~/.pi/agent-dev/`
+- Auth remains managed through Pi-compatible flow (`pi login`).
+- System prompts/settings are seeded by NixOS activation script in `base.nix`.
 - Update path: `nix flake update llm-agents` then `sudo nixos-rebuild switch --flake .`.
 
 ## Agent Behavior in This Repo
@@ -48,11 +68,14 @@
 - Summarize what changed with file paths.
 
 ## Visual Communication Policy
-- Use the canonical emoji mapping in `docs/EMOJI_DICTIONARY.md` when communicating status/plans.
+- Use the canonical emoji mapping in `docs/ux/EMOJI_DICTIONARY.md` when communicating status/plans.
 - Always pair emoji with explicit plain text meaning.
 - Keep emoji usage minimal and consistent (avoid decorative noise).
 
-## Runtime vs Maintainer Policy
+## Agent Role Policy
 - Runtime assistant must not directly self-modify Nixpi core/system config.
 - Runtime assistant should create evolution requests when core improvements are needed.
+- Technical Architect agent plans evolution work and validates conformance to architecture/rules.
 - Maintainer/dev agent performs code evolution in controlled repo context with strict TDD and validation before apply.
+- Reviewer agent performs independent quality/security/policy review before apply.
+- See role contracts in `docs/agents/`.

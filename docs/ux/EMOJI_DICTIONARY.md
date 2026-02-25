@@ -1,5 +1,7 @@
 # Nixpi Emoji -> Concept Dictionary
 
+Related: [Docs Home](../README.md) · [Operating Model](../runtime/OPERATING_MODEL.md) · [Docs Style](../meta/DOCS_STYLE.md)
+
 A compact visual language for Nixpi user communication.
 
 ## Purpose
@@ -49,9 +51,11 @@ A compact visual language for Nixpi user communication.
 - 🔄 `nixos-rebuild switch` apply step
 - ⏪ NixOS generation rollback path
 
-## Runtime vs Maintainer Roles
-- 🤖 Runtime assistant action (user-facing operations)
+## Agent Roles
+- 🤖 Runtime agent action (user-facing operations)
+- 🧭 Technical Architect action (planning/conformance)
 - 🧑‍💻 Maintainer/development agent action
+- 🔎 Reviewer agent action (quality/security review)
 - 📨 Evolution request created by runtime
 - 🧾 Reviewable diff/PR artifact
 
@@ -70,5 +74,5 @@ Use this structure for operational messages:
 ### Example
 - 🟡 In progress: adding Matrix adapter config docs.
 - 🟢 Risk: low (docs only).
-- 🛠️ Next: update `README.md` and `docs/OPERATING_MODEL.md`.
+- 🛠️ Next: update `README.md` and `docs/runtime/OPERATING_MODEL.md`.
 - 🧪 Validation: run `./scripts/check.sh`.

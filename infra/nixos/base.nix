@@ -27,6 +27,79 @@ let
     - Never modify /etc or systemd units directly; edit NixOS config instead
     - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files
   '';
+
+  piDevSystemPrompt = ''
+    You are the Nixpi developer-mode assistant.
+
+    ## Mission
+    - Act as a maintainer/developer agent for Nixpi evolution tasks.
+    - Prefer Pi-native workflows while following repository guardrails.
+
+    ## Mandatory rules
+    - Follow AGENTS.md conventions and strict TDD (Red -> Green -> Refactor).
+    - For features: include happy path, failure path, and at least one edge case.
+    - Prefer declarative Nix changes over imperative system mutation.
+    - Never modify /etc or systemd units directly; edit NixOS config instead.
+    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files.
+  '';
+
+  nixpiCli = pkgs.writeShellScriptBin "nixpi" ''
+    set -euo pipefail
+
+    PI_BIN="${pkgs.llm-agents.pi}/bin/pi"
+    RUNTIME_DIR="$HOME/.pi/agent"
+    DEV_DIR="$HOME/.pi/agent-dev"
+
+    case "''${1-}" in
+      dev)
+        shift
+        export PI_CODING_AGENT_DIR="$DEV_DIR"
+        exec "$PI_BIN" "$@"
+        ;;
+      mode)
+        shift
+        case "''${1-}" in
+          ""|runtime)
+            if [ "''${1-}" = "runtime" ]; then
+              shift
+            fi
+            export PI_CODING_AGENT_DIR="$RUNTIME_DIR"
+            exec "$PI_BIN" "$@"
+            ;;
+          dev)
+            shift
+            export PI_CODING_AGENT_DIR="$DEV_DIR"
+            exec "$PI_BIN" "$@"
+            ;;
+          *)
+            echo "Unknown nixpi mode: ''${1-}" >&2
+            echo "Use: nixpi [pi-args...] | nixpi dev [pi-args...] | nixpi mode <runtime|dev> [pi-args...]" >&2
+            exit 2
+            ;;
+        esac
+        ;;
+      --help|-h|help)
+        cat <<'EOF'
+nixpi - primary CLI for the Nixpi assistant (powered by Pi SDK)
+
+Usage:
+  nixpi [pi-args...]                         Run Nixpi in normal/runtime mode
+  nixpi dev [pi-args...]                     Run Nixpi in developer mode
+  nixpi mode <runtime|dev> [pi-args...]      Explicit mode selector
+  nixpi help                                 Show this help
+
+Notes:
+  - `pi` remains available as SDK/advanced CLI.
+  - `nixpi` (default) uses PI_CODING_AGENT_DIR=~/.pi/agent.
+  - `nixpi dev` uses PI_CODING_AGENT_DIR=~/.pi/agent-dev.
+EOF
+        ;;
+      *)
+        export PI_CODING_AGENT_DIR="$RUNTIME_DIR"
+        exec "$PI_BIN" "$@"
+        ;;
+    esac
+  '';
 in
 {
   # Enable flakes and nix-command
@@ -181,6 +254,7 @@ in
     # AI coding tools (Nix-packaged via llm-agents.nix)
     llm-agents.claude-code
     llm-agents.pi
+    nixpiCli
   ];
 
   # Ensure ~/.local/bin is in PATH
@@ -191,17 +265,47 @@ in
   # system is built but before services start. They're used for one-time setup.
   # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
-    PI_DIR="/home/nixpi/.pi/agent"
-    mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    RUNTIME_PI_DIR="/home/nixpi/.pi/agent"
+    DEV_PI_DIR="/home/nixpi/.pi/agent-dev"
 
-    # Seed SYSTEM.md if absent
-    if [ ! -f "$PI_DIR/SYSTEM.md" ]; then
-      cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
+    mkdir -p "$RUNTIME_PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    mkdir -p "$DEV_PI_DIR"/{sessions,extensions,skills,prompts,themes}
+
+    # Seed runtime SYSTEM.md if absent
+    if [ ! -f "$RUNTIME_PI_DIR/SYSTEM.md" ]; then
+      cat > "$RUNTIME_PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
     fi
 
-    chown -R nixpi:users "$PI_DIR"
+    # Seed developer-mode SYSTEM.md if absent
+    if [ ! -f "$DEV_PI_DIR/SYSTEM.md" ]; then
+      cat > "$DEV_PI_DIR/SYSTEM.md" <<'SYSEOF'
+${piDevSystemPrompt}
+SYSEOF
+    fi
+
+    # Seed developer-mode settings if absent.
+    # This keeps Pi-native behavior while preloading Nixpi skills/rules.
+    if [ ! -f "$DEV_PI_DIR/settings.json" ]; then
+      cat > "$DEV_PI_DIR/settings.json" <<'JSONEOF'
+{
+  "skills": [
+    "/home/nixpi/Development/NixPi/infra/pi/skills"
+  ],
+  "packages": [
+    "npm:@aaronmaturen/pi-context7"
+  ]
+}
+JSONEOF
+    fi
+
+    # Share auth between runtime and dev profiles without duplicating secrets.
+    if [ ! -e "$DEV_PI_DIR/auth.json" ]; then
+      ln -sfn "$RUNTIME_PI_DIR/auth.json" "$DEV_PI_DIR/auth.json"
+    fi
+
+    chown -R nixpi:users "$RUNTIME_PI_DIR" "$DEV_PI_DIR"
   '';
 
   # Automatic garbage collection

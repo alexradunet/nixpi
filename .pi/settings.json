@@ -1,5 +1,8 @@
 {
   "packages": [
     "npm:@aaronmaturen/pi-context7"
+  ],
+  "skills": [
+    "../infra/pi/skills"
   ]
 }
