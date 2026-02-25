@@ -57,7 +57,8 @@
       "WebFetch(domain:mariozechner.at)",
       "WebFetch(domain:michael.stapelberg.ch)",
       "Bash(npm view:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "WebFetch(domain:nixos.org)"
     ]
   }
 }

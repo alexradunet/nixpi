@@ -13,7 +13,7 @@ nixpi is an AI-first operating environment built on NixOS with Pi.Dev as the mai
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **RDP** | xrdp serving XFCE desktop, restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
-| **Syncthing** | File synchronization (GUI on loopback, accessible via SSH tunnel) |
+| **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale and LAN via nftables) |
 
 ## Access Methods
 

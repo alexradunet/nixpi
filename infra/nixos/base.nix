@@ -160,9 +160,7 @@ in
   ];
 
   # Ensure ~/.local/bin is in PATH
-  environment.shellInit = ''
-    export PATH="$HOME/.local/bin:$PATH"
-  '';
+  environment.localBinInPath = true;
 
 
   # Seed pi-coding-agent config (non-destructive: only creates if missing)
