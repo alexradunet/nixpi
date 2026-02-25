@@ -156,8 +156,8 @@ in
     extraGroups = [ "wheel" "networkmanager" ];
   };
 
-  # Browser
-  programs.firefox.enable = true;
+  # Browser (CDP-compatible, for AI agent automation)
+  programs.chromium.enable = true;
 
   # System packages
   environment.systemPackages = with pkgs; [
