@@ -27,9 +27,17 @@ if ! echo "$HW_CONFIG" | grep -q 'networking.hostName'; then
   HW_CONFIG=$(echo "$HW_CONFIG" | sed 's/}$/\n  networking.hostName = "'"$HOSTNAME"'";\n}/')
 fi
 
+# Add bootloader defaults only when not already declared by the generated config.
+# UEFI is enabled by default; BIOS/GRUB remains as commented fallback.
+if ! echo "$HW_CONFIG" | grep -q 'boot.loader.systemd-boot.enable' && \
+   ! echo "$HW_CONFIG" | grep -q 'boot.loader.grub.devices' && \
+   ! echo "$HW_CONFIG" | grep -q 'boot.loader.grub.mirroredBoots'; then
+  HW_CONFIG=$(echo "$HW_CONFIG" | sed 's/}$/\n  # Bootloader defaults (UEFI first)\n  boot.loader.systemd-boot.enable = true;\n  boot.loader.efi.canTouchEfiVariables = true;\n\n  # BIOS fallback (uncomment and adjust disk if needed)\n  # boot.loader.grub.enable = true;\n  # boot.loader.grub.devices = [ "\/dev\/sda" ];\n}/')
+fi
+
 echo "$HW_CONFIG" > "$HOST_FILE"
 echo "Wrote $HOST_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Review $HOST_FILE"
-echo "  2. git add $HOST_FILE && sudo nixos-rebuild switch --flake $REPO_ROOT"
+echo "  2. git add $HOST_FILE && sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"path:$REPO_ROOT#$HOSTNAME\""
