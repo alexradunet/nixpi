@@ -131,15 +131,15 @@ in
   time.timeZone = "Europe/Bucharest";
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
-    LC_ADDRESS = "ro_RO.UTF-8";
-    LC_IDENTIFICATION = "ro_RO.UTF-8";
-    LC_MEASUREMENT = "ro_RO.UTF-8";
-    LC_MONETARY = "ro_RO.UTF-8";
-    LC_NAME = "ro_RO.UTF-8";
-    LC_NUMERIC = "ro_RO.UTF-8";
-    LC_PAPER = "ro_RO.UTF-8";
-    LC_TELEPHONE = "ro_RO.UTF-8";
-    LC_TIME = "ro_RO.UTF-8";
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
   };
 
   # SSH with security hardening
@@ -147,8 +147,8 @@ in
     enable = true;
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = true;
       X11Forwarding = false;
       MaxAuthTries = 3;
       ClientAliveInterval = 300;
@@ -166,6 +166,7 @@ in
     extraInputRules = ''
       # Allow SSH from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 22 accept
+      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22 accept
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
@@ -189,11 +190,16 @@ in
   };
 
   # Tailscale VPN
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    # Enable Tailscale SSH so `tailscale ssh` works to this node.
+    extraSetFlags = [ "--ssh" ];
+  };
   # Note: we intentionally do NOT set trustedInterfaces = [ "tailscale0" ] here.
   # Instead, Tailscale traffic is controlled by the explicit IP-based rules above
-  # (100.0.0.0/8), giving us per-service granularity over what Tailscale peers
-  # can access rather than blanket-trusting all traffic on the interface.
+  # (100.0.0.0/8 + fd7a:115c:a1e0::/48 for SSH), giving us per-service
+  # granularity over what Tailscale peers can access rather than blanket-trusting
+  # all traffic on the interface.
   # Tailscale needs UDP 41641 for direct WireGuard connections between nodes.
   networking.firewall.allowedUDPPorts = [ 41641 ];
 
