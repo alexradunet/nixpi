@@ -217,10 +217,10 @@ in
   # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
 
-  # Local desktop stack for HDMI-first setup (display + Wi-Fi onboarding).
+  # Local lightweight desktop stack for HDMI-first setup (display + Wi-Fi onboarding).
   services.xserver.enable = true;
   services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.lxde.enable = true;
+  services.xserver.desktopManager.lxqt.enable = true;
   services.xserver.xkb = {
     layout = "us";
   };

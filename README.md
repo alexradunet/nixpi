@@ -7,7 +7,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Component | Description |
 |-----------|-------------|
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
-| **LXDE Desktop** | local HDMI monitor setup path (LightDM + LXDE) for first-boot Wi-Fi/display configuration |
+| **LXQt Desktop** | local HDMI monitor setup path (LightDM + LXQt) for first-boot Wi-Fi/display configuration |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
@@ -21,7 +21,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
-| LXDE Desktop | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXDE + Wi-Fi tray tooling) |
+| LXQt Desktop | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXQt + Wi-Fi tray tooling) |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
@@ -33,7 +33,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 ## Access Methods
 
 ```
-Local HDMI monitor        → LXDE      (LightDM)   → Local Wi-Fi/display onboarding
+Local HDMI monitor        → LXQt      (LightDM)   → Local Wi-Fi/display onboarding
 Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
 Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to localhost)
 Tailscale only            → Syncthing (port 8384) → Web GUI
@@ -57,7 +57,7 @@ Nixpi/
     meta/                      # Docs style + source-of-truth map
   infra/
     nixos/
-      base.nix                 # Base config + LXDE desktop + web terminal + nixpi wrapper + profile seeding
+      base.nix                 # Base config + LXQt desktop + web terminal + nixpi wrapper + profile seeding
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
     pi/skills/                 # Pi/Nixpi skills (tdd, claude-consult)

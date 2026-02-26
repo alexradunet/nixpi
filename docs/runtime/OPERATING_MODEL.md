@@ -18,7 +18,7 @@ For fresh installs, use the bootstrap flow in [`REINSTALL_MINIMAL.md`](./REINSTA
 After the first rebuild, both commands are available.
 
 ### First-boot expected flow
-1. User boots Nixpi and can complete local HDMI onboarding through LXDE (display + Wi-Fi).
+1. User boots Nixpi and can complete local HDMI onboarding through LXQt (display + Wi-Fi).
 2. User launches runtime mode with `nixpi`.
 3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
 4. User enables desired resources/extensions via `pi config`.

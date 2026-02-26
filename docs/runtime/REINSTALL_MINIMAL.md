@@ -1,6 +1,6 @@
 # Reinstall Nixpi on Fresh NixOS Minimal
 
-This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS minimal install from the interactive installer. Nixpi enables LXDE on the first rebuild so local HDMI setup (display + Wi-Fi) is available after reboot.
+This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS minimal install from the interactive installer. Nixpi enables LXQt on the first rebuild so local HDMI setup (display + Wi-Fi) is available after reboot.
 
 ## 0) Assumptions (fresh install defaults)
 
