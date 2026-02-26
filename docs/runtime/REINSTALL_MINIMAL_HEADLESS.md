@@ -79,36 +79,33 @@ sudo nixos-rebuild switch --rollback
 
 Or reboot and choose an older generation from the bootloader menu.
 
-## Personalized one-shot block (user: `nixpi`, hostname: `nixpi`)
+## Personalized one-shot block (user: `alex`, repo root: `~/Nixpi`)
 
-Use this if you intentionally set your machine hostname to `nixpi` during install:
+Use this when your Linux username is `alex` and you want the repo at `/home/alex/Nixpi`.
 
 ```bash
 set -euo pipefail
 
-# Optional: enforce expected host identity for this profile
-if [ "$(hostname)" != "nixpi" ]; then
-  echo "Hostname is $(hostname), expected nixpi."
-  echo "Either rename host to nixpi or use the generic block below."
+# Ensure expected user context
+if [ "$(whoami)" != "alex" ]; then
+  echo "Current user is $(whoami), expected alex."
   exit 1
 fi
 
-mkdir -p /home/nixpi/Development
-cd /home/nixpi/Development
+cd /home/alex
 
-if [ ! -d NixPi ]; then
+if [ ! -d Nixpi ]; then
   if command -v git >/dev/null 2>&1; then
-    git clone https://github.com/alexradunet/nixpi.git NixPi
+    git clone https://github.com/alexradunet/nixpi.git Nixpi
   else
-    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git NixPi
+    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
   fi
 fi
 
-cd /home/nixpi/Development/NixPi
+cd /home/alex/Nixpi
 
-# Host file already exists in repo for nixpi, but regenerate if missing
-if [ ! -f infra/nixos/hosts/nixpi.nix ]; then
-  ./scripts/add-host.sh nixpi
+if [ ! -f "infra/nixos/hosts/$(hostname).nix" ]; then
+  ./scripts/add-host.sh
 fi
 
 sudo nixos-rebuild switch --flake . || \
@@ -116,6 +113,19 @@ sudo nixos-rebuild switch --flake . || \
 
 nixpi --help
 ./scripts/verify-nixpi-modes.sh
+```
+
+If your host file needs explicit overrides, use:
+
+```nix
+# infra/nixos/hosts/<hostname>.nix
+{ config, ... }:
+{
+  nixpi.primaryUser = "alex";
+  nixpi.repoRoot = "/home/alex/Nixpi";
+  nixpi.runtimePiDir = "${config.nixpi.repoRoot}/.pi/agent";
+  nixpi.devPiDir = "${config.nixpi.repoRoot}/.pi/agent-dev";
+}
 ```
 
 ## Generic one-shot command block (run step-by-step)
