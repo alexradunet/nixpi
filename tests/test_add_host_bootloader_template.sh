@@ -36,7 +36,7 @@ chmod +x "$TMP_DIR/bin/nixos-option"
 happy_output="$(PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" demo-host)"
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/demo-host.nix"
 [ -f "$HOST_FILE" ] || fail "expected generated host file"
-HOST_CONTENT="$(cat "$HOST_FILE")"
+HOST_CONTENT="$(<"$HOST_FILE")"
 assert_contains "$HOST_CONTENT" 'boot.loader.systemd-boot.enable = true;'
 assert_contains "$HOST_CONTENT" 'boot.loader.efi.canTouchEfiVariables = true;'
 assert_contains "$HOST_CONTENT" '# boot.loader.grub.enable = true;'
@@ -47,7 +47,7 @@ assert_contains "$happy_output" '#demo-host"'
 
 # Failure path: invalid hostname must fail clearly.
 set +e
-invalid_output="$(PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" '-bad-host' 2>&1)"
+invalid_output="$(PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" 'bad_host!' 2>&1)"
 invalid_code=$?
 set -e
 [ $invalid_code -ne 0 ] || fail "expected non-zero for invalid hostname"
@@ -68,7 +68,7 @@ chmod +x "$TMP_DIR/bin/nixos-generate-config"
 
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" preset-host >/dev/null
 PRESET_FILE="$TMP_DIR/infra/nixos/hosts/preset-host.nix"
-PRESET_CONTENT="$(cat "$PRESET_FILE")"
+PRESET_CONTENT="$(<"$PRESET_FILE")"
 
 count_systemd_boot="$(printf '%s' "$PRESET_CONTENT" | grep -Fc 'boot.loader.systemd-boot.enable = true;')"
 [ "$count_systemd_boot" -eq 1 ] || fail "expected exactly one systemd-boot setting"

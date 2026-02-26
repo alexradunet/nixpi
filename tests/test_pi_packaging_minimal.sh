@@ -9,12 +9,12 @@ README="README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
 REINSTALL="docs/runtime/REINSTALL.md"
 
-FLAKE_CONTENT="$(cat "$FLAKE")"
-LOCK_CONTENT="$(cat "$LOCK")"
-BASE_CONTENT="$(cat "$BASE")"
-README_CONTENT="$(cat "$README")"
-OPERATING_CONTENT="$(cat "$OPERATING")"
-REINSTALL_CONTENT="$(cat "$REINSTALL")"
+FLAKE_CONTENT="$(<"$FLAKE")"
+LOCK_CONTENT="$(<"$LOCK")"
+BASE_CONTENT="$(<"$BASE")"
+README_CONTENT="$(<"$README")"
+OPERATING_CONTENT="$(<"$OPERATING")"
+REINSTALL_CONTENT="$(<"$REINSTALL")"
 
 # Happy path: Pi install path is minimal and avoids llm-agents flake dependency.
 assert_not_contains "$FLAKE_CONTENT" 'llm-agents.url'

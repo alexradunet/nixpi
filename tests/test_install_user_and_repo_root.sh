@@ -6,8 +6,8 @@ BASE="infra/nixos/base.nix"
 README="README.md"
 AGENTS="AGENTS.md"
 
-BASE_CONTENT="$(cat "$BASE")"
-README_CONTENT="$(cat "$README")"
+BASE_CONTENT="$(<"$BASE")"
+README_CONTENT="$(<"$README")"
 AGENTS_CONTENT="$(<"$AGENTS")"
 
 # Happy path: installer/user identity is configurable and reused across services.
@@ -16,10 +16,11 @@ assert_file_contains "$BASE" 'default = "nixpi";'
 assert_file_contains "$BASE" 'users.users.${primaryUser} = {'
 assert_file_contains "$BASE" 'user = primaryUser;'
 assert_file_contains "$BASE" 'folders.home = {'
-assert_file_contains "$BASE" 'path = userHome;'
+assert_file_contains "$BASE" 'path = "${userHome}/Shared";'
 
 # Failure path: reject invalid usernames and remove hardcoded nixpi homedir wiring.
 assert_file_contains "$BASE" 'assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;'
+assert_not_contains "$BASE_CONTENT" 'path = userHome;'
 assert_not_contains "$BASE_CONTENT" 'users.users.nixpi = {'
 assert_not_contains "$BASE_CONTENT" '/home/nixpi/.pi/agent'
 

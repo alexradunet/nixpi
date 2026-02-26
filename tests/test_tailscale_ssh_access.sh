@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
 BASE="infra/nixos/base.nix"
-CONTENT="$(cat "$BASE")"
+CONTENT="$(<"$BASE")"
 
 # Happy path: OpenSSH password login must stay enabled.
 assert_file_contains "$BASE" 'PasswordAuthentication = true;'

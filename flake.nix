@@ -15,10 +15,8 @@
   outputs = { self, nixpkgs, nixpkgs-unstable }:
     let
       lib = nixpkgs.lib;
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-      };
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
+      system = "x86_64-linux"; # Default for nixosConfigurations; hosts override via nixpkgs.hostPlatform
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
@@ -50,27 +48,32 @@
       # A dev shell is a temporary environment with specific tools available.
       # `nix develop` drops you into it without installing anything globally.
       # mkShell creates a shell environment with the listed packages on $PATH.
-      devShells.${system}.default = pkgs.mkShell {
-        packages = with pkgs; [
-          git
-          nodejs_22
-          sqlite
-          jq
-          ripgrep
-          fd
+      devShells = lib.genAttrs supportedSystems (sys:
+        let pkgs = import nixpkgs { system = sys; };
+        in {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              git
+              nodejs_22
+              sqlite
+              jq
+              ripgrep
+              fd
 
-          # Language servers and linters
-          nixd
-          bash-language-server
-          shellcheck
-          nodePackages.typescript-language-server
-        ];
+              # Language servers and linters
+              nixd
+              bash-language-server
+              shellcheck
+              nodePackages.typescript-language-server
+            ];
 
-        shellHook = ''
-          export PS1="(nixpi-dev) $PS1"
-          export PATH="$PWD/node_modules/.bin:$PATH"
-        '';
-      };
+            shellHook = ''
+              export PS1="(nixpi-dev) $PS1"
+              export PATH="$PWD/node_modules/.bin:$PATH"
+            '';
+          };
+        }
+      );
 
       # genAttrs turns a list of names into an attribute set by applying a
       # function to each name. This produces { nixpi = mkHost "nixpi"; ... }

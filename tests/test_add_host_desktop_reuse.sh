@@ -44,7 +44,7 @@ chmod +x "$TMP_DIR/bin/nixos-option"
 # Happy path: preserve existing desktop options when detected (canonical GNOME options).
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" reuse-host >/dev/null
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/reuse-host.nix"
-HOST_CONTENT="$(cat "$HOST_FILE")"
+HOST_CONTENT="$(<"$HOST_FILE")"
 assert_contains "$HOST_CONTENT" 'nixpi.desktopProfile = "preserve";'
 assert_contains "$HOST_CONTENT" 'services.displayManager.gdm.enable = true;'
 assert_contains "$HOST_CONTENT" 'services.desktopManager.gnome.enable = true;'
@@ -57,7 +57,7 @@ EOF
 chmod +x "$TMP_DIR/bin/nixos-option"
 
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" fallback-host >/dev/null
-FALLBACK_CONTENT="$(cat "$TMP_DIR/infra/nixos/hosts/fallback-host.nix")"
+FALLBACK_CONTENT="$(<"$TMP_DIR/infra/nixos/hosts/fallback-host.nix")"
 assert_not_contains "$FALLBACK_CONTENT" 'nixpi.desktopProfile = "preserve";'
 
 # Edge case: detected desktop options should not be duplicated.

@@ -22,11 +22,8 @@ while [ "$#" -gt 0 ]; do
       usage
       ;;
     -* )
-      if [ -n "$HOSTNAME_ARG" ]; then
-        usage
-      fi
-      HOSTNAME_ARG="$1"
-      shift
+      echo "error: unknown option: $1" >&2
+      usage
       ;;
     *)
       if [ -n "$HOSTNAME_ARG" ]; then

@@ -5,9 +5,9 @@ source "$(dirname "$0")/helpers.sh"
 FLAKE="flake.nix"
 BASE="infra/nixos/base.nix"
 README="README.md"
-FLAKE_CONTENT="$(cat "$FLAKE")"
-BASE_CONTENT="$(cat "$BASE")"
-README_CONTENT="$(cat "$README")"
+FLAKE_CONTENT="$(<"$FLAKE")"
+BASE_CONTENT="$(<"$BASE")"
+README_CONTENT="$(<"$README")"
 
 # Happy path: ttyd web terminal is enabled and proxies to localhost SSH.
 assert_file_contains "$BASE" 'services.ttyd = {'

@@ -12,7 +12,7 @@ stdout_file="$TMP_DIR/stdout.txt"
 NEW_HANDOFF_OUT_DIR="$TMP_DIR/out" NEW_HANDOFF_TIMESTAMP="20260225-2200" \
   "$SCRIPT" evolution-request "Element routing" >"$stdout_file"
 
-created_path="$(cat "$stdout_file")"
+created_path="$(<"$stdout_file")"
 assert_nonempty "$created_path" "script did not print output path"
 [ -f "$created_path" ] || fail "expected generated file at $created_path"
 

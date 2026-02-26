@@ -399,6 +399,15 @@ in
     '';
   };
 
+  options.nixpi.timeZone = lib.mkOption {
+    type = lib.types.str;
+    default = "UTC";
+    example = "Europe/Bucharest";
+    description = ''
+      System timezone. Override per host as needed.
+    '';
+  };
+
   options.nixpi.desktopProfile = lib.mkOption {
     type = lib.types.enum [ "gnome" "preserve" ];
     default = "gnome";
@@ -452,7 +461,7 @@ in
   # Default behavior mirrors standard GNOME installs. Hosts can opt into
   # preserve mode by setting:
   #   nixpi.desktopProfile = "preserve";
-  services.xserver.enable = true;
+  services.xserver.enable = config.nixpi.desktopProfile == "gnome";
   services.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
   services.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
   services.xserver.xkb = {
@@ -460,19 +469,8 @@ in
   };
 
   # Timezone and locale
-  time.timeZone = "Europe/Bucharest";
+  time.timeZone = config.nixpi.timeZone;
   i18n.defaultLocale = "en_US.UTF-8";
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "en_US.UTF-8";
-    LC_IDENTIFICATION = "en_US.UTF-8";
-    LC_MEASUREMENT = "en_US.UTF-8";
-    LC_MONETARY = "en_US.UTF-8";
-    LC_NAME = "en_US.UTF-8";
-    LC_NUMERIC = "en_US.UTF-8";
-    LC_PAPER = "en_US.UTF-8";
-    LC_TELEPHONE = "en_US.UTF-8";
-    LC_TIME = "en_US.UTF-8";
-  };
 
   # SSH with security hardening
   services.openssh = {
@@ -578,14 +576,14 @@ in
     dataDir = "${userHome}/.local/share/syncthing";
     configDir = "${userHome}/.config/syncthing";
     # Keep overrides disabled so users can still add folders/devices in UI.
-    # Home directory is declared by default so it can be synced across devices.
+    # ~/Shared is declared by default so it can be synced across devices.
     overrideFolders = false;
     overrideDevices = false;
     settings = {
       folders.home = {
-        id = "home";
-        label = "Home";
-        path = userHome;
+        id = "shared";
+        label = "Shared";
+        path = "${userHome}/Shared";
         devices = builtins.attrNames config.services.syncthing.settings.devices;
       };
       gui = {
@@ -660,7 +658,6 @@ in
   # Ensure ~/.local/bin is in PATH
   environment.localBinInPath = true;
 
-
   # Activation scripts run as root during `nixos-rebuild switch`, after the
   # system is built but before services start. They're used for one-time setup.
   # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
@@ -672,12 +669,14 @@ in
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     PI_DIR="${piDir}"
 
-    mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    install -d -o ${primaryUser} -g users "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    install -d -o ${primaryUser} -g users "${userHome}/Shared"
 
     # Keep SYSTEM.md in sync with declarative policy/prompt content.
     cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
+    chown ${primaryUser}:users "$PI_DIR/SYSTEM.md"
 
     # Seed settings if absent.
     # Single instance preloads Nixpi skills plus declarative extension sources.
@@ -686,8 +685,9 @@ SYSEOF
 ${settingsSeedJson}
 JSONEOF
     fi
-
-    chown -R ${primaryUser}:users "$PI_DIR"
+    if [ -f "$PI_DIR/settings.json" ]; then
+      chown ${primaryUser}:users "$PI_DIR/settings.json"
+    fi
   '';
 
   # Keep login-manager display name aligned with configured primary user

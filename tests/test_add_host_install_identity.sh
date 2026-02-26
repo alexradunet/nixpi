@@ -35,7 +35,7 @@ chmod +x "$TMP_DIR/bin/nixos-option"
 PATH="$TMP_DIR/bin:$PATH" SUDO_USER="alex" USER="root" LOGNAME="root" \
   "$TMP_DIR/scripts/add-host.sh" install-host >/dev/null
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/install-host.nix"
-HOST_CONTENT="$(cat "$HOST_FILE")"
+HOST_CONTENT="$(<"$HOST_FILE")"
 assert_contains "$HOST_CONTENT" 'nixpi.primaryUser = "alex";'
 assert_contains "$HOST_CONTENT" 'nixpi.repoRoot = "/home/alex/Nixpi";'
 
@@ -49,9 +49,17 @@ assert_contains "$exists_output" 'already exists'
 
 # Edge case: --force should regenerate host and keep installer-user mapping.
 force_output="$(PATH="$TMP_DIR/bin:$PATH" SUDO_USER="alex" USER="root" LOGNAME="root" "$TMP_DIR/scripts/add-host.sh" --force install-host)"
-FORCED_CONTENT="$(cat "$HOST_FILE")"
+FORCED_CONTENT="$(<"$HOST_FILE")"
 assert_contains "$force_output" 'Overwriting existing host file'
 assert_contains "$FORCED_CONTENT" 'nixpi.primaryUser = "alex";'
 assert_contains "$FORCED_CONTENT" 'nixpi.repoRoot = "/home/alex/Nixpi";'
+
+# Edge case: unknown options are rejected.
+set +e
+unknown_output="$(PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" --bogus 2>&1)"
+unknown_code=$?
+set -e
+[ $unknown_code -ne 0 ] || fail "expected non-zero for unknown option"
+assert_contains "$unknown_output" 'error: unknown option'
 
 echo "PASS: add-host installer identity + force regenerate"

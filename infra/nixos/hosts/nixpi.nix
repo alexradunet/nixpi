@@ -46,4 +46,5 @@
   # The flake uses the filename to look up the host, and nixos-rebuild uses
   # this hostname to select which configuration to apply.
   networking.hostName = "nixpi";
+  nixpi.timeZone = "Europe/Bucharest";
 }

@@ -7,7 +7,7 @@ README="README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
 VERIFY_SCRIPT="scripts/verify-nixpi.sh"
 
-BASE_CONTENT="$(cat "$BASE")"
+BASE_CONTENT="$(<"$BASE")"
 README_CONTENT="$(<"$README")"
 OPERATING_CONTENT="$(<"$OPERATING")"
 
