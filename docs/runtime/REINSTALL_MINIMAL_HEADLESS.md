@@ -79,7 +79,46 @@ sudo nixos-rebuild switch --rollback
 
 Or reboot and choose an older generation from the bootloader menu.
 
-## One-shot command block (run step-by-step)
+## Personalized one-shot block (user: `nixpi`, hostname: `nixpi`)
+
+Use this if you intentionally set your machine hostname to `nixpi` during install:
+
+```bash
+set -euo pipefail
+
+# Optional: enforce expected host identity for this profile
+if [ "$(hostname)" != "nixpi" ]; then
+  echo "Hostname is $(hostname), expected nixpi."
+  echo "Either rename host to nixpi or use the generic block below."
+  exit 1
+fi
+
+mkdir -p /home/nixpi/Development
+cd /home/nixpi/Development
+
+if [ ! -d NixPi ]; then
+  if command -v git >/dev/null 2>&1; then
+    git clone https://github.com/alexradunet/nixpi.git NixPi
+  else
+    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git NixPi
+  fi
+fi
+
+cd /home/nixpi/Development/NixPi
+
+# Host file already exists in repo for nixpi, but regenerate if missing
+if [ ! -f infra/nixos/hosts/nixpi.nix ]; then
+  ./scripts/add-host.sh nixpi
+fi
+
+sudo nixos-rebuild switch --flake . || \
+  sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
+
+nixpi --help
+./scripts/verify-nixpi-modes.sh
+```
+
+## Generic one-shot command block (run step-by-step)
 
 ```bash
 set -euo pipefail
