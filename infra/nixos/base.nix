@@ -46,10 +46,24 @@ let
     ${sharedGuidelines}
   '';
 
+  # Lightweight Pi install path: use npm package directly via npx,
+  # avoiding the large llm-agents flake dependency.
+  piWrapper = pkgs.writeShellScriptBin "pi" ''
+    set -euo pipefail
+
+    export npm_config_update_notifier=false
+    export npm_config_audit=false
+    export npm_config_fund=false
+    export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/nixpi-npm"
+
+    # Pin package version to keep behavior stable across rebuilds.
+    exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.55.1 "$@"
+  '';
+
   nixpiCli = pkgs.writeShellScriptBin "nixpi" ''
     set -euo pipefail
 
-    PI_BIN="${pkgs.llm-agents.pi}/bin/pi"
+    PI_BIN="${piWrapper}/bin/pi"
     RUNTIME_DIR="${runtimePiDir}"
     DEV_DIR="${devPiDir}"
 
@@ -176,12 +190,12 @@ in
   };
 
   options.nixpi.desktopProfile = lib.mkOption {
-    type = lib.types.enum [ "lxqt" "preserve" ];
-    default = "lxqt";
+    type = lib.types.enum [ "gnome" "preserve" ];
+    default = "gnome";
     example = "preserve";
     description = ''
       Desktop profile behavior.
-      - "lxqt": manage a local default desktop stack (LightDM + LXQt).
+      - "gnome": manage a local default desktop stack (GDM + GNOME).
       - "preserve": keep desktop options defined by the host configuration.
     '';
   };
@@ -208,10 +222,6 @@ in
 
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  # Binary cache: pre-built packages from numtide so we don't compile llm-agents
-  # from source. The public key verifies the cache hasn't been tampered with.
-  nix.settings.substituters = [ "https://cache.numtide.com" ];
-  nix.settings.trusted-public-keys = [ "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ber+6GZLDmYMbx7JKXHIUSHozk=" ];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -229,11 +239,12 @@ in
   networking.nftables.enable = true;
 
   # Local desktop policy for HDMI-first setup (display + Wi-Fi onboarding).
-  # Default behavior manages LXQt. Hosts can opt into preserve mode by setting:
+  # Default behavior mirrors standard GNOME installs. Hosts can opt into
+  # preserve mode by setting:
   #   nixpi.desktopProfile = "preserve";
   services.xserver.enable = true;
-  services.xserver.displayManager.lightdm.enable = config.nixpi.desktopProfile == "lxqt";
-  services.xserver.desktopManager.lxqt.enable = config.nixpi.desktopProfile == "lxqt";
+  services.xserver.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
+  services.xserver.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
   services.xserver.xkb = {
     layout = "us";
   };
@@ -377,6 +388,10 @@ in
     };
   };
 
+  # Keep existing account passwords mutable so first-install users retain
+  # credentials configured in the NixOS installer.
+  users.mutableUsers = true;
+
   # User configuration
   users.users.${primaryUser} = {
     isNormalUser = true;
@@ -426,9 +441,8 @@ in
     # Terminal multiplexer (recommended for pi background tasks)
     tmux
 
-    # AI coding tools (Nix-packaged via llm-agents.nix)
-    llm-agents.claude-code
-    llm-agents.pi
+    # AI coding tools (minimal Pi install path)
+    piWrapper
     nixpiCli
   ];
 

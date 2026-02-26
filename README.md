@@ -7,13 +7,12 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Component | Description |
 |-----------|-------------|
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
-| **LXQt Desktop (default)** | local HDMI monitor setup path (LightDM + LXQt) for first-boot Wi-Fi/display configuration |
-| **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with LXQt |
+| **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration |
+| **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with the GNOME default |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
 | **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
-| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
-| **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
+| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via lightweight npm-backed wrapper (SDK/advanced CLI) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
 | **Tailscale** | VPN for secure remote access |
@@ -24,7 +23,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
-| LXQt Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXQt + Wi-Fi tray tooling) |
+| GNOME Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (GDM + GNOME + Wi-Fi tray tooling) |
 | Desktop reuse mode | `base.nix` + `scripts/add-host.sh` | If existing desktop options are detected, host file sets `nixpi.desktopProfile = "preserve"` and keeps current UI |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
@@ -33,13 +32,12 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
 | Simple Text Editor | `base.nix` — `environment.systemPackages` | Lightweight terminal editor (`nano`) |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`, `nixpi dev`) |
-| pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix (SDK/advanced CLI) |
-| Claude Code | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |
+| pi | `base.nix` — `piWrapper` + `environment.systemPackages` | npm-backed wrapper for SDK/advanced CLI |
 
 ## Access Methods
 
 ```
-Local HDMI monitor        → LXQt/UI   (default or preserved) → Local Wi-Fi/display onboarding
+Local HDMI monitor        → GNOME/UI  (default or preserved) → Local Wi-Fi/display onboarding
 Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
 Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to localhost)
 Tailscale only            → Syncthing (port 8384) → Web GUI
@@ -63,12 +61,12 @@ Nixpi/
     meta/                      # Docs style + source-of-truth map
   infra/
     nixos/
-      base.nix                 # Base config + LXQt desktop + web terminal + nixpi wrapper + profile seeding
+      base.nix                 # Base config + GNOME desktop + web terminal + nixpi wrapper + profile seeding
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
-    pi/skills/                 # Pi/Nixpi skills (tdd, claude-consult)
+    pi/skills/                 # Pi/Nixpi skills (install-nixpi, tdd, claude-consult)
   scripts/
-    bootstrap-fresh-nixos.sh   # Clone + first rebuild automation for fresh NixOS installs
+    bootstrap-fresh-nixos.sh   # Clone + guided Pi install workflow for fresh NixOS installs
     add-host.sh                # Generate a new host config from hardware
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
@@ -105,7 +103,21 @@ cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh
 ```
 
-When `add-host.sh` runs on a machine that already has a desktop UI configured, it preserves that desktop automatically (`nixpi.desktopProfile = "preserve"`) instead of replacing it with LXQt.
+`bootstrap-fresh-nixos.sh` refreshes `infra/nixos/hosts/$(hostname).nix` from local hardware, maps Nixpi to your current installer user, then launches Pi with the `install-nixpi` skill for guided review + first rebuild.
+
+For unattended installs, you can run:
+
+```bash
+./scripts/bootstrap-fresh-nixos.sh --non-interactive
+```
+
+For preview-only planning (no changes applied):
+
+```bash
+./scripts/bootstrap-fresh-nixos.sh --dry-run
+```
+
+When `add-host.sh` runs on a machine that already has a desktop UI configured, it preserves that desktop automatically (`nixpi.desktopProfile = "preserve"`) instead of replacing it with the GNOME default.
 
 ### Rebuild NixOS after config changes
 
@@ -149,7 +161,6 @@ Commands available system-wide:
 nixpi           # Nixpi normal/runtime mode (primary user command)
 nixpi dev       # Nixpi developer mode (Pi-native + Nixpi skills/rules)
 pi              # Pi SDK/advanced CLI
-claude          # Claude Code
 ```
 
 `pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
@@ -171,7 +182,7 @@ Optional host override (if you need a different layout):
 ```
 
 ### Is Nixpi preinstalled?
-Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi` and `claude`). No separate `pi install` step is required for core Nixpi.
+Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi`). No separate `pi install` step is required for core Nixpi.
 
 ## Dev Shell
 
@@ -237,12 +248,12 @@ The flake auto-discovers hosts from `infra/nixos/hosts/`. Just add a file and re
 
 On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
 
-## Updating AI Tools
+## Updating Pi
 
-Pi and Claude Code are pinned in `flake.lock` via the llm-agents.nix input. To update:
+Pi is installed via npm-backed wrapper in `infra/nixos/base.nix` (`piWrapper`).
+To update, bump the package spec there, then rebuild:
 
 ```bash
-nix flake update llm-agents
 sudo nixos-rebuild switch --flake .
 ```
 

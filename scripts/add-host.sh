@@ -4,7 +4,41 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOSTS_DIR="$REPO_ROOT/infra/nixos/hosts"
 
-HOSTNAME="${1:-$(hostname)}"
+usage() {
+  echo "usage: $0 [--force] [hostname]" >&2
+  exit 2
+}
+
+FORCE=0
+HOSTNAME_ARG=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --force)
+      FORCE=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    -* )
+      if [ -n "$HOSTNAME_ARG" ]; then
+        usage
+      fi
+      HOSTNAME_ARG="$1"
+      shift
+      ;;
+    *)
+      if [ -n "$HOSTNAME_ARG" ]; then
+        usage
+      fi
+      HOSTNAME_ARG="$1"
+      shift
+      ;;
+  esac
+done
+
+HOSTNAME="${HOSTNAME_ARG:-$(hostname)}"
 
 # Validate hostname (RFC 952: alphanumeric and hyphens only)
 if [[ ! "$HOSTNAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$ ]]; then
@@ -14,9 +48,13 @@ fi
 
 HOST_FILE="$HOSTS_DIR/$HOSTNAME.nix"
 
-if [ -f "$HOST_FILE" ]; then
+if [ -f "$HOST_FILE" ] && [ "$FORCE" -ne 1 ]; then
   echo "error: $HOST_FILE already exists" >&2
   exit 1
+fi
+
+if [ -f "$HOST_FILE" ] && [ "$FORCE" -eq 1 ]; then
+  echo "Overwriting existing host file: $HOST_FILE"
 fi
 
 append_block_before_final_brace() {
@@ -53,11 +91,18 @@ nixos_option_true() {
 
 detect_desktop_options() {
   local options=(
+    # Canonical option paths (align with recent NixOS defaults)
+    "services.displayManager.gdm.enable"
+    "services.displayManager.sddm.enable"
+    "services.displayManager.lightdm.enable"
+    "services.desktopManager.gnome.enable"
+    "services.desktopManager.plasma6.enable"
+
+    # Compatibility aliases still commonly seen in existing configs
     "services.xserver.displayManager.gdm.enable"
     "services.xserver.displayManager.sddm.enable"
     "services.xserver.displayManager.lightdm.enable"
     "services.xserver.desktopManager.gnome.enable"
-    "services.desktopManager.plasma6.enable"
     "services.xserver.desktopManager.xfce.enable"
     "services.xserver.desktopManager.lxqt.enable"
     "services.xserver.desktopManager.cinnamon.enable"
@@ -72,12 +117,40 @@ detect_desktop_options() {
   done
 }
 
+valid_linux_username() {
+  local username="$1"
+  [[ "$username" =~ ^[a-z_][a-z0-9_-]*$ ]]
+}
+
+detect_primary_user() {
+  local candidate
+
+  for candidate in "${SUDO_USER-}" "${LOGNAME-}" "${USER-}"; do
+    if [ -n "$candidate" ] && [ "$candidate" != "root" ] && valid_linux_username "$candidate"; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+
+  printf '%s\n' "nixpi"
+}
+
+PRIMARY_USER="$(detect_primary_user)"
+
 echo "Generating hardware config for '$HOSTNAME'..."
 HW_CONFIG="$(nixos-generate-config --show-hardware-config 2>/dev/null)"
 
 # Append networking.hostName if not already present
 if ! echo "$HW_CONFIG" | grep -q 'networking.hostName'; then
   HW_CONFIG="$(append_block_before_final_brace "$HW_CONFIG" "  networking.hostName = \"$HOSTNAME\";")"
+fi
+
+# Bind Nixpi defaults to the current installer user to preserve an existing
+# known-good login and password across the first rebuild.
+if ! echo "$HW_CONFIG" | grep -q 'nixpi.primaryUser'; then
+  USER_BLOCK="  nixpi.primaryUser = \"$PRIMARY_USER\";
+  nixpi.repoRoot = \"/home/$PRIMARY_USER/Nixpi\";"
+  HW_CONFIG="$(append_block_before_final_brace "$HW_CONFIG" "$USER_BLOCK")"
 fi
 
 # Add bootloader defaults only when not already declared by the generated config.
@@ -95,7 +168,7 @@ if ! echo "$HW_CONFIG" | grep -q 'boot.loader.systemd-boot.enable' && \
 fi
 
 # If an existing desktop UI is already configured on this machine,
-# preserve it instead of forcing the default LXQt stack.
+# preserve it instead of forcing the default GNOME stack.
 DETECTED_DESKTOP_OPTIONS=()
 while IFS= read -r option; do
   if [ -n "$option" ]; then
@@ -120,4 +193,5 @@ echo "Wrote $HOST_FILE"
 echo ""
 echo "Next steps:"
 echo "  1. Review $HOST_FILE"
-echo "  2. git add $HOST_FILE && sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"path:$REPO_ROOT#$HOSTNAME\""
+echo "  2. Run ./scripts/bootstrap-fresh-nixos.sh (recommended)"
+echo "     or apply directly: sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"path:$REPO_ROOT#$HOSTNAME\""

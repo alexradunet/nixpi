@@ -57,14 +57,14 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - If compatibility is temporarily unavoidable, document why and add a removal task/milestone.
 
 ## Pi Integration
-- `pi` is Nix-packaged via [llm-agents.nix](https://github.com/numtide/llm-agents.nix) (not npx).
+- `pi` is provided via a lightweight npm-backed wrapper in `base.nix` (`piWrapper`).
 - `nixpi` is the primary wrapper command (runtime + dev mode) built declaratively in `base.nix`.
 - Config directories:
   - Runtime mode: `~/Nixpi/.pi/agent/`
   - Developer mode: `~/Nixpi/.pi/agent-dev/`
 - Auth remains managed through Pi-compatible flow (`pi login`).
 - System prompts/settings are seeded by NixOS activation script in `base.nix`.
-- Update path: `nix flake update llm-agents` then `sudo nixos-rebuild switch --flake .`.
+- Update path: bump Pi package version in `base.nix` then `sudo nixos-rebuild switch --flake .`.
 
 ## Agent Behavior in This Repo
 - Ask before changing system-level config or installing/removing major dependencies.

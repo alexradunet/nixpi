@@ -1,6 +1,8 @@
 # Reinstall Nixpi on Fresh NixOS
 
-This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install from the interactive installer. Nixpi provides a complete desktop-capable setup on first rebuild (local HDMI + Wi-Fi onboarding) while preserving an already-configured desktop UI when detected.
+This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install from the interactive installer.
+
+Nixpi now defaults to a GNOME desktop profile (closer to standard NixOS GNOME setups) and preserves an existing desktop config when detected.
 
 ## 0) Assumptions (fresh install defaults)
 
@@ -10,7 +12,7 @@ This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install f
 - You can log in locally or over SSH.
 - You have network connectivity.
 
-## 1) Fast path (automated clone + first rebuild)
+## 1) Fast path (automated clone + guided install)
 
 Single-command one-liner:
 
@@ -27,12 +29,26 @@ cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh
 ```
 
+Optional unattended mode (skips Pi guidance and applies directly):
+
+```bash
+./scripts/bootstrap-fresh-nixos.sh --non-interactive
+```
+
+Optional preview mode (shows planned actions without changing anything):
+
+```bash
+./scripts/bootstrap-fresh-nixos.sh --dry-run
+```
+
 What `bootstrap-fresh-nixos.sh` does:
-1. Validates clone target path
-2. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed
-3. Creates host file via `./scripts/add-host.sh` if missing
-4. Runs first rebuild with flakes explicitly enabled:
-   - `sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"`
+1. Validates clone target path.
+2. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed.
+3. Regenerates the host file for the current machine:
+   - `./scripts/add-host.sh --force "$(hostname)"`
+4. Default mode: launches Pi with the `install-nixpi` skill to guide final review + first rebuild.
+5. `--non-interactive` mode: runs first rebuild directly.
+6. `--dry-run` mode: prints the plan and exits without mutating the system.
 
 ## 2) Manual path (same assumptions)
 
@@ -44,21 +60,29 @@ nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git 
 cd ~/Nixpi
 ```
 
-### Ensure host file exists for current hostname
+### Regenerate host file for this machine
 
 ```bash
-hostname
+./scripts/add-host.sh --force "$(hostname)"
 ```
 
-If `infra/nixos/hosts/$(hostname).nix` is missing:
+This refresh avoids stale disk UUIDs and maps `nixpi.primaryUser` / `nixpi.repoRoot` to your current installer user.
+
+### Guided Pi install session (recommended)
+
+If `pi` is installed:
 
 ```bash
-./scripts/add-host.sh
+pi --skill ./infra/pi/skills/install-nixpi/SKILL.md
 ```
 
-`add-host.sh` defaults to LXQt in Nixpi. If an existing desktop UI is detected on the current machine, it sets `nixpi.desktopProfile = "preserve"` in the generated host file and carries over detected desktop options.
+If `pi` is not installed yet:
 
-### First rebuild (flakes explicitly enabled)
+```bash
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill ./infra/pi/skills/install-nixpi/SKILL.md
+```
+
+### Manual first rebuild (if you skip guided mode)
 
 ```bash
 sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"

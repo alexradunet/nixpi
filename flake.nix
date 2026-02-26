@@ -8,18 +8,14 @@
   # in flake.lock, so every build uses identical inputs.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
-  outputs = { self, nixpkgs, llm-agents }:
+  outputs = { self, nixpkgs }:
     let
       lib = nixpkgs.lib;
       system = "x86_64-linux";
-      # Overlays inject extra packages into nixpkgs. Here we add llm-agents
-      # packages (pi, claude-code) so they're available alongside regular nixpkgs.
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ llm-agents.overlays.default ];
       };
 
       # Auto-discover hosts: every .nix file in hosts/ becomes a NixOS config.
@@ -37,7 +33,6 @@
       mkHost = name: nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
-          { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
           ./infra/nixos/base.nix
           (hostDir + "/${name}.nix")
         ];

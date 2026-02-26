@@ -25,7 +25,7 @@ chmod +x "$TMP_DIR/bin/nixos-generate-config"
 cat > "$TMP_DIR/bin/nixos-option" <<'EOF'
 #!/usr/bin/env bash
 case "$1" in
-  services.xserver.displayManager.gdm.enable|services.xserver.desktopManager.gnome.enable)
+  services.displayManager.gdm.enable|services.desktopManager.gnome.enable)
     cat <<'OUT'
 Value:
   true
@@ -41,13 +41,13 @@ esac
 EOF
 chmod +x "$TMP_DIR/bin/nixos-option"
 
-# Happy path: preserve existing desktop options when detected.
+# Happy path: preserve existing desktop options when detected (canonical GNOME options).
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" reuse-host >/dev/null
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/reuse-host.nix"
 HOST_CONTENT="$(cat "$HOST_FILE")"
 assert_contains "$HOST_CONTENT" 'nixpi.desktopProfile = "preserve";'
-assert_contains "$HOST_CONTENT" 'services.xserver.displayManager.gdm.enable = true;'
-assert_contains "$HOST_CONTENT" 'services.xserver.desktopManager.gnome.enable = true;'
+assert_contains "$HOST_CONTENT" 'services.displayManager.gdm.enable = true;'
+assert_contains "$HOST_CONTENT" 'services.desktopManager.gnome.enable = true;'
 
 # Failure path: if desktop detection fails, generation still succeeds without preserve profile.
 cat > "$TMP_DIR/bin/nixos-option" <<'EOF'
@@ -61,8 +61,8 @@ FALLBACK_CONTENT="$(cat "$TMP_DIR/infra/nixos/hosts/fallback-host.nix")"
 assert_not_contains "$FALLBACK_CONTENT" 'nixpi.desktopProfile = "preserve";'
 
 # Edge case: detected desktop options should not be duplicated.
-count_gdm="$(printf '%s' "$HOST_CONTENT" | grep -Fc 'services.xserver.displayManager.gdm.enable = true;')"
-count_gnome="$(printf '%s' "$HOST_CONTENT" | grep -Fc 'services.xserver.desktopManager.gnome.enable = true;')"
+count_gdm="$(printf '%s' "$HOST_CONTENT" | grep -Fc 'services.displayManager.gdm.enable = true;')"
+count_gnome="$(printf '%s' "$HOST_CONTENT" | grep -Fc 'services.desktopManager.gnome.enable = true;')"
 [ "$count_gdm" -eq 1 ] || fail "expected gdm preserve option once"
 [ "$count_gnome" -eq 1 ] || fail "expected gnome preserve option once"
 
