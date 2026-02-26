@@ -10,18 +10,19 @@ This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install d
 
 ## 1) Clone Nixpi
 
+Recommended location (matches project convention): `~/Nixpi`
+
 ```bash
-mkdir -p ~/Development
-cd ~/Development
-git clone https://github.com/alexradunet/nixpi.git NixPi
-cd NixPi
+cd ~
+git clone https://github.com/alexradunet/nixpi.git Nixpi
+cd Nixpi
 ```
 
 If `git` is not present on your fresh install:
 
 ```bash
-nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git NixPi
-cd NixPi
+nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
+cd ~/Nixpi
 ```
 
 ## 2) Ensure host file exists for current hostname
@@ -133,18 +134,17 @@ If your host file needs explicit overrides, use:
 ```bash
 set -euo pipefail
 
-mkdir -p ~/Development
-cd ~/Development
+cd ~
 
-if [ ! -d NixPi ]; then
+if [ ! -d Nixpi ]; then
   if command -v git >/dev/null 2>&1; then
-    git clone https://github.com/alexradunet/nixpi.git NixPi
+    git clone https://github.com/alexradunet/nixpi.git Nixpi
   else
-    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git NixPi
+    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
   fi
 fi
 
-cd NixPi
+cd ~/Nixpi
 
 if [ ! -f "infra/nixos/hosts/$(hostname).nix" ]; then
   ./scripts/add-host.sh
