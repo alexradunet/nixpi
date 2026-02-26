@@ -103,6 +103,34 @@ EOF
         ;;
     esac
   '';
+
+  passwordPolicyCheck = pkgs.writeShellScript "nixpi-password-policy-check" ''
+    set -euo pipefail
+
+    # pam_exec with expose_authtok provides the candidate password on stdin.
+    IFS= read -r password || exit 1
+
+    if [ "''${#password}" -lt 16 ]; then
+      echo "Password must be at least 16 characters." >&2
+      exit 1
+    fi
+
+    case "$password" in
+      (*[0-9]*) ;;
+      (*)
+        echo "Password must include at least one number." >&2
+        exit 1
+        ;;
+    esac
+
+    case "$password" in
+      (*[[:punct:]]*) ;;
+      (*)
+        echo "Password must include at least one special character." >&2
+        exit 1
+        ;;
+    esac
+  '';
 in
 {
   # Enable flakes and nix-command
@@ -156,6 +184,25 @@ in
     };
   };
 
+  # Password complexity policy for local account password changes.
+  # Requirement: minimum 16 chars, at least one number, and at least one
+  # special character.
+  security.pam.services.passwd.rules.password.passwordPolicy = {
+    order = config.security.pam.services.passwd.rules.password.unix.order - 20;
+    control = "requisite";
+    modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
+    args = [ "expose_authtok" "${passwordPolicyCheck}" ];
+  };
+
+  # Apply the same explicit checks to non-interactive password updates
+  # (e.g. chpasswd).
+  security.pam.services.chpasswd.rules.password.passwordPolicy = {
+    order = config.security.pam.services.chpasswd.rules.password.unix.order - 20;
+    control = "requisite";
+    modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
+    args = [ "expose_authtok" "${passwordPolicyCheck}" ];
+  };
+
   # Firewall: restrict SSH and Syncthing to Tailscale and local network.
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
   # input chain. Multiple modules can set extraInputRules — NixOS concatenates
@@ -192,8 +239,8 @@ in
   # Tailscale VPN
   services.tailscale = {
     enable = true;
-    # Enable Tailscale SSH so `tailscale ssh` works to this node.
-    extraSetFlags = [ "--ssh" ];
+    # Keep Tailscale SSH disabled so OpenSSH remains the single SSH control plane.
+    extraSetFlags = [ "--ssh=false" ];
   };
   # Note: we intentionally do NOT set trustedInterfaces = [ "tailscale0" ] here.
   # Instead, Tailscale traffic is controlled by the explicit IP-based rules above
