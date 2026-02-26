@@ -204,6 +204,27 @@ in
     };
   };
 
+  # Web admin interface (Cockpit) for headless system management.
+  services.cockpit = {
+    enable = true;
+    # Keep firewall control centralized in networking.firewall.extraInputRules.
+    openFirewall = false;
+  };
+
+  # Allow expected hostnames used for Cockpit browser sessions/websockets.
+  # NixOS defaults to localhost-only origins, which blocks remote login flows.
+  services.cockpit.allowed-origins = [
+    "https://${config.networking.hostName}:${toString config.services.cockpit.port}"
+    "https://*.ts.net:${toString config.services.cockpit.port}"
+    "https://100.*:${toString config.services.cockpit.port}"
+    "https://192.168.*:${toString config.services.cockpit.port}"
+    "https://10.*:${toString config.services.cockpit.port}"
+    # Cockpit may use loopback-origin websocket flows internally.
+    "https://127.0.0.1:${toString config.services.cockpit.port}"
+    "http://127.0.0.1:${toString config.services.cockpit.port}"
+    "http://localhost:${toString config.services.cockpit.port}"
+  ];
+
   # Password complexity policy for local account password changes.
   # Requirement: minimum 16 chars, at least one number, and at least one
   # special character.
@@ -223,10 +244,9 @@ in
     args = [ "expose_authtok" "${passwordPolicyCheck}" ];
   };
 
-  # Firewall: restrict SSH and Syncthing to Tailscale and local network.
+  # Firewall: restrict SSH, Cockpit, and Syncthing to Tailscale and local network.
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
-  # input chain. Multiple modules can set extraInputRules — NixOS concatenates
-  # them all (e.g. desktop.nix adds RDP rules on top of these).
+  # input chain.
   networking.firewall = {
     enable = true;
 
@@ -237,6 +257,13 @@ in
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
+
+      # Allow Cockpit web UI (port 9090) from Tailscale and local network
+      ip saddr 100.0.0.0/8 tcp dport 9090 accept
+      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 9090 accept
+      ip saddr 192.168.0.0/16 tcp dport 9090 accept
+      ip saddr 10.0.0.0/8 tcp dport 9090 accept
+      tcp dport 9090 drop
 
       # Allow Syncthing GUI (port 8384) from Tailscale and local network
       ip saddr 100.0.0.0/8 tcp dport 8384 accept

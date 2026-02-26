@@ -2,7 +2,7 @@
 # It declares inputs (dependencies), outputs (packages, shells, system configs),
 # and is pinned via flake.lock for reproducibility.
 {
-  description = "nixpi: AI-centric NixOS desktop configuration";
+  description = "nixpi: AI-centric NixOS workstation/server configuration";
 
   # Pinned dependency sources. Nix fetches these and locks their exact revisions
   # in flake.lock, so every build uses identical inputs.
@@ -31,21 +31,15 @@
         (builtins.filter (n: lib.hasSuffix ".nix" n)
           (builtins.attrNames hostFiles));
 
-      # Hosts that include the desktop UI layer
-      desktopHosts = [ "nixpi" ];
-
       # mkHost builds a full NixOS system for a given hostname.
       # nixosSystem takes a list of "modules" — each module is a file that
       # declares part of the system config. NixOS deep-merges them all together.
-      # If the host is in desktopHosts, desktop.nix is appended to the module list.
       mkHost = name: nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
           { nixpkgs.overlays = [ llm-agents.overlays.default ]; }
           ./infra/nixos/base.nix
           (hostDir + "/${name}.nix")
-        ] ++ lib.optionals (builtins.elem name desktopHosts) [
-          ./infra/nixos/desktop.nix
         ];
       };
     in {
