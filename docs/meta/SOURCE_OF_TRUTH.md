@@ -21,6 +21,7 @@ This document defines canonical sources when information conflicts.
 
 ## Configuration Ownership
 - Nix-seeded Pi profile defaults are declared in `infra/nixos/base.nix`.
+- Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
 - Effective runtime profile files live in: `~/Nixpi/.pi/agent/`.
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 

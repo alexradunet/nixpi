@@ -164,6 +164,15 @@ pi              # Pi SDK/advanced CLI
 
 `pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
 
+Install Pi extensions with a commit-friendly manifest:
+
+```bash
+nixpi npm install @scope/extension
+nixpi npm install npm:@scope/extension@1.2.3
+```
+
+This installs the extension in your active Nixpi profile and records its source in `infra/pi/extensions/packages.json` (tracked in git).
+
 Single Nixpi instance: `~/Nixpi/.pi/agent/`
 
 Optional host override (if you need a different layout):

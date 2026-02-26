@@ -22,7 +22,7 @@ After the first rebuild, both commands are available.
 1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default, or preserved existing desktop when detected).
 2. User launches Nixpi with `nixpi`.
 3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
-4. User enables desired resources/extensions via `pi config`.
+4. User adds/updates extension sources with `nixpi npm install <package>` and enables desired resources via `pi config`.
 5. Hermes (Runtime) runs in background and waits for events/tasks/channels.
 
 ### Single Nixpi instance model
@@ -32,6 +32,7 @@ After the first rebuild, both commands are available.
 
 ### Configuration source of truth
 - Declarative profile defaults are seeded from `infra/nixos/base.nix`.
+- Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
 - Effective profile files are under: `~/Nixpi/.pi/agent/`.
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 

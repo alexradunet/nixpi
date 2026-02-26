@@ -37,6 +37,13 @@ let
     - If no local skills are found, say so explicitly and suggest `--skill <path-to-SKILL.md>`.
   '';
 
+  extensionManifest = builtins.fromJSON (builtins.readFile ../pi/extensions/packages.json);
+  extensionPackages = extensionManifest.packages or [ ];
+  settingsSeedJson = builtins.toJSON {
+    skills = [ "${repoRoot}/infra/pi/skills" ];
+    packages = extensionPackages;
+  };
+
   # Lightweight Pi install path: use npm package directly via npx,
   # avoiding the large llm-agents flake dependency.
   piWrapper = pkgs.writeShellScriptBin "pi" ''
@@ -59,6 +66,8 @@ let
 
     PI_BIN="${piWrapper}/bin/pi"
     PI_DIR="${piDir}"
+    REPO_ROOT="${repoRoot}"
+    EXTENSIONS_MANIFEST="$REPO_ROOT/infra/pi/extensions/packages.json"
 
     case "''${1-}" in
       dev|mode|runtime)
@@ -72,12 +81,62 @@ nixpi - primary CLI for the Nixpi assistant (powered by Pi SDK)
 
 Usage:
   nixpi [pi-args...]                         Run Nixpi (single instance)
+  nixpi npm install <package...>             Install extension(s) and track them in-repo
   nixpi help                                 Show this help
 
 Notes:
   - `pi` remains available as SDK/advanced CLI.
   - `nixpi` uses PI_CODING_AGENT_DIR from nixpi.piDir.
+  - `nixpi npm install` stores package sources in infra/pi/extensions/packages.json.
 EOF
+        ;;
+      npm)
+        shift || true
+
+        case "''${1-}" in
+          install)
+            shift || true
+
+            if [ "$#" -eq 0 ]; then
+              echo "nixpi npm install requires at least one package name." >&2
+              echo "Usage: nixpi npm install <package...>" >&2
+              exit 2
+            fi
+
+            mkdir -p "$(dirname "$EXTENSIONS_MANIFEST")"
+            if [ ! -f "$EXTENSIONS_MANIFEST" ]; then
+              cat > "$EXTENSIONS_MANIFEST" <<'JSONEOF'
+{
+  "packages": []
+}
+JSONEOF
+            fi
+
+            export PI_CODING_AGENT_DIR="$PI_DIR"
+
+            for pkg in "$@"; do
+              case "$pkg" in
+                npm:*) source="$pkg" ;;
+                *) source="npm:$pkg" ;;
+              esac
+
+              "$PI_BIN" install "$source"
+
+              tmp_manifest="$(mktemp)"
+              ${pkgs.jq}/bin/jq --arg pkg "$source" '
+                .packages = ((.packages // []) + [$pkg] | unique)
+              ' "$EXTENSIONS_MANIFEST" > "$tmp_manifest"
+              mv "$tmp_manifest" "$EXTENSIONS_MANIFEST"
+            done
+
+            echo "Saved extension sources to $EXTENSIONS_MANIFEST"
+            ;;
+          *)
+            echo "Unknown nixpi npm subcommand: ''${1-}" >&2
+            echo "Usage: nixpi npm install <package...>" >&2
+            exit 2
+            ;;
+        esac
         ;;
       *)
         export PI_CODING_AGENT_DIR="$PI_DIR"
@@ -436,17 +495,10 @@ ${piSystemPrompt}
 SYSEOF
 
     # Seed settings if absent.
-    # Single instance preloads Nixpi skills plus Context7 docs package.
+    # Single instance preloads Nixpi skills plus declarative extension sources.
     if [ ! -f "$PI_DIR/settings.json" ]; then
       cat > "$PI_DIR/settings.json" <<'JSONEOF'
-{
-  "skills": [
-    "${repoRoot}/infra/pi/skills"
-  ],
-  "packages": [
-    "npm:@aaronmaturen/pi-context7"
-  ]
-}
+${settingsSeedJson}
 JSONEOF
     fi
 
