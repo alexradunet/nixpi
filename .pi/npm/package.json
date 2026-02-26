@@ -1,7 +1,0 @@
-{
-  "name": "pi-extensions",
-  "private": true,
-  "dependencies": {
-    "@aaronmaturen/pi-context7": "^1.0.1"
-  }
-}
