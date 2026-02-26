@@ -430,12 +430,10 @@ in
 
     mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
 
-    # Seed SYSTEM.md if absent
-    if [ ! -f "$PI_DIR/SYSTEM.md" ]; then
-      cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
+    # Keep SYSTEM.md in sync with declarative policy/prompt content.
+    cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
-    fi
 
     # Seed settings if absent.
     # Single instance preloads Nixpi skills plus Context7 docs package.
