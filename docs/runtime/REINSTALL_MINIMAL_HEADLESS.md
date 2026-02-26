@@ -1,66 +1,63 @@
-# Reinstall Nixpi on Fresh NixOS Minimal (Headless)
+# Reinstall Nixpi on Fresh NixOS Minimal (Headless Installer)
 
-This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install done with the interactive installer **without a desktop environment**.
+This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install done with the interactive installer **without selecting a desktop environment**. Nixpi enables LXDE on the first rebuild so local HDMI setup (display + Wi-Fi) is available after reboot.
 
-## 0) Assumptions
+## 0) Assumptions (fresh install defaults)
 
-- You already completed a base NixOS install (minimal/headless).
+- `git` is **not** installed yet.
+- Flakes are **not** enabled yet.
+- You already completed a base NixOS install (minimal/headless installer profile).
 - You can log in locally or over SSH.
 - You have network connectivity.
 
-## 1) Clone Nixpi
-
-Recommended location (matches project convention): `~/Nixpi`
+## 1) Fast path (automated clone + first rebuild)
 
 ```bash
 cd ~
-git clone https://github.com/alexradunet/nixpi.git Nixpi
-cd Nixpi
+nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
+cd ~/Nixpi
+./scripts/bootstrap-fresh-nixos.sh
 ```
 
-If `git` is not present on your fresh install:
+What `bootstrap-fresh-nixos.sh` does:
+1. Validates clone target path
+2. Clones with one-time `nix shell nixpkgs#git -c git clone ...` when needed
+3. Creates host file via `./scripts/add-host.sh` if missing
+4. Runs first rebuild with flakes explicitly enabled:
+   - `sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"`
+
+## 2) Manual path (same assumptions)
+
+### Clone Nixpi
 
 ```bash
+cd ~
 nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
 cd ~/Nixpi
 ```
 
-## 2) Ensure host file exists for current hostname
-
-Check current hostname:
+### Ensure host file exists for current hostname
 
 ```bash
 hostname
 ```
 
-If your hostname is not already represented by `infra/nixos/hosts/<hostname>.nix`, generate it:
+If `infra/nixos/hosts/$(hostname).nix` is missing:
 
 ```bash
 ./scripts/add-host.sh
 ```
 
-Then review and stage the generated host file if you plan to commit it.
-
-## 3) Apply Nixpi system configuration
-
-From repo root:
-
-```bash
-sudo nixos-rebuild switch --flake .
-```
-
-If flakes are not yet enabled on the base system:
+### First rebuild (flakes explicitly enabled)
 
 ```bash
 sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
 ```
 
-## 4) Verify core commands and wrapper modes
+## 3) Verify
 
 ```bash
 nixpi --help
-nixpi
-nixpi dev
 ./scripts/verify-nixpi-modes.sh
 ```
 
@@ -70,89 +67,10 @@ Authenticate Pi if needed:
 pi login
 ```
 
-## 5) Rollback (safety)
-
-If needed, rollback to previous generation:
+## 4) Rollback (safety)
 
 ```bash
 sudo nixos-rebuild switch --rollback
 ```
 
 Or reboot and choose an older generation from the bootloader menu.
-
-## Personalized one-shot block (user: `alex`, repo root: `~/Nixpi`)
-
-Use this when your Linux username is `alex` and you want the repo at `/home/alex/Nixpi`.
-
-```bash
-set -euo pipefail
-
-# Ensure expected user context
-if [ "$(whoami)" != "alex" ]; then
-  echo "Current user is $(whoami), expected alex."
-  exit 1
-fi
-
-cd /home/alex
-
-if [ ! -d Nixpi ]; then
-  if command -v git >/dev/null 2>&1; then
-    git clone https://github.com/alexradunet/nixpi.git Nixpi
-  else
-    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
-  fi
-fi
-
-cd /home/alex/Nixpi
-
-if [ ! -f "infra/nixos/hosts/$(hostname).nix" ]; then
-  ./scripts/add-host.sh
-fi
-
-sudo nixos-rebuild switch --flake . || \
-  sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
-
-nixpi --help
-./scripts/verify-nixpi-modes.sh
-```
-
-If your host file needs explicit overrides, use:
-
-```nix
-# infra/nixos/hosts/<hostname>.nix
-{ config, ... }:
-{
-  nixpi.primaryUser = "alex";
-  nixpi.repoRoot = "/home/alex/Nixpi";
-  nixpi.runtimePiDir = "${config.nixpi.repoRoot}/.pi/agent";
-  nixpi.devPiDir = "${config.nixpi.repoRoot}/.pi/agent-dev";
-}
-```
-
-## Generic one-shot command block (run step-by-step)
-
-```bash
-set -euo pipefail
-
-cd ~
-
-if [ ! -d Nixpi ]; then
-  if command -v git >/dev/null 2>&1; then
-    git clone https://github.com/alexradunet/nixpi.git Nixpi
-  else
-    nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
-  fi
-fi
-
-cd ~/Nixpi
-
-if [ ! -f "infra/nixos/hosts/$(hostname).nix" ]; then
-  ./scripts/add-host.sh
-fi
-
-sudo nixos-rebuild switch --flake . || \
-  sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
-
-nixpi --help
-./scripts/verify-nixpi-modes.sh
-```

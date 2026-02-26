@@ -217,6 +217,14 @@ in
   # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
 
+  # Local desktop stack for HDMI-first setup (display + Wi-Fi onboarding).
+  services.xserver.enable = true;
+  services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.desktopManager.lxde.enable = true;
+  services.xserver.xkb = {
+    layout = "us";
+  };
+
   # Timezone and locale
   time.timeZone = "Europe/Bucharest";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -388,6 +396,10 @@ in
     curl
     wget
     tailscale
+
+    # Desktop helpers (local HDMI + Wi-Fi setup)
+    networkmanagerapplet
+    xorg.xrandr
 
     # Search and utility tools
     jq

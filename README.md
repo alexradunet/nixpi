@@ -6,7 +6,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 
 | Component | Description |
 |-----------|-------------|
-| **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
+| **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
+| **LXDE Desktop** | local HDMI monitor setup path (LightDM + LXDE) for first-boot Wi-Fi/display configuration |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
@@ -20,6 +21,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
+| LXDE Desktop | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXDE + Wi-Fi tray tooling) |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
@@ -31,6 +33,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 ## Access Methods
 
 ```
+Local HDMI monitor        → LXDE      (LightDM)   → Local Wi-Fi/display onboarding
 Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
 Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to localhost)
 Tailscale only            → Syncthing (port 8384) → Web GUI
@@ -54,11 +57,12 @@ Nixpi/
     meta/                      # Docs style + source-of-truth map
   infra/
     nixos/
-      base.nix                 # Headless config + web terminal + nixpi wrapper + profile seeding
+      base.nix                 # Base config + LXDE desktop + web terminal + nixpi wrapper + profile seeding
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
     pi/skills/                 # Pi/Nixpi skills (tdd, claude-consult)
   scripts/
+    bootstrap-fresh-nixos.sh   # Clone + first rebuild automation for fresh NixOS installs
     add-host.sh                # Generate a new host config from hardware
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
@@ -78,8 +82,16 @@ Nixpi/
 
 ## Getting Started
 
-For a full reinstall on a fresh headless NixOS install, use:
+For a full reinstall on a fresh NixOS minimal install (no desktop selected in installer), use:
 - [`docs/runtime/REINSTALL_MINIMAL_HEADLESS.md`](./docs/runtime/REINSTALL_MINIMAL_HEADLESS.md)
+
+Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
+
+```bash
+nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
+cd ~/Nixpi
+./scripts/bootstrap-fresh-nixos.sh
+```
 
 ### Rebuild NixOS after config changes
 
@@ -87,6 +99,12 @@ From the repo root (`nixos-rebuild` auto-selects the config matching your hostna
 
 ```bash
 sudo nixos-rebuild switch --flake .
+```
+
+Fresh-install first rebuild only (when flakes are not yet enabled):
+
+```bash
+sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
 ```
 
 ### Connect via SSH
