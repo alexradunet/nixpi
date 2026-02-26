@@ -442,8 +442,9 @@ in
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+  # Allow unfree packages. mkDefault on the whole attrset so the VM test
+  # framework's read-only nixpkgs.config (types.unique) takes precedence.
+  nixpkgs.config = lib.mkDefault { allowUnfree = true; };
 
   # nix-ld provides a dynamic linker shim so pre-compiled binaries (e.g. VS Code
   # remote server, downloaded tools) can run on NixOS, which normally lacks the

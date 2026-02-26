@@ -16,3 +16,11 @@ if [ "${NIXPI_CHECK_BUILD:-0}" = "1" ]; then
   build_host="${NIXPI_CHECK_HOST:-$(hostname)}"
   nix build ".#nixosConfigurations.${build_host}.config.system.build.toplevel" --no-link
 fi
+
+# Optional VM integration tests: boot QEMU VMs and assert runtime behavior.
+# Requires KVM. Runs all checks.x86_64-linux.vm-* tests.
+# Usage:
+#   NIXPI_CHECK_VM=1 ./scripts/check.sh
+if [ "${NIXPI_CHECK_VM:-0}" = "1" ]; then
+  nix flake check -L
+fi

@@ -22,6 +22,18 @@
         config.allowUnfree = true;
       };
 
+      # Lightweight package set for VM tests. Uses stable nixpkgs with a
+      # claude-code-bin stub so tests never pull the full unstable closure.
+      pkgsForTests = import nixpkgs { inherit system; config.allowUnfree = true; };
+      pkgsUnstableForTests = pkgsForTests // {
+        claude-code-bin = pkgsForTests.writeShellScriptBin "claude" ''echo "claude-code stub for testing"'';
+      };
+
+      # Wraps testers.runNixOSTest and injects the stubbed pkgsUnstable.
+      mkVmTest = testFile: pkgsForTests.testers.runNixOSTest (import testFile {
+        inherit pkgsUnstableForTests;
+      });
+
       # Auto-discover hosts: every .nix file in hosts/ becomes a NixOS config.
       # Adding a new file (e.g. hosts/mybox.nix) automatically registers it —
       # no need to touch flake.nix.
@@ -79,5 +91,18 @@
       # function to each name. This produces { nixpi = mkHost "nixpi"; ... }
       # for every host discovered above.
       nixosConfigurations = lib.genAttrs hostNames mkHost;
+
+      # NixOS VM integration tests. Each test boots a QEMU VM and asserts
+      # runtime behavior (services, firewall, users, activation scripts).
+      # Run one:  nix build .#checks.x86_64-linux.vm-user-and-groups --no-link -L
+      # Run all:  nix flake check -L
+      checks.x86_64-linux = {
+        vm-user-and-groups    = mkVmTest ./tests/vm/user-and-groups.nix;
+        vm-ssh-hardening      = mkVmTest ./tests/vm/ssh-hardening.nix;
+        vm-firewall-rules     = mkVmTest ./tests/vm/firewall-rules.nix;
+        vm-activation-scripts = mkVmTest ./tests/vm/activation-scripts.nix;
+        vm-service-ensemble   = mkVmTest ./tests/vm/service-ensemble.nix;
+        vm-password-policy    = mkVmTest ./tests/vm/password-policy.nix;
+      };
     };
 }
