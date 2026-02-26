@@ -11,18 +11,18 @@ nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
-| **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to local network and Tailscale |
+| **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
 | **Tailscale** | VPN for secure remote access |
-| **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale and LAN via nftables) |
+| **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale via nftables) |
 
 ## Services Reference
 
 | Service | Config location | Notes |
 |---------|----------------|-------|
-| SSH | `base.nix` — `services.openssh` | Hardened; restricted to Tailscale + LAN |
-| ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; delegates login to localhost SSH |
+| SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
+| ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
-| Syncthing | `base.nix` — `services.syncthing` | File sync; GUI restricted to Tailscale + LAN |
+| Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`, `nixpi dev`) |
 | pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix (SDK/advanced CLI) |
@@ -31,11 +31,12 @@ nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 ## Access Methods
 
 ```
-Local Network / Tailscale → SSH    (port 22)   → Terminal / VS Code Remote SSH
-Local Network / Tailscale → ttyd   (port 7681) → Browser terminal (SSH to localhost)
+Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
+Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to localhost)
+Tailscale only            → Syncthing (port 8384) → Web GUI
 ```
 
-All inbound ports are restricted to Tailscale (100.0.0.0/8) and local network (192.168.0.0/16, 10.0.0.0/8) via nftables rules.
+Firewall scope is split by service: SSH remains available from local network and Tailscale; ttyd and Syncthing are Tailscale-only.
 
 ## Project Structure
 
@@ -93,11 +94,11 @@ ssh <username>@<tailscale-ip>
 
 ### Access ttyd web terminal
 
-Open `http://<tailscale-ip>:7681` in your browser. ttyd is restricted to Tailscale and local network via nftables and opens an SSH login prompt to localhost.
+Open `http://<tailscale-ip>:7681` in your browser. ttyd is Tailscale-only via nftables and opens an SSH login prompt to localhost.
 
 ### Access Syncthing web UI
 
-Open `http://<tailscale-ip>:8384` in your browser. The GUI is restricted to Tailscale and local network via nftables.
+Open `http://<tailscale-ip>:8384` in your browser. The GUI is Tailscale-only via nftables.
 
 ### Use the AI agents
 
