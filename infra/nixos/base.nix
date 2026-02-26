@@ -238,7 +238,8 @@ in
     args = [ "expose_authtok" "${passwordPolicyCheck}" ];
   };
 
-  # Firewall: restrict SSH, ttyd, and Syncthing to Tailscale and local network.
+  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap), while
+  # ttyd and Syncthing are Tailscale-only.
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
   # input chain.
   networking.firewall = {
@@ -252,26 +253,21 @@ in
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
 
-      # Allow ttyd web terminal (port 7681) from Tailscale and local network
+      # Allow ttyd web terminal (port 7681) from Tailscale only
       ip saddr 100.0.0.0/8 tcp dport 7681 accept
       ip6 saddr fd7a:115c:a1e0::/48 tcp dport 7681 accept
-      ip saddr 192.168.0.0/16 tcp dport 7681 accept
-      ip saddr 10.0.0.0/8 tcp dport 7681 accept
       tcp dport 7681 drop
 
-      # Allow Syncthing GUI (port 8384) from Tailscale and local network
+      # Allow Syncthing GUI (port 8384) from Tailscale only
       ip saddr 100.0.0.0/8 tcp dport 8384 accept
-      ip saddr 192.168.0.0/16 tcp dport 8384 accept
-      ip saddr 10.0.0.0/8 tcp dport 8384 accept
+      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 8384 accept
       tcp dport 8384 drop
 
-      # Allow Syncthing sync (port 22000) from Tailscale and local network
+      # Allow Syncthing sync (port 22000) from Tailscale only
       ip saddr 100.0.0.0/8 tcp dport 22000 accept
       ip saddr 100.0.0.0/8 udp dport 22000 accept
-      ip saddr 192.168.0.0/16 tcp dport 22000 accept
-      ip saddr 192.168.0.0/16 udp dport 22000 accept
-      ip saddr 10.0.0.0/8 tcp dport 22000 accept
-      ip saddr 10.0.0.0/8 udp dport 22000 accept
+      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22000 accept
+      ip6 saddr fd7a:115c:a1e0::/48 udp dport 22000 accept
       tcp dport 22000 drop
       udp dport 22000 drop
     '';
