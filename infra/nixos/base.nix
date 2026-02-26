@@ -150,6 +150,7 @@ EOF
   '';
 
   primaryUser = config.nixpi.primaryUser;
+  userDisplayName = config.nixpi.primaryUserDisplayName;
   userHome = "/home/${primaryUser}";
   repoRoot = config.nixpi.repoRoot;
   runtimePiDir = config.nixpi.runtimePiDir;
@@ -162,6 +163,16 @@ in
     example = "alex";
     description = ''
       Primary Linux username for the local human operator.
+    '';
+  };
+
+  options.nixpi.primaryUserDisplayName = lib.mkOption {
+    type = lib.types.str;
+    default = config.nixpi.primaryUser;
+    example = "Alex";
+    description = ''
+      Display name shown by login managers (for example GDM).
+      Defaults to nixpi.primaryUser to avoid username/display-name mismatch.
     '';
   };
 
@@ -399,7 +410,7 @@ in
   users.users.${primaryUser} = {
     isNormalUser = true;
     home = userHome;
-    description = "Nixpi";
+    description = userDisplayName;
     extraGroups = [ "wheel" "networkmanager" ];
   };
 

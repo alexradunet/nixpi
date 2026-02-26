@@ -178,6 +178,7 @@ Optional host override (if you need a different layout):
   nixpi.repoRoot = "/home/<user>/Nixpi";
   nixpi.runtimePiDir = "${config.nixpi.repoRoot}/.pi/agent";
   nixpi.devPiDir = "${config.nixpi.repoRoot}/.pi/agent-dev";
+  nixpi.primaryUserDisplayName = "Alex";
 }
 ```
 
