@@ -16,7 +16,7 @@ OPERATING_CONTENT="$(cat "$OPERATING")"
 # Happy path: first-install bootstrap script exists and runs clone + first rebuild.
 assert_executable "$SCRIPT"
 assert_file_contains "$SCRIPT" 'nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git'
-assert_file_contains "$SCRIPT" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .'
+assert_file_contains "$SCRIPT" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$TARGET_DIR#$(hostname)"'
 
 # Failure path: clear guard for non-repo target path collisions.
 assert_file_contains "$SCRIPT" 'exists but is not a git repository'
@@ -28,8 +28,8 @@ assert_not_contains "$SCRIPT_CONTENT" 'command -v git'
 # Docs regression: reinstall flow points to automated bootstrap + one-time clone command.
 assert_file_contains "$DOC" './scripts/bootstrap-fresh-nixos.sh'
 assert_file_contains "$DOC" 'nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi'
-assert_file_contains "$DOC" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .'
-assert_file_contains "$README" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .'
+assert_file_contains "$DOC" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"'
+assert_file_contains "$README" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"'
 assert_not_contains "$DOC_CONTENT" 'If `git` is not present on your fresh install:'
 
 # Edge docs: provide single-command one-liner for clone + bootstrap.
