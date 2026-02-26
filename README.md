@@ -167,11 +167,21 @@ pi              # Pi SDK/advanced CLI
 Install Pi extensions with a commit-friendly manifest:
 
 ```bash
-nixpi npm install @scope/extension
+nixpi npm install @scope/extension@1.2.3
 nixpi npm install npm:@scope/extension@1.2.3
+nixpi npm sync
 ```
 
-This installs the extension in your active Nixpi profile and records its source in `infra/pi/extensions/packages.json` (tracked in git).
+This installs pinned extensions in your active Nixpi profile and records their sources in `infra/pi/extensions/packages.json` (tracked in git). Use `nixpi npm sync` to rebuild runtime extension state from the manifest.
+
+Apply/rollback system evolution with guardrails:
+
+```bash
+nixpi evolve
+nixpi rollback
+```
+
+`nixpi evolve` runs `sudo nixos-rebuild switch --flake .`, then executes `./scripts/verify-nixpi.sh`; if validation fails, it automatically runs rollback.
 
 Single Nixpi instance: `~/Nixpi/.pi/agent/`
 

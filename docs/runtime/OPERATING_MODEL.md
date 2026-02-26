@@ -22,7 +22,7 @@ After the first rebuild, both commands are available.
 1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default, or preserved existing desktop when detected).
 2. User launches Nixpi with `nixpi`.
 3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
-4. User adds/updates extension sources with `nixpi npm install <package>` and enables desired resources via `pi config`.
+4. User adds/updates pinned extension sources with `nixpi npm install <package@version>`, runs `nixpi npm sync` when needed, and enables desired resources via `pi config`.
 5. Hermes (Runtime) runs in background and waits for events/tasks/channels.
 
 ### Single Nixpi instance model
@@ -58,6 +58,7 @@ Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HAN
 5. Athena performs final conformance review against plan and standards.
 6. Human approval gate decides apply/no-apply.
 7. Approved system changes are applied declaratively (`nixos-rebuild switch --flake ...`) with rollback available.
+8. Preferred operator path for local guarded apply/rollback is `nixpi evolve` and `nixpi rollback`.
 
 ## Why this model
 - Prevents unsafe live self-mutation.
