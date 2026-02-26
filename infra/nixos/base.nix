@@ -175,6 +175,17 @@ in
     '';
   };
 
+  options.nixpi.desktopProfile = lib.mkOption {
+    type = lib.types.enum [ "lxqt" "preserve" ];
+    default = "lxqt";
+    example = "preserve";
+    description = ''
+      Desktop profile behavior.
+      - "lxqt": manage a local default desktop stack (LightDM + LXQt).
+      - "preserve": keep desktop options defined by the host configuration.
+    '';
+  };
+
   config = {
     assertions = [
       {
@@ -217,10 +228,12 @@ in
   # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
 
-  # Local lightweight desktop stack for HDMI-first setup (display + Wi-Fi onboarding).
+  # Local desktop policy for HDMI-first setup (display + Wi-Fi onboarding).
+  # Default behavior manages LXQt. Hosts can opt into preserve mode by setting:
+  #   nixpi.desktopProfile = "preserve";
   services.xserver.enable = true;
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.lxqt.enable = true;
+  services.xserver.displayManager.lightdm.enable = config.nixpi.desktopProfile == "lxqt";
+  services.xserver.desktopManager.lxqt.enable = config.nixpi.desktopProfile == "lxqt";
   services.xserver.xkb = {
     layout = "us";
   };

@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
 SCRIPT="scripts/bootstrap-fresh-nixos.sh"
-DOC="docs/runtime/REINSTALL_MINIMAL.md"
+DOC="docs/runtime/REINSTALL.md"
 README="README.md"
 DOCS_HOME="docs/README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
@@ -36,6 +36,8 @@ assert_file_contains "$DOC" './scripts/bootstrap-fresh-nixos.sh'
 assert_file_contains "$DOC" 'nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi'
 assert_file_contains "$DOC" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"'
 assert_file_contains "$README" 'sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"'
+assert_file_contains "$README" 'Only needed for the very first flake rebuild on a fresh system.'
+assert_file_contains "$DOC" 'Only needed for the very first flake rebuild on a fresh system.'
 assert_not_contains "$DOC_CONTENT" 'If `git` is not present on your fresh install:'
 
 # Edge docs: provide single-command one-liner for clone + bootstrap.
@@ -57,10 +59,13 @@ assert_not_contains "$SCRIPT_CONTENT" 'sudo NIX_CONFIG="experimental-features = 
 assert_not_contains "$DOC_CONTENT" 'sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .'
 assert_not_contains "$README_CONTENT" 'sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .'
 
-# No stale headless docs references should remain.
+# No stale split-installer docs references should remain.
 assert_not_contains "$README_CONTENT" 'REINSTALL_MINIMAL_HEADLESS.md'
 assert_not_contains "$DOCS_HOME_CONTENT" 'REINSTALL_MINIMAL_HEADLESS.md'
 assert_not_contains "$OPERATING_CONTENT" 'REINSTALL_MINIMAL_HEADLESS.md'
+assert_not_contains "$README_CONTENT" 'REINSTALL_MINIMAL.md'
+assert_not_contains "$DOCS_HOME_CONTENT" 'REINSTALL_MINIMAL.md'
+assert_not_contains "$OPERATING_CONTENT" 'REINSTALL_MINIMAL.md'
 assert_not_contains "$DOC_CONTENT" 'headless'
 
 echo "PASS: bootstrap automation + git/flakes first-install assumptions"

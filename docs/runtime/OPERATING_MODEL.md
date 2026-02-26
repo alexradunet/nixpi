@@ -14,11 +14,11 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 No for core Nixpi.
 
 `nixpi` (wrapper) and `pi` (SDK CLI) are installed declaratively via NixOS (`base.nix`, with Pi from `llm-agents.nix`).
-For fresh installs, use the bootstrap flow in [`REINSTALL_MINIMAL.md`](./REINSTALL_MINIMAL.md), which assumes no `git` and no flakes by default.
+For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
 After the first rebuild, both commands are available.
 
 ### First-boot expected flow
-1. User boots Nixpi and can complete local HDMI onboarding through LXQt (display + Wi-Fi).
+1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (LXQt by default, or preserved existing desktop when detected).
 2. User launches runtime mode with `nixpi`.
 3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
 4. User enables desired resources/extensions via `pi config`.

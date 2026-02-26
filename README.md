@@ -7,7 +7,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Component | Description |
 |-----------|-------------|
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
-| **LXQt Desktop** | local HDMI monitor setup path (LightDM + LXQt) for first-boot Wi-Fi/display configuration |
+| **LXQt Desktop (default)** | local HDMI monitor setup path (LightDM + LXQt) for first-boot Wi-Fi/display configuration |
+| **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with LXQt |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
 | **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
@@ -23,7 +24,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
-| LXQt Desktop | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXQt + Wi-Fi tray tooling) |
+| LXQt Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (LightDM + LXQt + Wi-Fi tray tooling) |
+| Desktop reuse mode | `base.nix` + `scripts/add-host.sh` | If existing desktop options are detected, host file sets `nixpi.desktopProfile = "preserve"` and keeps current UI |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
@@ -37,7 +39,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 ## Access Methods
 
 ```
-Local HDMI monitor        → LXQt      (LightDM)   → Local Wi-Fi/display onboarding
+Local HDMI monitor        → LXQt/UI   (default or preserved) → Local Wi-Fi/display onboarding
 Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
 Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to localhost)
 Tailscale only            → Syncthing (port 8384) → Web GUI
@@ -86,8 +88,8 @@ Nixpi/
 
 ## Getting Started
 
-For a full reinstall on a fresh NixOS minimal install, use:
-- [`docs/runtime/REINSTALL_MINIMAL.md`](./docs/runtime/REINSTALL_MINIMAL.md)
+For a full reinstall on a fresh NixOS install, use:
+- [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md)
 
 Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
 
@@ -103,6 +105,8 @@ cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh
 ```
 
+When `add-host.sh` runs on a machine that already has a desktop UI configured, it preserves that desktop automatically (`nixpi.desktopProfile = "preserve"`) instead of replacing it with LXQt.
+
 ### Rebuild NixOS after config changes
 
 From the repo root (`nixos-rebuild` auto-selects the config matching your hostname):
@@ -115,6 +119,12 @@ Fresh-install first rebuild only (when flakes are not yet enabled):
 
 ```bash
 sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"
+```
+
+Only needed for the very first flake rebuild on a fresh system. After this succeeds once, Nixpi has already enabled flakes system-wide (`nix.settings.experimental-features`), so regular rebuilds can use:
+
+```bash
+sudo nixos-rebuild switch --flake .
 ```
 
 ### Connect via SSH

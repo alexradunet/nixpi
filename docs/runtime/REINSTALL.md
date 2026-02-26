@@ -1,12 +1,12 @@
-# Reinstall Nixpi on Fresh NixOS Minimal
+# Reinstall Nixpi on Fresh NixOS
 
-This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS minimal install from the interactive installer. Nixpi enables LXQt on the first rebuild so local HDMI setup (display + Wi-Fi) is available after reboot.
+This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install from the interactive installer. Nixpi provides a complete desktop-capable setup on first rebuild (local HDMI + Wi-Fi onboarding) while preserving an already-configured desktop UI when detected.
 
 ## 0) Assumptions (fresh install defaults)
 
 - `git` is **not** installed yet.
 - Flakes are **not** enabled yet.
-- You already completed a base NixOS minimal install.
+- You already completed a base NixOS install.
 - You can log in locally or over SSH.
 - You have network connectivity.
 
@@ -56,10 +56,18 @@ If `infra/nixos/hosts/$(hostname).nix` is missing:
 ./scripts/add-host.sh
 ```
 
+`add-host.sh` defaults to LXQt in Nixpi. If an existing desktop UI is detected on the current machine, it sets `nixpi.desktopProfile = "preserve"` in the generated host file and carries over detected desktop options.
+
 ### First rebuild (flakes explicitly enabled)
 
 ```bash
 sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"
+```
+
+Only needed for the very first flake rebuild on a fresh system. After this succeeds once, flakes are enabled declaratively by Nixpi (`nix.settings.experimental-features`), so future rebuilds can use:
+
+```bash
+sudo nixos-rebuild switch --flake .
 ```
 
 ## 3) Verify

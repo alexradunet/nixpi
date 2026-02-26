@@ -22,6 +22,16 @@ CFG
 EOF
 chmod +x "$TMP_DIR/bin/nixos-generate-config"
 
+# Keep desktop detection deterministic for this test.
+cat > "$TMP_DIR/bin/nixos-option" <<'EOF'
+#!/usr/bin/env bash
+cat <<'OUT'
+Value:
+  false
+OUT
+EOF
+chmod +x "$TMP_DIR/bin/nixos-option"
+
 # Happy path: generated host file should include UEFI defaults + commented BIOS fallback.
 happy_output="$(PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" demo-host)"
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/demo-host.nix"
