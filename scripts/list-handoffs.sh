@@ -54,15 +54,14 @@ done
 
 [ -d "$HANDOFF_DIR" ] || exit 0
 
-# shellcheck disable=SC2010
-files="$(ls -1 "$HANDOFF_DIR"/*.md 2>/dev/null | xargs -r -n1 basename | sort -r)"
+mapfile -t files < <(find "$HANDOFF_DIR" -maxdepth 1 -type f -name '*.md' -printf '%f\n' | sort -r)
 
 if [ -n "$DATE_FILTER" ]; then
-  files="$(printf '%s\n' "$files" | grep -E "^${DATE_FILTER}-" || true)"
+  mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -E "^${DATE_FILTER}-" || true)
 fi
 
 if [ -n "$TYPE_FILTER" ]; then
-  files="$(printf '%s\n' "$files" | grep -F -- "-$TYPE_FILTER-" || true)"
+  mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -F -- "-$TYPE_FILTER-" || true)
 fi
 
-printf '%s\n' "$files" | sed '/^$/d'
+printf '%s\n' "${files[@]}" | sed '/^$/d'

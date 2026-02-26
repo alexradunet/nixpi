@@ -8,7 +8,7 @@ All project-wide policies (TDD, safety, Nix/NixOS conventions, standards-first, 
 
 ## Development Operating Model
 - Build in **Nixpi** (repo + shell + tests).
-- Use **`nixpi dev`** as the primary developer-mode assistant interface.
+- Use **`nixpi`** as the primary assistant interface.
 - Use **Pi** (`pi` / `pi -p`) as the underlying SDK/advanced CLI when needed.
 - Repository files + tests + git history are the source of truth.
 - If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
@@ -22,6 +22,9 @@ Run relevant tests for changed code, and for repo-wide checks run:
 
 # Full checks (tests + flake validation)
 ./scripts/check.sh
+
+# Optional strict check (also builds one host system closure)
+NIXPI_CHECK_BUILD=1 NIXPI_CHECK_HOST=$(hostname) ./scripts/check.sh
 
 # Optional direct flake validation
 nix flake check --no-build

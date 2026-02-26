@@ -23,7 +23,7 @@ Use this skill when the user is bootstrapping Nixpi on a fresh machine.
    - `sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$(hostname)"`
 5. After rebuild, verify:
    - `nixpi --help`
-   - `./scripts/verify-nixpi-modes.sh`
+   - `./scripts/verify-nixpi.sh`
 6. If rebuild fails, provide rollback command:
    - `sudo nixos-rebuild switch --rollback`
 

@@ -200,6 +200,9 @@ Provides: git, Node.js 22, sqlite, jq, ripgrep, fd, and language servers (nixd, 
 # Full project checks (tests + flake checks)
 ./scripts/check.sh
 
+# Optional strict check (also builds one host system closure)
+NIXPI_CHECK_BUILD=1 NIXPI_CHECK_HOST=$(hostname) ./scripts/check.sh
+
 # Optional direct flake validation
 nix flake check --no-build
 
