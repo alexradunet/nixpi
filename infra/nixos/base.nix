@@ -15,7 +15,7 @@ let
   sharedGuidelines = ''
     - Prefer declarative Nix changes over imperative system mutation
     - Never modify /etc or systemd units directly; edit NixOS config instead
-    - Protect secrets: never read ~/.pi/agent/auth.json, ~/.ssh/*, or .env files
+    - Protect secrets: never read ${runtimePiDir}/auth.json, ~/.ssh/*, or .env files
   '';
 
   piSystemPrompt = ''
@@ -23,8 +23,8 @@ let
 
     ## Environment
     - OS: NixOS (declarative, flake-based)
-    - Config repo: ~/Nixpi
-    - Rebuild: cd ~/Nixpi && sudo nixos-rebuild switch --flake .
+    - Config repo: ${repoRoot}
+    - Rebuild: cd ${repoRoot} && sudo nixos-rebuild switch --flake .
     - VPN: Tailscale (services restricted to Tailscale + LAN)
     - File sync: Syncthing
 
@@ -50,8 +50,8 @@ let
     set -euo pipefail
 
     PI_BIN="${pkgs.llm-agents.pi}/bin/pi"
-    RUNTIME_DIR="$HOME/.pi/agent"
-    DEV_DIR="$HOME/.pi/agent-dev"
+    RUNTIME_DIR="${runtimePiDir}"
+    DEV_DIR="${devPiDir}"
 
     case "''${1-}" in
       dev)
@@ -93,8 +93,8 @@ Usage:
 
 Notes:
   - `pi` remains available as SDK/advanced CLI.
-  - `nixpi` (default) uses PI_CODING_AGENT_DIR=~/.pi/agent.
-  - `nixpi dev` uses PI_CODING_AGENT_DIR=~/.pi/agent-dev.
+  - `nixpi` (default) uses PI_CODING_AGENT_DIR from nixpi.runtimePiDir.
+  - `nixpi dev` uses PI_CODING_AGENT_DIR from nixpi.devPiDir.
 EOF
         ;;
       *)
@@ -134,7 +134,9 @@ EOF
 
   primaryUser = config.nixpi.primaryUser;
   userHome = "/home/${primaryUser}";
-  repoRoot = "${userHome}/Nixpi";
+  repoRoot = config.nixpi.repoRoot;
+  runtimePiDir = config.nixpi.runtimePiDir;
+  devPiDir = config.nixpi.devPiDir;
 in
 {
   options.nixpi.primaryUser = lib.mkOption {
@@ -146,13 +148,53 @@ in
     '';
   };
 
+  options.nixpi.repoRoot = lib.mkOption {
+    type = lib.types.str;
+    default = "/home/${config.nixpi.primaryUser}/Nixpi";
+    example = "/home/alex/Nixpi";
+    description = ''
+      Repository root for Nixpi on disk.
+    '';
+  };
+
+  options.nixpi.runtimePiDir = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.nixpi.repoRoot}/.pi/agent";
+    example = "/home/alex/Nixpi/.pi/agent";
+    description = ''
+      Runtime-mode PI_CODING_AGENT_DIR path.
+    '';
+  };
+
+  options.nixpi.devPiDir = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.nixpi.repoRoot}/.pi/agent-dev";
+    example = "/home/alex/Nixpi/.pi/agent-dev";
+    description = ''
+      Developer-mode PI_CODING_AGENT_DIR path.
+    '';
+  };
+
   config = {
     assertions = [
       {
         assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;
         message = "nixpi.primaryUser must be a valid Linux username (lowercase letters, digits, _, -, and starting with a lowercase letter or _).";
       }
+      {
+        assertion = lib.hasPrefix "/" repoRoot;
+        message = "nixpi.repoRoot must be an absolute path.";
+      }
+      {
+        assertion = lib.hasPrefix "/" runtimePiDir;
+        message = "nixpi.runtimePiDir must be an absolute path.";
+      }
+      {
+        assertion = lib.hasPrefix "/" devPiDir;
+        message = "nixpi.devPiDir must be an absolute path.";
+      }
     ];
+
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # Binary cache: pre-built packages from numtide so we don't compile llm-agents
@@ -374,11 +416,11 @@ in
   # IMPORTANT: These seeds are write-once. Files are only created if absent.
   # If you update piSystemPrompt/piDevSystemPrompt/settings above, existing
   # deployments will NOT receive the changes. To apply updates manually:
-  #   rm ~/.pi/agent/SYSTEM.md ~/.pi/agent-dev/SYSTEM.md
+  #   rm <runtimePiDir>/SYSTEM.md <devPiDir>/SYSTEM.md
   #   sudo nixos-rebuild switch --flake .
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
-    RUNTIME_PI_DIR="${userHome}/.pi/agent"
-    DEV_PI_DIR="${userHome}/.pi/agent-dev"
+    RUNTIME_PI_DIR="${runtimePiDir}"
+    DEV_PI_DIR="${devPiDir}"
 
     mkdir -p "$RUNTIME_PI_DIR"/{sessions,extensions,skills,prompts,themes}
     mkdir -p "$DEV_PI_DIR"/{sessions,extensions,skills,prompts,themes}

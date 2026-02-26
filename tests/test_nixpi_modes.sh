@@ -10,6 +10,8 @@ VERIFY_SCRIPT="scripts/verify-nixpi-modes.sh"
 # Feature: nixpi command wrapper exists with runtime + dev modes.
 assert_file_contains "$BASE" 'writeShellScriptBin "nixpi"'
 assert_file_contains "$BASE" 'nixpi dev [pi-args...]'
+assert_file_contains "$BASE" 'RUNTIME_DIR="${runtimePiDir}"'
+assert_file_contains "$BASE" 'DEV_DIR="${devPiDir}"'
 assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$DEV_DIR"'
 
 # Failure-path handling: explicit error for unknown mode value.
@@ -17,12 +19,18 @@ assert_file_contains "$BASE" 'Unknown nixpi mode:'
 
 # Edge case: default invocation should map to runtime mode.
 assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$RUNTIME_DIR"'
+assert_file_contains "$BASE" 'nixpi.runtimePiDir'
+assert_file_contains "$BASE" 'nixpi.devPiDir'
 
 # Docs: clarify nixpi as product command and pi as SDK.
 assert_file_contains "$README" '`nixpi` command'
 assert_file_contains "$README" '`pi` remains available as SDK'
 assert_file_contains "$README" 'nixpi` is installed automatically'
+assert_file_contains "$README" 'Runtime mode: `~/Nixpi/.pi/agent/`'
+assert_file_contains "$README" 'Developer mode: `~/Nixpi/.pi/agent-dev/`'
 assert_file_contains "$OPERATING" '`nixpi dev`'
+assert_file_contains "$OPERATING" '`~/Nixpi/.pi/agent/` (runtime)'
+assert_file_contains "$OPERATING" '`~/Nixpi/.pi/agent-dev/` (developer mode)'
 
 # Smoke-check script: exists, executable, validates runtime/dev mode behavior.
 assert_executable "$VERIFY_SCRIPT"

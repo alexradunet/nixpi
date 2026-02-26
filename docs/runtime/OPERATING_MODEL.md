@@ -31,9 +31,15 @@ After `nixos-rebuild switch`, both commands are available.
 ### Configuration source of truth
 - Declarative profile defaults are seeded from `infra/nixos/base.nix`.
 - Effective runtime profile files are under:
-  - `~/.pi/agent/` (runtime)
-  - `~/.pi/agent-dev/` (developer mode)
+  - `~/Nixpi/.pi/agent/` (runtime)
+  - `~/Nixpi/.pi/agent-dev/` (developer mode)
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
+
+### Optional path overrides (per host)
+If a host needs a different repository/profile location, override these Nix options in `infra/nixos/hosts/<hostname>.nix`:
+- `nixpi.repoRoot`
+- `nixpi.runtimePiDir`
+- `nixpi.devPiDir`
 
 ## Multi-Agent Architecture (Mandatory)
 See role contracts in [Agents Overview](../agents/README.md).

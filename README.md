@@ -113,6 +113,22 @@ claude          # Claude Code
 
 `pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
 
+Profile directories:
+- Runtime mode: `~/Nixpi/.pi/agent/`
+- Developer mode: `~/Nixpi/.pi/agent-dev/`
+
+Optional host override (if you need a different layout):
+
+```nix
+# infra/nixos/hosts/<hostname>.nix
+{ config, ... }:
+{
+  nixpi.repoRoot = "/home/<user>/Nixpi";
+  nixpi.runtimePiDir = "${config.nixpi.repoRoot}/.pi/agent";
+  nixpi.devPiDir = "${config.nixpi.repoRoot}/.pi/agent-dev";
+}
+```
+
 ### Is Nixpi preinstalled?
 Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi` and `claude`). No separate `pi install` step is required for core Nixpi.
 
