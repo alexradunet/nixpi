@@ -385,6 +385,8 @@ in
     nodejs_22
     vim
     neovim
+    nano
+    vscode
 
     # Language servers and linters
     nixd                          # Nix LSP

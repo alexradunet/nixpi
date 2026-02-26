@@ -8,6 +8,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 |-----------|-------------|
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
 | **LXQt Desktop** | local HDMI monitor setup path (LightDM + LXQt) for first-boot Wi-Fi/display configuration |
+| **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
+| **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
@@ -26,6 +28,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
+| VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
+| Simple Text Editor | `base.nix` — `environment.systemPackages` | Lightweight terminal editor (`nano`) |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`, `nixpi dev`) |
 | pi | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix (SDK/advanced CLI) |
 | Claude Code | `base.nix` — `environment.systemPackages` | Nix-packaged via llm-agents.nix |

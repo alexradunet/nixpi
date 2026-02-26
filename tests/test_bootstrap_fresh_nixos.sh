@@ -7,11 +7,13 @@ DOC="docs/runtime/REINSTALL_MINIMAL.md"
 README="README.md"
 DOCS_HOME="docs/README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
+BASE="infra/nixos/base.nix"
 SCRIPT_CONTENT="$(cat "$SCRIPT" 2>/dev/null || true)"
 DOC_CONTENT="$(cat "$DOC")"
 README_CONTENT="$(cat "$README")"
 DOCS_HOME_CONTENT="$(cat "$DOCS_HOME")"
 OPERATING_CONTENT="$(cat "$OPERATING")"
+BASE_CONTENT="$(cat "$BASE")"
 
 # Happy path: first-install bootstrap script exists and runs clone + first rebuild.
 assert_executable "$SCRIPT"
@@ -20,6 +22,10 @@ assert_file_contains "$SCRIPT" 'sudo env NIX_CONFIG="experimental-features = nix
 
 # Failure path: clear guard for non-repo target path collisions.
 assert_file_contains "$SCRIPT" 'exists but is not a git repository'
+
+# System default: flakes + nix-command are enabled declaratively system-wide.
+assert_file_contains "$BASE" 'nix.settings.experimental-features = [ "nix-command" "flakes" ];'
+assert_not_contains "$BASE_CONTENT" 'nix.settings.experimental-features = [ ];'
 
 # Edge case: idempotent rerun should skip cloning and avoid git dependency checks.
 assert_file_contains "$SCRIPT" 'Repository already present, skipping clone'
