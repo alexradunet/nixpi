@@ -32,7 +32,7 @@ What `bootstrap-fresh-nixos.sh` does:
 2. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed
 3. Creates host file via `./scripts/add-host.sh` if missing
 4. Runs first rebuild with flakes explicitly enabled:
-   - `sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .`
+   - `sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .`
 
 ## 2) Manual path (same assumptions)
 
@@ -59,7 +59,7 @@ If `infra/nixos/hosts/$(hostname).nix` is missing:
 ### First rebuild (flakes explicitly enabled)
 
 ```bash
-sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .
+sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .
 ```
 
 ## 3) Verify

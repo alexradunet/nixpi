@@ -26,7 +26,7 @@ if [ ! -f "infra/nixos/hosts/$(hostname).nix" ]; then
   ./scripts/add-host.sh
 fi
 
-sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .
+sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .
 
 echo "bootstrap-fresh-nixos: OK"
 echo "Next: nixpi --help && ./scripts/verify-nixpi-modes.sh"
