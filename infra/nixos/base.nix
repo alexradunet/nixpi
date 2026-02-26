@@ -151,6 +151,8 @@ EOF
 
   primaryUser = config.nixpi.primaryUser;
   userDisplayName = config.nixpi.primaryUserDisplayName;
+  primaryUserShell = lib.escapeShellArg primaryUser;
+  userDisplayNameShell = lib.escapeShellArg userDisplayName;
   userHome = "/home/${primaryUser}";
   repoRoot = config.nixpi.repoRoot;
   runtimePiDir = config.nixpi.runtimePiDir;
@@ -528,6 +530,17 @@ JSONEOF
     fi
 
     chown -R ${primaryUser}:users "$RUNTIME_PI_DIR" "$DEV_PI_DIR"
+  '';
+
+  # Keep login-manager display name aligned with configured primary user
+  # display name, even when users.mutableUsers is enabled.
+  system.activationScripts.syncPrimaryUserDisplayName = lib.stringAfter [ "users" ] ''
+    if ${pkgs.glibc.bin}/bin/getent passwd ${primaryUserShell} >/dev/null; then
+      currentGecos="$(${pkgs.glibc.bin}/bin/getent passwd ${primaryUserShell} | ${pkgs.gawk}/bin/awk -F: '{print $5}')"
+      if [ "$currentGecos" != ${userDisplayNameShell} ]; then
+        ${pkgs.shadow}/bin/usermod -c ${userDisplayNameShell} ${primaryUserShell}
+      fi
+    fi
   '';
 
   # Automatic garbage collection
