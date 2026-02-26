@@ -6,12 +6,12 @@ nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 
 | Component | Description |
 |-----------|-------------|
-| **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, Cockpit, Tailscale, Syncthing, packages |
+| **NixOS Base** | Declarative headless config (`infra/nixos/base.nix`): SSH, OliveTin, Tailscale, Syncthing, packages |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via llm-agents.nix (Nix-packaged SDK/advanced CLI) |
 | **`claude` command** | [Claude Code](https://github.com/anthropics/claude-code) via llm-agents.nix (Nix-packaged, optional — Pi does not support Claude oAuth) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
-| **Cockpit** | Web admin interface (`https://<tailscale-ip>:9090`), restricted to local network and Tailscale |
+| **OliveTin** | Web action interface (`http://<tailscale-ip>:1337`), restricted to local network and Tailscale |
 | **Tailscale** | VPN for secure remote access |
 | **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale and LAN via nftables) |
 
@@ -20,7 +20,7 @@ nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; restricted to Tailscale + LAN |
-| Cockpit | `base.nix` — `services.cockpit` | Web admin UI on port 9090; restricted to Tailscale + LAN |
+| OliveTin | `base.nix` — `services.olivetin` | Web action UI on port 1337; restricted to Tailscale + LAN |
 | Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI restricted to Tailscale + LAN |
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
@@ -31,8 +31,8 @@ nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 ## Access Methods
 
 ```
-Local Network / Tailscale → SSH      (port 22)   → Terminal / VS Code Remote SSH
-Local Network / Tailscale → Cockpit  (port 9090) → Web admin UI
+Local Network / Tailscale → SSH       (port 22)   → Terminal / VS Code Remote SSH
+Local Network / Tailscale → OliveTin  (port 1337) → Curated web actions
 ```
 
 All inbound ports are restricted to Tailscale (100.0.0.0/8) and local network (192.168.0.0/16, 10.0.0.0/8) via nftables rules.
@@ -91,9 +91,9 @@ sudo nixos-rebuild switch --flake .
 ssh <username>@<tailscale-ip>
 ```
 
-### Access Cockpit web admin
+### Access OliveTin web interface
 
-Open `https://<tailscale-ip>:9090` in your browser. Cockpit is restricted to Tailscale and local network via nftables.
+Open `http://<tailscale-ip>:1337` in your browser. OliveTin is restricted to Tailscale and local network via nftables.
 
 ### Access Syncthing web UI
 
