@@ -55,6 +55,9 @@ let
     export npm_config_audit=false
     export npm_config_fund=false
     export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/nixpi-npm"
+    export npm_config_prefix="''${XDG_DATA_HOME:-$HOME/.local/share}/nixpi-npm-global"
+
+    mkdir -p "$npm_config_cache" "$npm_config_prefix"
 
     # Pin package version to keep behavior stable across rebuilds.
     exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.55.1 "$@"
@@ -243,8 +246,8 @@ in
   # preserve mode by setting:
   #   nixpi.desktopProfile = "preserve";
   services.xserver.enable = true;
-  services.xserver.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
-  services.xserver.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
+  services.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
+  services.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
   services.xserver.xkb = {
     layout = "us";
   };

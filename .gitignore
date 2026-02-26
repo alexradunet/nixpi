@@ -1,5 +1,7 @@
 /node_modules
 /result
+/.pi/agent/
+/.pi/agent-dev/
 /.pi/npm/node_modules
 /.pi/npm/.package-lock.json
 

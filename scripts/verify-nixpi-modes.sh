@@ -22,4 +22,7 @@ echo "$invalid_output" | grep -Fq 'Unknown nixpi mode:' || fail "missing unknown
 nixpi mode runtime --help >/dev/null 2>&1 || fail "runtime mode did not forward to pi --help"
 nixpi dev --help >/dev/null 2>&1 || fail "dev mode did not forward to pi --help"
 
+# Edge case: explicit mode selector for dev should behave like `nixpi dev`.
+nixpi mode dev --help >/dev/null 2>&1 || fail "explicit dev mode did not forward to pi --help"
+
 echo "verify-nixpi-modes: OK"
