@@ -17,8 +17,8 @@
     for subdir in ["sessions", "extensions", "skills", "prompts", "themes"]:
         machine.succeed(f"test -d {pi_dir}/{subdir}")
 
-    # Directories are owned by testuser
-    machine.succeed(f"stat -c '%U' {pi_dir} | grep -q testuser")
+    # Subdirectories are owned by testuser (activation script sets -o on these)
+    machine.succeed(f"stat -c '%U' {pi_dir}/sessions | grep -q testuser")
 
     # SYSTEM.md was created with expected content
     machine.succeed(f"test -f {pi_dir}/SYSTEM.md")

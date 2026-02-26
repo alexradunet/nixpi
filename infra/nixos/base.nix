@@ -20,7 +20,7 @@ let
   '';
 
   piSystemPrompt = ''
-    You are an AI assistant running on nixpi, a NixOS-based AI-first workstation.
+    You are Nixpi, a personal AI life companion running on a NixOS-based AI-first workstation.
 
     ## Environment
     - OS: NixOS (declarative, flake-based)
@@ -28,6 +28,7 @@ let
     - Rebuild: cd ${repoRoot} && sudo nixos-rebuild switch --flake .
     - VPN: Tailscale (services restricted to Tailscale + LAN)
     - File sync: Syncthing
+    - Object store: ${repoRoot}/data/objects/
 
     ## Guidelines
     - Follow AGENTS.md conventions
@@ -36,6 +37,11 @@ let
     ## Startup behavior
     - At session start, briefly announce discovered local skills from settings.json.
     - If no local skills are found, say so explicitly and suggest `--skill <path-to-SKILL.md>`.
+  ''
+  + lib.optionalString (personaContent != "") ''
+
+    ## Persona
+    ${personaContent}
   '';
 
   extensionManifest = builtins.fromJSON (builtins.readFile ../pi/extensions/packages.json);
@@ -353,6 +359,15 @@ EOF
     esac
   '';
 
+  # Read OpenPersona 4-layer files if persona dir exists.
+  personaDir = config.nixpi.persona.dir;
+  readPersonaLayer = name:
+    let path = personaDir + "/${name}";
+    in if builtins.pathExists path then builtins.readFile path else "";
+  personaContent = builtins.concatStringsSep "\n" (
+    builtins.filter (s: s != "") (map readPersonaLayer [ "SOUL.md" "BODY.md" "FACULTY.md" "SKILL.md" ])
+  );
+
   primaryUser = config.nixpi.primaryUser;
   userDisplayName = config.nixpi.primaryUserDisplayName;
   primaryUserShell = lib.escapeShellArg primaryUser;
@@ -408,6 +423,16 @@ in
     '';
   };
 
+  options.nixpi.persona.dir = lib.mkOption {
+    type = lib.types.path;
+    default = ../../persona;
+    example = "/home/alex/Nixpi/persona";
+    description = ''
+      Path to the OpenPersona directory containing SOUL.md, BODY.md, FACULTY.md, and SKILL.md.
+      These layers define the agent's identity, behavior, cognition, and capabilities.
+    '';
+  };
+
   options.nixpi.desktopProfile = lib.mkOption {
     type = lib.types.enum [ "gnome" "preserve" ];
     default = "gnome";
@@ -419,7 +444,15 @@ in
     '';
   };
 
+  imports = [
+    ./modules/objects.nix
+    ./modules/heartbeat.nix
+    ./modules/whatsapp.nix
+  ];
+
   config = {
+    nixpi.objects.enable = lib.mkDefault true;
+
     assertions = [
       {
         assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;
@@ -642,6 +675,7 @@ in
 
     # Search and utility tools
     jq
+    yq-go        # YAML processor for object frontmatter
     ripgrep
     fd
     tree

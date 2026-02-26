@@ -2,6 +2,13 @@
 /result
 /.pi/
 
+# Life data (synced via Syncthing, not version-controlled)
+/data/objects/
+
+# WhatsApp bridge build artifacts and dependencies
+/services/whatsapp-bridge/node_modules/
+/services/whatsapp-bridge/dist/
+
 # Generated agent handoff artifacts (local operational data)
 /docs/agents/handoffs/*.md
 !/docs/agents/handoffs/.gitkeep

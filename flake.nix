@@ -69,6 +69,7 @@
               nodejs_22
               sqlite
               jq
+              yq-go        # YAML processor for object frontmatter
               ripgrep
               fd
 
@@ -103,6 +104,9 @@
         vm-activation-scripts = mkVmTest ./tests/vm/activation-scripts.nix;
         vm-service-ensemble   = mkVmTest ./tests/vm/service-ensemble.nix;
         vm-password-policy    = mkVmTest ./tests/vm/password-policy.nix;
+        vm-objects-data-dir   = mkVmTest ./tests/vm/objects-data-dir.nix;
+        vm-persona-injection  = mkVmTest ./tests/vm/persona-injection.nix;
+        vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
       };
     };
 }
