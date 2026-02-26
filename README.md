@@ -92,7 +92,7 @@ sudo nixos-rebuild switch --flake .
 ### Connect via SSH
 
 ```bash
-ssh nixpi@<tailscale-ip>
+ssh <username>@<tailscale-ip>
 ```
 
 ### Connect via RDP

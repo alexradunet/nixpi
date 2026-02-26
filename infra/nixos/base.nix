@@ -23,8 +23,8 @@ let
 
     ## Environment
     - OS: NixOS (declarative, flake-based)
-    - Config repo: ~/Development/NixPi
-    - Rebuild: cd ~/Development/NixPi && sudo nixos-rebuild switch --flake .
+    - Config repo: ~/Nixpi
+    - Rebuild: cd ~/Nixpi && sudo nixos-rebuild switch --flake .
     - VPN: Tailscale (services restricted to Tailscale + LAN)
     - File sync: Syncthing
 
@@ -131,8 +131,28 @@ EOF
         ;;
     esac
   '';
+
+  primaryUser = config.nixpi.primaryUser;
+  userHome = "/home/${primaryUser}";
+  repoRoot = "${userHome}/Nixpi";
 in
 {
+  options.nixpi.primaryUser = lib.mkOption {
+    type = lib.types.str;
+    default = "nixpi";
+    example = "alex";
+    description = ''
+      Primary Linux username for the local human operator.
+    '';
+  };
+
+  config = {
+    assertions = [
+      {
+        assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;
+        message = "nixpi.primaryUser must be a valid Linux username (lowercase letters, digits, _, -, and starting with a lowercase letter or _).";
+      }
+    ];
   # Enable flakes and nix-command
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # Binary cache: pre-built packages from numtide so we don't compile llm-agents
@@ -253,15 +273,20 @@ in
   # Syncthing for file synchronization
   services.syncthing = {
     enable = true;
-    user = "nixpi";
-    dataDir = "/home/nixpi/.local/share/syncthing";
-    configDir = "/home/nixpi/.config/syncthing";
-    # overrideFolders/overrideDevices = false: let the user add folders/devices
-    # via the Syncthing web UI without NixOS wiping them on each rebuild.
-    # When true, NixOS would enforce only the folders/devices declared here.
+    user = primaryUser;
+    dataDir = "${userHome}/.local/share/syncthing";
+    configDir = "${userHome}/.config/syncthing";
+    # Keep overrides disabled so users can still add folders/devices in UI.
+    # Home directory is declared by default so it can be synced across devices.
     overrideFolders = false;
     overrideDevices = false;
     settings = {
+      folders.home = {
+        id = "home";
+        label = "Home";
+        path = userHome;
+        devices = builtins.attrNames config.services.syncthing.settings.devices;
+      };
       gui = {
         enabled = true;
         address = "0.0.0.0:8384";
@@ -273,9 +298,9 @@ in
   };
 
   # User configuration
-  users.users.nixpi = {
+  users.users.${primaryUser} = {
     isNormalUser = true;
-    home = "/home/nixpi";
+    home = userHome;
     description = "Nixpi";
     extraGroups = [ "wheel" "networkmanager" ];
   };
@@ -335,8 +360,8 @@ in
   #   rm ~/.pi/agent/SYSTEM.md ~/.pi/agent-dev/SYSTEM.md
   #   sudo nixos-rebuild switch --flake .
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
-    RUNTIME_PI_DIR="/home/nixpi/.pi/agent"
-    DEV_PI_DIR="/home/nixpi/.pi/agent-dev"
+    RUNTIME_PI_DIR="${userHome}/.pi/agent"
+    DEV_PI_DIR="${userHome}/.pi/agent-dev"
 
     mkdir -p "$RUNTIME_PI_DIR"/{sessions,extensions,skills,prompts,themes}
     mkdir -p "$DEV_PI_DIR"/{sessions,extensions,skills,prompts,themes}
@@ -361,7 +386,7 @@ SYSEOF
       cat > "$DEV_PI_DIR/settings.json" <<'JSONEOF'
 {
   "skills": [
-    "/home/nixpi/Development/NixPi/infra/pi/skills"
+    "${repoRoot}/infra/pi/skills"
   ],
   "packages": [
     "npm:@aaronmaturen/pi-context7"
@@ -375,7 +400,7 @@ JSONEOF
       ln -sfn "$RUNTIME_PI_DIR/auth.json" "$DEV_PI_DIR/auth.json"
     fi
 
-    chown -R nixpi:users "$RUNTIME_PI_DIR" "$DEV_PI_DIR"
+    chown -R ${primaryUser}:users "$RUNTIME_PI_DIR" "$DEV_PI_DIR"
   '';
 
   # Automatic garbage collection
@@ -389,4 +414,5 @@ JSONEOF
   # (databases, state directories). It does NOT control package versions.
   # Never change this after install — it would break existing state assumptions.
   system.stateVersion = "25.11";
+  };
 }

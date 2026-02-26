@@ -37,7 +37,7 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - Document rollback steps for risky operations.
 
 ## Repository Conventions
-- Project root: `~/Development/NixPi`
+- Project root: `~/Nixpi`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
 ## Documentation Conventions
