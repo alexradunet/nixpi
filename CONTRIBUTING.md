@@ -1,6 +1,6 @@
 # Contributing to Nixpi
 
-Related: [AGENTS.md](./AGENTS.md) · [Source of Truth](./docs/meta/SOURCE_OF_TRUTH.md) · [TDD Skill](./infra/pi/skills/tdd/SKILL.md) · [Docs Home](./docs/README.md)
+Related: [AGENTS.md](./AGENTS.md) · [Source of Truth](./docs/meta/SOURCE_OF_TRUTH.md) · [Agent Skills Index](./docs/agents/SKILLS.md) · [Docs Home](./docs/README.md)
 
 This project is NixOS-first and AI-assisted. Keep changes reproducible, test-driven, and easy to review.
 

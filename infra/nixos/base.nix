@@ -460,7 +460,8 @@ in
   # IMPORTANT: These seeds are write-once. Files are only created if absent.
   # If you update piSystemPrompt/piDevSystemPrompt/settings above, existing
   # deployments will NOT receive the changes. To apply updates manually:
-  #   rm <runtimePiDir>/SYSTEM.md <devPiDir>/SYSTEM.md
+  #   rm <runtimePiDir>/SYSTEM.md <runtimePiDir>/settings.json
+  #   rm <devPiDir>/SYSTEM.md <devPiDir>/settings.json
   #   sudo nixos-rebuild switch --flake .
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     RUNTIME_PI_DIR="${runtimePiDir}"
@@ -483,8 +484,20 @@ ${piDevSystemPrompt}
 SYSEOF
     fi
 
+    # Seed runtime-mode settings if absent.
+    # Runtime also loads Nixpi skills (agent contracts + install/TDD helpers).
+    if [ ! -f "$RUNTIME_PI_DIR/settings.json" ]; then
+      cat > "$RUNTIME_PI_DIR/settings.json" <<'JSONEOF'
+{
+  "skills": [
+    "${repoRoot}/infra/pi/skills"
+  ]
+}
+JSONEOF
+    fi
+
     # Seed developer-mode settings if absent.
-    # This keeps Pi-native behavior while preloading Nixpi skills/rules.
+    # Dev mode preloads the same Nixpi skills plus optional dev packages.
     if [ ! -f "$DEV_PI_DIR/settings.json" ]; then
       cat > "$DEV_PI_DIR/settings.json" <<'JSONEOF'
 {

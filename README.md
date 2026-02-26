@@ -64,7 +64,7 @@ Nixpi/
       base.nix                 # Base config + GNOME desktop + web terminal + nixpi wrapper + profile seeding
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
-    pi/skills/                 # Pi/Nixpi skills (install-nixpi, tdd, claude-consult)
+    pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
     bootstrap-fresh-nixos.sh   # Clone + guided Pi install workflow for fresh NixOS installs
     add-host.sh                # Generate a new host config from hardware
@@ -159,7 +159,7 @@ Commands available system-wide:
 
 ```bash
 nixpi           # Nixpi normal/runtime mode (primary user command)
-nixpi dev       # Nixpi developer mode (Pi-native + Nixpi skills/rules)
+nixpi dev       # Nixpi developer mode (Pi-native; see docs/agents/SKILLS.md)
 pi              # Pi SDK/advanced CLI
 ```
 
@@ -214,14 +214,13 @@ nix flake check --no-build
 
 - Development model and contribution policy: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Agent behavior policy: [`AGENTS.md`](./AGENTS.md)
-- Pi TDD skill: [`infra/pi/skills/tdd/SKILL.md`](./infra/pi/skills/tdd/SKILL.md)
+- Agent skills index: [`docs/agents/SKILLS.md`](./docs/agents/SKILLS.md)
 - Documentation hub: [`docs/README.md`](./docs/README.md)
 - Runtime operating model: [`docs/runtime/OPERATING_MODEL.md`](./docs/runtime/OPERATING_MODEL.md)
 - Agents overview and responsibilities: [`docs/agents/README.md`](./docs/agents/README.md)
 - Source-of-truth precedence: [`docs/meta/SOURCE_OF_TRUTH.md`](./docs/meta/SOURCE_OF_TRUTH.md)
 - Emoji concept dictionary (visual communication): [`docs/ux/EMOJI_DICTIONARY.md`](./docs/ux/EMOJI_DICTIONARY.md)
 - Documentation style guide: [`docs/meta/DOCS_STYLE.md`](./docs/meta/DOCS_STYLE.md)
-- Pi skills: [`infra/pi/skills/`](./infra/pi/skills/)
 
 ## Runtime Model (High Level)
 

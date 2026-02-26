@@ -22,8 +22,7 @@ This section defines each Nixpi agent role as a modular contract.
 ## Tooling
 - `scripts/new-handoff.sh` — scaffold a standards-compliant handoff file.
 - `scripts/list-handoffs.sh` — list handoff files (supports type/date filters).
-- `infra/pi/skills/tdd/SKILL.md` — mandatory TDD behavior contract.
-- `infra/pi/skills/claude-consult/SKILL.md` — optional second-opinion consult workflow.
+- [Agent Skills Index](./SKILLS.md) — short descriptions + links to skill contracts used by `nixpi` and `nixpi dev`.
 
 ## Role Boundaries
 - Hermes (Runtime) does not directly self-modify Nixpi core.

@@ -6,6 +6,7 @@ This folder is organized as a modular knowledge base.
 - [Operating Model](./runtime/OPERATING_MODEL.md) — multi-agent runtime/evolution workflow
 - [Reinstall on Fresh NixOS](./runtime/REINSTALL.md) — copy-paste recovery/reinstall checklist (includes automated clone + first rebuild)
 - [Agents Overview](./agents/README.md) — role contracts and responsibilities
+- [Agent Skills Index](./agents/SKILLS.md) — concise map of agent skill contracts
 - [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md) — standard inter-agent artifacts
 - [Source of Truth Map](./meta/SOURCE_OF_TRUTH.md) — canonical ownership and precedence
 - [Emoji Dictionary](./ux/EMOJI_DICTIONARY.md) — visual language for low-cognitive-load communication
@@ -19,6 +20,7 @@ This folder is organized as a modular knowledge base.
 1. [Source of Truth Map](./meta/SOURCE_OF_TRUTH.md)
 2. [Operating Model](./runtime/OPERATING_MODEL.md)
 3. [Agents Overview](./agents/README.md)
-4. [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md)
-5. [Emoji Dictionary](./ux/EMOJI_DICTIONARY.md)
-6. [Docs Style Guide](./meta/DOCS_STYLE.md)
+4. [Agent Skills Index](./agents/SKILLS.md)
+5. [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md)
+6. [Emoji Dictionary](./ux/EMOJI_DICTIONARY.md)
+7. [Docs Style Guide](./meta/DOCS_STYLE.md)

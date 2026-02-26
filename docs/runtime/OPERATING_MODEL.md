@@ -6,7 +6,7 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 
 ## Goal
 - End-user experience: install Nixpi, use `nixpi` as the primary assistant command, and run in normal/runtime mode by default.
-- Engineering experience: use `nixpi dev` for Pi-native development with Nixpi skills/rules preloaded; evolve Nixpi through tested, reviewable, declarative changes.
+- Engineering experience: use `nixpi dev` for Pi-native development with skills from [Agent Skills Index](../agents/SKILLS.md); evolve Nixpi through tested, reviewable, declarative changes.
 
 ## Installation and First Boot
 
@@ -27,7 +27,8 @@ After the first rebuild, both commands are available.
 
 ### Runtime vs Developer mode
 - `nixpi` → normal/runtime mode (primary end-user path).
-- `nixpi dev` → developer mode (Pi-native workflow with Nixpi dev skills/rules).
+- `nixpi dev` → developer mode (Pi-native workflow; see [Agent Skills Index](../agents/SKILLS.md)).
+- Both profiles preload shared Nixpi skills (see [Agent Skills Index](../agents/SKILLS.md)).
 - `pi` remains available for SDK/advanced usage.
 
 ### Configuration source of truth
