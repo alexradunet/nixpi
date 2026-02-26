@@ -110,7 +110,7 @@ sudo nixos-rebuild switch --flake .
 Fresh-install first rebuild only (when flakes are not yet enabled):
 
 ```bash
-sudo nixos-rebuild switch --flake . --extra-experimental-features "nix-command flakes"
+sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake .
 ```
 
 ### Connect via SSH
