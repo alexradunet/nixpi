@@ -12,6 +12,14 @@ This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install d
 
 ## 1) Fast path (automated clone + first rebuild)
 
+Single-command one-liner:
+
+```bash
+nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
+```
+
+Step-by-step equivalent:
+
 ```bash
 cd ~
 nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi

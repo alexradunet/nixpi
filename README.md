@@ -88,6 +88,12 @@ For a full reinstall on a fresh NixOS minimal install (no desktop selected in in
 Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
 
 ```bash
+nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
+```
+
+Step-by-step equivalent:
+
+```bash
 nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
 cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh

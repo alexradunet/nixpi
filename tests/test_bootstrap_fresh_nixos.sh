@@ -4,6 +4,7 @@ source "$(dirname "$0")/helpers.sh"
 
 SCRIPT="scripts/bootstrap-fresh-nixos.sh"
 DOC="docs/runtime/REINSTALL_MINIMAL_HEADLESS.md"
+README="README.md"
 SCRIPT_CONTENT="$(cat "$SCRIPT" 2>/dev/null || true)"
 DOC_CONTENT="$(cat "$DOC")"
 
@@ -23,5 +24,9 @@ assert_not_contains "$SCRIPT_CONTENT" 'command -v git'
 assert_file_contains "$DOC" './scripts/bootstrap-fresh-nixos.sh'
 assert_file_contains "$DOC" 'nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi'
 assert_not_contains "$DOC_CONTENT" 'If `git` is not present on your fresh install:'
+
+# Edge docs: provide single-command one-liner for clone + bootstrap.
+assert_file_contains "$README" 'nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh'
+assert_file_contains "$DOC" 'nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh'
 
 echo "PASS: bootstrap automation + git/flakes first-install assumptions"
