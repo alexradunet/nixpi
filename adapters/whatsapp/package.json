@@ -1,0 +1,15 @@
+{
+  "name": "@nixpi/whatsapp-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenClaw-like WhatsApp adapter for Nixpi (MVP)",
+  "scripts": {
+    "start": "node src/main.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc.9",
+    "pino": "9.9.5"
+  }
+}

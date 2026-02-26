@@ -324,6 +324,25 @@ EOF
     esac
   '';
 
+  whatsappAdapterRunner = pkgs.writeShellScriptBin "nixpi-whatsapp-adapter" ''
+    set -euo pipefail
+
+    ADAPTER_DIR="${repoRoot}/adapters/whatsapp"
+
+    if [ ! -f "$ADAPTER_DIR/src/main.mjs" ]; then
+      echo "Missing WhatsApp adapter sources at $ADAPTER_DIR" >&2
+      exit 1
+    fi
+
+    if [ ! -d "$ADAPTER_DIR/node_modules" ]; then
+      echo "Missing adapter dependencies at $ADAPTER_DIR/node_modules" >&2
+      echo "Run: cd $ADAPTER_DIR && npm ci" >&2
+      exit 1
+    fi
+
+    exec ${pkgs.nodejs_22}/bin/node "$ADAPTER_DIR/src/main.mjs"
+  '';
+
   passwordPolicyCheck = pkgs.writeShellScript "nixpi-password-policy-check" ''
     set -euo pipefail
 
@@ -409,6 +428,59 @@ in
     '';
   };
 
+  options.nixpi.whatsapp.enable = lib.mkEnableOption ''
+    OpenClaw-like WhatsApp adapter service for Nixpi.
+  '';
+
+  options.nixpi.whatsapp.allowlistedNumbers = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    example = [ "40722000111" "491234567890" ];
+    description = ''
+      WhatsApp sender numbers allowed to interact with Nixpi.
+      Use country code + digits only (no plus sign or spaces).
+      Values are mapped to NIXPI_WHATSAPP_ALLOWED_NUMBERS when the service runs.
+    '';
+  };
+
+  options.nixpi.whatsapp.environmentFile = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = null;
+    example = "/var/lib/nixpi-secrets/whatsapp.env";
+    description = ''
+      Optional systemd EnvironmentFile for WhatsApp adapter runtime config.
+      Use this for values you do not want committed in git.
+      Example line: NIXPI_WHATSAPP_ALLOWED_NUMBERS=40722000111,491234567890
+    '';
+  };
+
+  options.nixpi.whatsapp.stateDir = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.nixpi.repoRoot}/.pi/whatsapp";
+    example = "/home/alex/.local/share/nixpi/whatsapp";
+    description = ''
+      Runtime state directory for WhatsApp auth/session files.
+    '';
+  };
+
+  options.nixpi.whatsapp.maxReplyChars = lib.mkOption {
+    type = lib.types.ints.positive;
+    default = 3500;
+    example = 2000;
+    description = ''
+      Maximum reply size sent back to WhatsApp.
+    '';
+  };
+
+  options.nixpi.whatsapp.logLevel = lib.mkOption {
+    type = lib.types.enum [ "trace" "debug" "info" "warn" "error" ];
+    default = "info";
+    example = "debug";
+    description = ''
+      Log level for the WhatsApp adapter process.
+    '';
+  };
+
   config = {
     assertions = [
       {
@@ -426,6 +498,22 @@ in
       {
         assertion = extensionPackagesArePinned;
         message = "All infra/pi/extensions/packages.json entries must be pinned npm sources (exact versions), e.g. npm:@scope/extension@1.2.3.";
+      }
+      {
+        assertion = builtins.all (number: builtins.match "^[0-9]+$" number != null) config.nixpi.whatsapp.allowlistedNumbers;
+        message = "nixpi.whatsapp.allowlistedNumbers entries must be digits only (country code, no '+').";
+      }
+      {
+        assertion = lib.hasPrefix "/" config.nixpi.whatsapp.stateDir;
+        message = "nixpi.whatsapp.stateDir must be an absolute path.";
+      }
+      {
+        assertion = config.nixpi.whatsapp.environmentFile == null || lib.hasPrefix "/" config.nixpi.whatsapp.environmentFile;
+        message = "nixpi.whatsapp.environmentFile must be an absolute path when set.";
+      }
+      {
+        assertion = !config.nixpi.whatsapp.enable || config.nixpi.whatsapp.allowlistedNumbers != [ ] || config.nixpi.whatsapp.environmentFile != null;
+        message = "nixpi.whatsapp.enable requires either nixpi.whatsapp.allowlistedNumbers or nixpi.whatsapp.environmentFile (with NIXPI_WHATSAPP_ALLOWED_NUMBERS).";
       }
     ];
 
@@ -594,6 +682,44 @@ in
       options = {
         relaysEnabled = true;  # Allow relay servers for connectivity
       };
+    };
+  };
+
+  # WhatsApp adapter (MVP) service wiring.
+  # This service is disabled by default and can be enabled per host via:
+  #   nixpi.whatsapp.enable = true;
+  systemd.tmpfiles.rules = lib.mkIf config.nixpi.whatsapp.enable [
+    "d ${config.nixpi.whatsapp.stateDir} 0700 ${primaryUser} users - -"
+  ];
+
+  systemd.services.nixpi-whatsapp-adapter = lib.mkIf config.nixpi.whatsapp.enable {
+    description = "Nixpi WhatsApp adapter (MVP)";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+
+    environment = {
+      NIXPI_WHATSAPP_STATE_DIR = config.nixpi.whatsapp.stateDir;
+      NIXPI_WHATSAPP_PI_BIN = "${nixpiCli}/bin/nixpi";
+      NIXPI_WHATSAPP_MAX_REPLY_CHARS = toString config.nixpi.whatsapp.maxReplyChars;
+      NIXPI_WHATSAPP_LOG_LEVEL = config.nixpi.whatsapp.logLevel;
+    } // lib.optionalAttrs (config.nixpi.whatsapp.allowlistedNumbers != [ ]) {
+      NIXPI_WHATSAPP_ALLOWED_NUMBERS = lib.concatStringsSep "," config.nixpi.whatsapp.allowlistedNumbers;
+    };
+
+    serviceConfig = {
+      Type = "simple";
+      User = primaryUser;
+      Group = "users";
+      WorkingDirectory = "${repoRoot}/adapters/whatsapp";
+      ExecStart = "${whatsappAdapterRunner}/bin/nixpi-whatsapp-adapter";
+      Restart = "always";
+      RestartSec = "5s";
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      EnvironmentFile = lib.optionals (config.nixpi.whatsapp.environmentFile != null) [
+        config.nixpi.whatsapp.environmentFile
+      ];
     };
   };
 

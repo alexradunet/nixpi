@@ -53,10 +53,13 @@ Nixpi/
   CONTRIBUTING.md              # Developer workflow and contribution rules
   flake.nix                    # Flake: dev shell + NixOS configurations
   flake.lock
+  adapters/
+    whatsapp/                  # OpenClaw-like WhatsApp bridge (MVP)
   docs/
     README.md                  # Docs hub
     runtime/OPERATING_MODEL.md # Runtime/evolution operating model
     agents/                    # Agent role contracts + handoff templates
+    extensions/                # Channel adapter docs/runbooks (e.g., WhatsApp)
     ux/EMOJI_DICTIONARY.md     # Visual communication dictionary
     meta/                      # Docs style + source-of-truth map
   infra/
@@ -227,6 +230,39 @@ nix flake check --no-build
 
 # Post-rebuild smoke check for nixpi single-instance wrapper
 ./scripts/verify-nixpi.sh
+```
+
+## WhatsApp adapter (MVP)
+
+OpenClaw-like WhatsApp chat bridge is scaffolded at:
+- `adapters/whatsapp/`
+- Docs: `docs/extensions/WHATSAPP_ADAPTER.md`
+
+Quick start:
+
+```bash
+cd adapters/whatsapp
+npm install
+NIXPI_WHATSAPP_ALLOWED_NUMBERS="40722000111" node src/main.mjs
+```
+
+Declarative host enablement:
+
+```nix
+# infra/nixos/hosts/<hostname>.nix
+{ ... }:
+{
+  nixpi.whatsapp.enable = true;
+  nixpi.whatsapp.allowlistedNumbers = [ "40722000111" ];
+  # or: nixpi.whatsapp.environmentFile = "/var/lib/nixpi-secrets/whatsapp.env";
+}
+```
+
+Before first service start, install adapter dependencies once:
+
+```bash
+cd ~/Nixpi/adapters/whatsapp
+npm ci
 ```
 
 ## Development Rules

@@ -73,4 +73,5 @@ Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HAN
 ## Ecosystem Direction
 - Official core channel target: Element/Matrix.
 - Additional channels/capabilities come via extensions.
+- Current MVP extension example: WhatsApp adapter scaffold ([docs/extensions/WHATSAPP_ADAPTER.md](../extensions/WHATSAPP_ADAPTER.md)).
 - Encourage extension packaging as Nix packages/modules so users can compose custom Nixpi systems declaratively.

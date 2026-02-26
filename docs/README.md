@@ -11,6 +11,7 @@ This folder is organized as a modular knowledge base.
 - [Source of Truth Map](./meta/SOURCE_OF_TRUTH.md) — canonical ownership and precedence
 - [Emoji Dictionary](./ux/EMOJI_DICTIONARY.md) — visual language for low-cognitive-load communication
 - [Docs Style Guide](./meta/DOCS_STYLE.md) — documentation conventions, linking rules, and structure
+- [WhatsApp Adapter (MVP)](./extensions/WHATSAPP_ADAPTER.md) — first channel adapter plan + local runbook
 
 ## Why this format
 - Standard Markdown links keep docs portable across tools and Git viewers.
