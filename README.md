@@ -78,6 +78,9 @@ nixpi/
 
 ## Getting Started
 
+For a full reinstall on a fresh headless NixOS install, use:
+- [`docs/runtime/REINSTALL_MINIMAL_HEADLESS.md`](./docs/runtime/REINSTALL_MINIMAL_HEADLESS.md)
+
 ### Rebuild NixOS after config changes
 
 From the repo root (`nixos-rebuild` auto-selects the config matching your hostname):
