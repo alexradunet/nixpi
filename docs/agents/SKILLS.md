@@ -2,7 +2,7 @@
 
 Related: [Agents Home](./README.md) · [Operating Model](../runtime/OPERATING_MODEL.md) · [Handoff Templates](./HANDOFF_TEMPLATES.md)
 
-Concise map of Nixpi agent skills used by both `nixpi` and `nixpi dev`.
+Concise map of Nixpi agent skills used by `nixpi`.
 
 ## Canonical agent-role skills
 - **Hermes (Runtime)** — user-facing runtime behavior contract  

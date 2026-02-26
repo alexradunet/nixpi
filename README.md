@@ -11,7 +11,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with the GNOME default |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
 | **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
-| **`nixpi` command** | Primary Nixpi CLI wrapper (runtime + dev modes), powered by Pi SDK |
+| **`nixpi` command** | Primary Nixpi CLI wrapper (single instance), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via lightweight npm-backed wrapper (SDK/advanced CLI) |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
@@ -31,7 +31,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
 | VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
 | Simple Text Editor | `base.nix` — `environment.systemPackages` | Lightweight terminal editor (`nano`) |
-| nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`, `nixpi dev`) |
+| nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`) |
 | pi | `base.nix` — `piWrapper` + `environment.systemPackages` | npm-backed wrapper for SDK/advanced CLI |
 
 ## Access Methods
@@ -70,7 +70,7 @@ Nixpi/
     add-host.sh                # Generate a new host config from hardware
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
-    verify-nixpi-modes.sh      # Post-rebuild nixpi wrapper smoke test
+    verify-nixpi.sh            # Post-rebuild nixpi wrapper smoke test
     new-handoff.sh             # Scaffold a standards-compliant handoff file
     list-handoffs.sh           # List handoff files (supports type/date filters)
   tests/
@@ -158,16 +158,13 @@ Open `http://<tailscale-ip>:8384` in your browser. The GUI is Tailscale-only via
 Commands available system-wide:
 
 ```bash
-nixpi           # Nixpi normal/runtime mode (primary user command)
-nixpi dev       # Nixpi developer mode (Pi-native; see docs/agents/SKILLS.md)
+nixpi           # Nixpi assistant (single instance; see docs/agents/SKILLS.md)
 pi              # Pi SDK/advanced CLI
 ```
 
 `pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
 
-Profile directories:
-- Runtime mode: `~/Nixpi/.pi/agent/`
-- Developer mode: `~/Nixpi/.pi/agent-dev/`
+Single Nixpi instance: `~/Nixpi/.pi/agent/`
 
 Optional host override (if you need a different layout):
 
@@ -176,8 +173,7 @@ Optional host override (if you need a different layout):
 { config, ... }:
 {
   nixpi.repoRoot = "/home/<user>/Nixpi";
-  nixpi.runtimePiDir = "${config.nixpi.repoRoot}/.pi/agent";
-  nixpi.devPiDir = "${config.nixpi.repoRoot}/.pi/agent-dev";
+  nixpi.piDir = "${config.nixpi.repoRoot}/.pi/agent";
   nixpi.primaryUserDisplayName = "Alex";
 }
 ```
@@ -207,8 +203,8 @@ Provides: git, Node.js 22, sqlite, jq, ripgrep, fd, and language servers (nixd, 
 # Optional direct flake validation
 nix flake check --no-build
 
-# Post-rebuild smoke check for nixpi runtime/dev wrapper modes
-./scripts/verify-nixpi-modes.sh
+# Post-rebuild smoke check for nixpi single-instance wrapper
+./scripts/verify-nixpi.sh
 ```
 
 ## Development Rules
@@ -228,7 +224,7 @@ nix flake check --no-build
 See the full runtime and evolution workflow in the [Operating Model](./docs/runtime/OPERATING_MODEL.md) and agent role contracts in [Agents Overview](./docs/agents/README.md).
 
 - **End users do not need `pi install`** for core Nixpi — `nixpi` and `pi` are provided declaratively by NixOS config.
-- `nixpi` → runtime mode (primary user command). `nixpi dev` → developer mode.
+- `nixpi` → single Nixpi instance (primary user command).
 - Nixpi uses a multi-agent model (Hermes, Athena, Hephaestus, Themis) where the runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
 
 ## Adding a New Machine

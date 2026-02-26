@@ -98,7 +98,7 @@ sudo nixos-rebuild switch --flake .
 
 ```bash
 nixpi --help
-./scripts/verify-nixpi-modes.sh
+./scripts/verify-nixpi.sh
 ```
 
 Authenticate Pi if needed:

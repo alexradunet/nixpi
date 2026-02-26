@@ -22,9 +22,8 @@ for skill in \
   [ -f "$file" ] || fail "expected skill file: $file"
 done
 
-# Skills are discoverable by both runtime and developer profiles.
-assert_file_contains "$BASE" 'if [ ! -f "$RUNTIME_PI_DIR/settings.json" ]; then'
-assert_file_contains "$BASE" 'if [ ! -f "$DEV_PI_DIR/settings.json" ]; then'
+# Skills are discoverable by the single Nixpi profile.
+assert_file_contains "$BASE" 'if [ ! -f "$PI_DIR/settings.json" ]; then'
 assert_file_contains "$BASE" '"${repoRoot}/infra/pi/skills"'
 
 # Spot-check each skill front matter.
@@ -33,4 +32,4 @@ assert_file_contains "infra/pi/skills/athena-technical-architect/SKILL.md" "name
 assert_file_contains "infra/pi/skills/hephaestus-maintainer/SKILL.md" "name: hephaestus-maintainer"
 assert_file_contains "infra/pi/skills/themis-reviewer/SKILL.md" "name: themis-reviewer"
 
-echo "PASS: agent skills are defined and preloaded for runtime/dev"
+echo "PASS: agent skills are defined and preloaded for nixpi"

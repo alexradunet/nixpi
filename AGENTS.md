@@ -58,10 +58,8 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 
 ## Pi Integration
 - `pi` is provided via a lightweight npm-backed wrapper in `base.nix` (`piWrapper`).
-- `nixpi` is the primary wrapper command (runtime + dev mode) built declaratively in `base.nix`.
-- Config directories:
-  - Runtime mode: `~/Nixpi/.pi/agent/`
-  - Developer mode: `~/Nixpi/.pi/agent-dev/`
+- `nixpi` is the primary wrapper command (single instance) built declaratively in `base.nix`.
+- Config directory: `~/Nixpi/.pi/agent/`
 - Auth remains managed through Pi-compatible flow (`pi login`).
 - System prompts/settings are seeded by NixOS activation script in `base.nix`.
 - Update path: bump Pi package version in `base.nix` then `sudo nixos-rebuild switch --flake .`.

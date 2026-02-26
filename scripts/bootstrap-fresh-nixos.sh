@@ -81,7 +81,7 @@ cd "$TARGET_DIR"
 if [ "$NON_INTERACTIVE" -eq 1 ]; then
   sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "$FLAKE_REF"
   echo "bootstrap-fresh-nixos: non-interactive apply finished"
-  echo "Next: nixpi --help && ./scripts/verify-nixpi-modes.sh"
+  echo "Next: nixpi --help && ./scripts/verify-nixpi.sh"
   exit 0
 fi
 

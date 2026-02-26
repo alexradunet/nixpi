@@ -5,37 +5,42 @@ source "$(dirname "$0")/helpers.sh"
 BASE="infra/nixos/base.nix"
 README="README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
-VERIFY_SCRIPT="scripts/verify-nixpi-modes.sh"
+VERIFY_SCRIPT="scripts/verify-nixpi.sh"
 
-# Feature: nixpi command wrapper exists with runtime + dev modes.
+BASE_CONTENT="$(cat "$BASE")"
+README_CONTENT="$(<"$README")"
+OPERATING_CONTENT="$(<"$OPERATING")"
+
+# Feature (happy path): nixpi wrapper exists and always uses one Nixpi instance dir.
 assert_file_contains "$BASE" 'writeShellScriptBin "nixpi"'
-assert_file_contains "$BASE" 'nixpi dev [pi-args...]'
-assert_file_contains "$BASE" 'RUNTIME_DIR="${runtimePiDir}"'
-assert_file_contains "$BASE" 'DEV_DIR="${devPiDir}"'
-assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$DEV_DIR"'
+assert_file_contains "$BASE" 'PI_DIR="${piDir}"'
+assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$PI_DIR"'
+assert_file_contains "$BASE" 'nixpi.piDir'
+assert_not_contains "$BASE_CONTENT" 'RUNTIME_DIR='
+assert_not_contains "$BASE_CONTENT" 'DEV_DIR='
 
-# Failure-path handling: explicit error for unknown mode value.
-assert_file_contains "$BASE" 'Unknown nixpi mode:'
+# Feature (failure path): deprecated selectors fail with a clear migration error.
+assert_file_contains "$BASE" 'Unknown/deprecated nixpi subcommand:'
+assert_file_contains "$BASE" 'Use: nixpi [pi-args...]'
 
-# Edge case: default invocation should map to runtime mode.
-assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$RUNTIME_DIR"'
-assert_file_contains "$BASE" 'nixpi.runtimePiDir'
-assert_file_contains "$BASE" 'nixpi.devPiDir'
+# Feature (edge case): default invocation still forwards to pi with the configured single dir.
+assert_file_contains "$BASE" '*)'
+assert_file_contains "$BASE" 'exec "$PI_BIN" "$@"'
 
-# Docs: clarify nixpi as product command and pi as SDK.
+# Docs: single command/single instance model.
 assert_file_contains "$README" '`nixpi` command'
 assert_file_contains "$README" '`pi` remains available as SDK'
-assert_file_contains "$README" 'nixpi` is installed automatically'
-assert_file_contains "$README" 'Runtime mode: `~/Nixpi/.pi/agent/`'
-assert_file_contains "$README" 'Developer mode: `~/Nixpi/.pi/agent-dev/`'
-assert_file_contains "$OPERATING" '`nixpi dev`'
-assert_file_contains "$OPERATING" '`~/Nixpi/.pi/agent/` (runtime)'
-assert_file_contains "$OPERATING" '`~/Nixpi/.pi/agent-dev/` (developer mode)'
+assert_file_contains "$README" 'Single Nixpi instance: `~/Nixpi/.pi/agent/`'
+assert_not_contains "$README_CONTENT" 'nixpi dev'
+assert_not_contains "$README_CONTENT" 'Developer mode: `~/Nixpi/.pi/agent-dev/`'
+assert_file_contains "$OPERATING" '`nixpi` → single Nixpi instance (primary path).'
+assert_not_contains "$OPERATING_CONTENT" '`nixpi dev`'
+assert_not_contains "$OPERATING_CONTENT" '`~/Nixpi/.pi/agent-dev/` (developer mode)'
 
-# Smoke-check script: exists, executable, validates runtime/dev mode behavior.
+# Smoke-check script: exists, executable, validates single-instance behavior.
 assert_executable "$VERIFY_SCRIPT"
 assert_file_contains "$VERIFY_SCRIPT" 'nixpi --help'
-assert_file_contains "$VERIFY_SCRIPT" 'nixpi mode invalid'
-assert_file_contains "$VERIFY_SCRIPT" 'verify-nixpi-modes: OK'
+assert_file_contains "$VERIFY_SCRIPT" 'nixpi dev'
+assert_file_contains "$VERIFY_SCRIPT" 'verify-nixpi: OK'
 
-echo "PASS: nixpi mode/docs checks"
+echo "PASS: nixpi single-instance checks"

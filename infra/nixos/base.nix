@@ -11,11 +11,11 @@
 # `let ... in` binds local variables. Everything between `let` and `in`
 # is only visible within this file.
 let
-  # Shared guidelines referenced by both runtime and dev system prompts.
+  # Shared guidelines for the single Nixpi instance system prompt.
   sharedGuidelines = ''
     - Prefer declarative Nix changes over imperative system mutation
     - Never modify /etc or systemd units directly; edit NixOS config instead
-    - Protect secrets: never read ${runtimePiDir}/auth.json, ~/.ssh/*, or .env files
+    - Protect secrets: never read ${piDir}/auth.json, ~/.ssh/*, or .env files
   '';
 
   piSystemPrompt = ''
@@ -30,19 +30,6 @@ let
 
     ## Guidelines
     - Follow AGENTS.md conventions
-    ${sharedGuidelines}
-  '';
-
-  piDevSystemPrompt = ''
-    You are the Nixpi developer-mode assistant.
-
-    ## Mission
-    - Act as a maintainer/developer agent for Nixpi evolution tasks.
-    - Prefer Pi-native workflows while following repository guardrails.
-
-    ## Mandatory rules
-    - Follow AGENTS.md conventions and strict TDD (Red -> Green -> Refactor).
-    - For features: include happy path, failure path, and at least one edge case.
     ${sharedGuidelines}
   '';
 
@@ -67,55 +54,29 @@ let
     set -euo pipefail
 
     PI_BIN="${piWrapper}/bin/pi"
-    RUNTIME_DIR="${runtimePiDir}"
-    DEV_DIR="${devPiDir}"
+    PI_DIR="${piDir}"
 
     case "''${1-}" in
-      dev)
-        shift
-        export PI_CODING_AGENT_DIR="$DEV_DIR"
-        exec "$PI_BIN" "$@"
-        ;;
-      mode)
-        shift
-        case "''${1-}" in
-          ""|runtime)
-            if [ "''${1-}" = "runtime" ]; then
-              shift
-            fi
-            export PI_CODING_AGENT_DIR="$RUNTIME_DIR"
-            exec "$PI_BIN" "$@"
-            ;;
-          dev)
-            shift
-            export PI_CODING_AGENT_DIR="$DEV_DIR"
-            exec "$PI_BIN" "$@"
-            ;;
-          *)
-            echo "Unknown nixpi mode: ''${1-}" >&2
-            echo "Use: nixpi [pi-args...] | nixpi dev [pi-args...] | nixpi mode <runtime|dev> [pi-args...]" >&2
-            exit 2
-            ;;
-        esac
+      dev|mode|runtime)
+        echo "Unknown/deprecated nixpi subcommand: ''${1-}" >&2
+        echo "Use: nixpi [pi-args...]" >&2
+        exit 2
         ;;
       --help|-h|help)
         cat <<'EOF'
 nixpi - primary CLI for the Nixpi assistant (powered by Pi SDK)
 
 Usage:
-  nixpi [pi-args...]                         Run Nixpi in normal/runtime mode
-  nixpi dev [pi-args...]                     Run Nixpi in developer mode
-  nixpi mode <runtime|dev> [pi-args...]      Explicit mode selector
+  nixpi [pi-args...]                         Run Nixpi (single instance)
   nixpi help                                 Show this help
 
 Notes:
   - `pi` remains available as SDK/advanced CLI.
-  - `nixpi` (default) uses PI_CODING_AGENT_DIR from nixpi.runtimePiDir.
-  - `nixpi dev` uses PI_CODING_AGENT_DIR from nixpi.devPiDir.
+  - `nixpi` uses PI_CODING_AGENT_DIR from nixpi.piDir.
 EOF
         ;;
       *)
-        export PI_CODING_AGENT_DIR="$RUNTIME_DIR"
+        export PI_CODING_AGENT_DIR="$PI_DIR"
         exec "$PI_BIN" "$@"
         ;;
     esac
@@ -155,8 +116,7 @@ EOF
   userDisplayNameShell = lib.escapeShellArg userDisplayName;
   userHome = "/home/${primaryUser}";
   repoRoot = config.nixpi.repoRoot;
-  runtimePiDir = config.nixpi.runtimePiDir;
-  devPiDir = config.nixpi.devPiDir;
+  piDir = config.nixpi.piDir;
 in
 {
   options.nixpi.primaryUser = lib.mkOption {
@@ -187,21 +147,12 @@ in
     '';
   };
 
-  options.nixpi.runtimePiDir = lib.mkOption {
+  options.nixpi.piDir = lib.mkOption {
     type = lib.types.str;
     default = "${config.nixpi.repoRoot}/.pi/agent";
     example = "/home/alex/Nixpi/.pi/agent";
     description = ''
-      Runtime-mode PI_CODING_AGENT_DIR path.
-    '';
-  };
-
-  options.nixpi.devPiDir = lib.mkOption {
-    type = lib.types.str;
-    default = "${config.nixpi.repoRoot}/.pi/agent-dev";
-    example = "/home/alex/Nixpi/.pi/agent-dev";
-    description = ''
-      Developer-mode PI_CODING_AGENT_DIR path.
+      PI_CODING_AGENT_DIR path for the single Nixpi instance.
     '';
   };
 
@@ -227,12 +178,8 @@ in
         message = "nixpi.repoRoot must be an absolute path.";
       }
       {
-        assertion = lib.hasPrefix "/" runtimePiDir;
-        message = "nixpi.runtimePiDir must be an absolute path.";
-      }
-      {
-        assertion = lib.hasPrefix "/" devPiDir;
-        message = "nixpi.devPiDir must be an absolute path.";
+        assertion = lib.hasPrefix "/" piDir;
+        message = "nixpi.piDir must be an absolute path.";
       }
     ];
 
@@ -471,48 +418,26 @@ in
   # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
   #
   # IMPORTANT: These seeds are write-once. Files are only created if absent.
-  # If you update piSystemPrompt/piDevSystemPrompt/settings above, existing
-  # deployments will NOT receive the changes. To apply updates manually:
-  #   rm <runtimePiDir>/SYSTEM.md <runtimePiDir>/settings.json
-  #   rm <devPiDir>/SYSTEM.md <devPiDir>/settings.json
+  # If you update piSystemPrompt/settings above, existing deployments will NOT
+  # receive the changes. To apply updates manually:
+  #   rm <piDir>/SYSTEM.md <piDir>/settings.json
   #   sudo nixos-rebuild switch --flake .
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
-    RUNTIME_PI_DIR="${runtimePiDir}"
-    DEV_PI_DIR="${devPiDir}"
+    PI_DIR="${piDir}"
 
-    mkdir -p "$RUNTIME_PI_DIR"/{sessions,extensions,skills,prompts,themes}
-    mkdir -p "$DEV_PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    mkdir -p "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
 
-    # Seed runtime SYSTEM.md if absent
-    if [ ! -f "$RUNTIME_PI_DIR/SYSTEM.md" ]; then
-      cat > "$RUNTIME_PI_DIR/SYSTEM.md" <<'SYSEOF'
+    # Seed SYSTEM.md if absent
+    if [ ! -f "$PI_DIR/SYSTEM.md" ]; then
+      cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
     fi
 
-    # Seed developer-mode SYSTEM.md if absent
-    if [ ! -f "$DEV_PI_DIR/SYSTEM.md" ]; then
-      cat > "$DEV_PI_DIR/SYSTEM.md" <<'SYSEOF'
-${piDevSystemPrompt}
-SYSEOF
-    fi
-
-    # Seed runtime-mode settings if absent.
-    # Runtime also loads Nixpi skills (agent contracts + install/TDD helpers).
-    if [ ! -f "$RUNTIME_PI_DIR/settings.json" ]; then
-      cat > "$RUNTIME_PI_DIR/settings.json" <<'JSONEOF'
-{
-  "skills": [
-    "${repoRoot}/infra/pi/skills"
-  ]
-}
-JSONEOF
-    fi
-
-    # Seed developer-mode settings if absent.
-    # Dev mode preloads the same Nixpi skills plus optional dev packages.
-    if [ ! -f "$DEV_PI_DIR/settings.json" ]; then
-      cat > "$DEV_PI_DIR/settings.json" <<'JSONEOF'
+    # Seed settings if absent.
+    # Single instance preloads Nixpi skills plus Context7 docs package.
+    if [ ! -f "$PI_DIR/settings.json" ]; then
+      cat > "$PI_DIR/settings.json" <<'JSONEOF'
 {
   "skills": [
     "${repoRoot}/infra/pi/skills"
@@ -524,12 +449,7 @@ JSONEOF
 JSONEOF
     fi
 
-    # Share auth between runtime and dev profiles without duplicating secrets.
-    if [ ! -e "$DEV_PI_DIR/auth.json" ]; then
-      ln -sfn "$RUNTIME_PI_DIR/auth.json" "$DEV_PI_DIR/auth.json"
-    fi
-
-    chown -R ${primaryUser}:users "$RUNTIME_PI_DIR" "$DEV_PI_DIR"
+    chown -R ${primaryUser}:users "$PI_DIR"
   '';
 
   # Keep login-manager display name aligned with configured primary user
