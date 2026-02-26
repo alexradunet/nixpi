@@ -1,6 +1,6 @@
-# nixpi
+# Nixpi
 
-nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the product/user-facing assistant layer, and **Pi** is the underlying SDK/agent harness. The AI agent is the primary control layer; Linux provides the execution layer underneath.
+Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the product/user-facing assistant layer, and **Pi** is the underlying SDK/agent harness. The AI agent is the primary control layer; Linux provides the execution layer underneath.
 
 ## What's Included
 
@@ -41,7 +41,7 @@ Firewall scope is split by service: SSH remains available from local network and
 ## Project Structure
 
 ```
-nixpi/
+Nixpi/
   AGENTS.md                    # Agent behavior + policy for assistants
   CONTRIBUTING.md              # Developer workflow and contribution rules
   flake.nix                    # Flake: dev shell + NixOS configurations

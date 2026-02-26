@@ -3,7 +3,7 @@
 Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOURCE_OF_TRUTH.md) · [Operating Model](./docs/runtime/OPERATING_MODEL.md) · [Agents Overview](./docs/agents/README.md) · [Docs Home](./docs/README.md)
 
 ## Project
-- Name: **nixpi**
+- Name: **Nixpi**
 - Goal: Build an autonomous AI personal agent on top of pi, targeting NixOS-first workflows.
 
 ## Working Style

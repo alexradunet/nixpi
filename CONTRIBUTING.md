@@ -1,4 +1,4 @@
-# Contributing to nixpi
+# Contributing to Nixpi
 
 Related: [AGENTS.md](./AGENTS.md) · [Source of Truth](./docs/meta/SOURCE_OF_TRUTH.md) · [TDD Skill](./infra/pi/skills/tdd/SKILL.md) · [Docs Home](./docs/README.md)
 
