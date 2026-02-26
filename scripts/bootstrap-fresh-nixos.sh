@@ -15,7 +15,7 @@ fi
 
 if [ ! -d "$TARGET_DIR/.git" ]; then
   mkdir -p "$(dirname "$TARGET_DIR")"
-  nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git "$TARGET_DIR"
+  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git "$TARGET_DIR"
 else
   echo "Repository already present, skipping clone: $TARGET_DIR"
 fi

@@ -82,19 +82,19 @@ Nixpi/
 
 ## Getting Started
 
-For a full reinstall on a fresh NixOS minimal install (no desktop selected in installer), use:
-- [`docs/runtime/REINSTALL_MINIMAL_HEADLESS.md`](./docs/runtime/REINSTALL_MINIMAL_HEADLESS.md)
+For a full reinstall on a fresh NixOS minimal install, use:
+- [`docs/runtime/REINSTALL_MINIMAL.md`](./docs/runtime/REINSTALL_MINIMAL.md)
 
 Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
 
 ```bash
-nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
 ```
 
 Step-by-step equivalent:
 
 ```bash
-nix shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
 cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh
 ```

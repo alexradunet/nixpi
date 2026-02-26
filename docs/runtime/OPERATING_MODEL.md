@@ -14,7 +14,7 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 No for core Nixpi.
 
 `nixpi` (wrapper) and `pi` (SDK CLI) are installed declaratively via NixOS (`base.nix`, with Pi from `llm-agents.nix`).
-For fresh installs, use the bootstrap flow in [`REINSTALL_MINIMAL_HEADLESS.md`](./REINSTALL_MINIMAL_HEADLESS.md), which assumes no `git` and no flakes by default.
+For fresh installs, use the bootstrap flow in [`REINSTALL_MINIMAL.md`](./REINSTALL_MINIMAL.md), which assumes no `git` and no flakes by default.
 After the first rebuild, both commands are available.
 
 ### First-boot expected flow

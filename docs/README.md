@@ -4,7 +4,7 @@ This folder is organized as a modular knowledge base.
 
 ## Navigation
 - [Operating Model](./runtime/OPERATING_MODEL.md) — multi-agent runtime/evolution workflow
-- [Reinstall on Fresh NixOS Minimal (Headless Installer)](./runtime/REINSTALL_MINIMAL_HEADLESS.md) — copy-paste recovery/reinstall checklist (includes automated clone + first rebuild)
+- [Reinstall on Fresh NixOS Minimal](./runtime/REINSTALL_MINIMAL.md) — copy-paste recovery/reinstall checklist (includes automated clone + first rebuild)
 - [Agents Overview](./agents/README.md) — role contracts and responsibilities
 - [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md) — standard inter-agent artifacts
 - [Source of Truth Map](./meta/SOURCE_OF_TRUTH.md) — canonical ownership and precedence
