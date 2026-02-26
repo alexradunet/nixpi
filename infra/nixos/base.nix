@@ -31,6 +31,10 @@ let
     ## Guidelines
     - Follow AGENTS.md conventions
     ${sharedGuidelines}
+
+    ## Startup behavior
+    - At session start, briefly announce discovered local skills from settings.json.
+    - If no local skills are found, say so explicitly and suggest `--skill <path-to-SKILL.md>`.
   '';
 
   # Lightweight Pi install path: use npm package directly via npx,
@@ -417,11 +421,10 @@ in
   # system is built but before services start. They're used for one-time setup.
   # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
   #
-  # IMPORTANT: These seeds are write-once. Files are only created if absent.
-  # If you update piSystemPrompt/settings above, existing deployments will NOT
-  # receive the changes. To apply updates manually:
-  #   rm <piDir>/SYSTEM.md <piDir>/settings.json
-  #   sudo nixos-rebuild switch --flake .
+  # IMPORTANT:
+  # - SYSTEM.md is declaratively refreshed on each activation so policy/prompt
+  #   updates apply automatically.
+  # - settings.json is seeded write-once to avoid clobbering runtime/user state.
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     PI_DIR="${piDir}"
 
