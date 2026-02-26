@@ -54,7 +54,7 @@ nixpi/
     meta/                      # Docs style + source-of-truth map
   infra/
     nixos/
-      base.nix                 # Headless config + web admin + nixpi wrapper + profile seeding
+      base.nix                 # Headless config + web terminal + nixpi wrapper + profile seeding
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
     pi/skills/                 # Pi/Nixpi skills (tdd, claude-consult)
