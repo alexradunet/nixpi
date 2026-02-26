@@ -13,6 +13,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (single instance), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via lightweight npm-backed wrapper (SDK/advanced CLI) |
+| **`claude` command** | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
 | **Tailscale** | VPN for secure remote access |
@@ -33,6 +34,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Simple Text Editor | `base.nix` — `environment.systemPackages` | Lightweight terminal editor (`nano`) |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`) |
 | pi | `base.nix` — `piWrapper` + `environment.systemPackages` | npm-backed wrapper for SDK/advanced CLI |
+| claude | `base.nix` — `environment.systemPackages` (`pkgsUnstable."claude-code-bin"`) | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
 
 ## Access Methods
 
@@ -160,9 +162,12 @@ Commands available system-wide:
 ```bash
 nixpi           # Nixpi assistant (single instance; see docs/agents/SKILLS.md)
 pi              # Pi SDK/advanced CLI
+claude          # Claude Code CLI (installed from nixpkgs unstable binary package)
 ```
 
 `pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
+
+`claude` is provided declaratively by NixOS; you should not need to run `claude install`.
 
 Install Pi extensions with a commit-friendly manifest:
 
@@ -198,7 +203,7 @@ Optional host override (if you need a different layout):
 ```
 
 ### Is Nixpi preinstalled?
-Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi`). No separate `pi install` step is required for core Nixpi.
+Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi` and `claude`). No separate `pi install` or `claude install` step is required.
 
 ## Dev Shell
 
@@ -272,6 +277,16 @@ Pi is installed via npm-backed wrapper in `infra/nixos/base.nix` (`piWrapper`).
 To update, bump the package spec there, then rebuild:
 
 ```bash
+sudo nixos-rebuild switch --flake .
+```
+
+## Updating Claude Code
+
+Claude Code is installed from nixpkgs unstable (`pkgsUnstable."claude-code-bin"` in `infra/nixos/base.nix`).
+To update Claude Code, refresh the unstable flake input and rebuild:
+
+```bash
+nix flake update nixpkgs-unstable
 sudo nixos-rebuild switch --flake .
 ```
 

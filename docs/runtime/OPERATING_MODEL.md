@@ -13,10 +13,10 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 ### Does the user need to run `pi install`?
 No for core Nixpi.
 
-`nixpi` (wrapper) and `pi` (SDK CLI) are installed declaratively via NixOS (`base.nix`, with Pi provided by a lightweight npm-backed wrapper).
+`nixpi` (wrapper), `pi` (SDK CLI), and `claude` are installed declaratively via NixOS (`base.nix`; Pi uses a lightweight npm-backed wrapper, Claude uses nixpkgs `claude-code-bin`).
 For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
 The bootstrap flow launches Pi with the `install-nixpi` skill so host disks/user settings are reviewed before the first rebuild.
-After the first rebuild, both commands are available.
+After the first rebuild, all three commands are available (`nixpi`, `pi`, and `claude`).
 
 ### First-boot expected flow
 1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default, or preserved existing desktop when detected).

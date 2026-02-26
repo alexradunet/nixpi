@@ -1,12 +1,13 @@
 # Base NixOS module — shared config loaded by every host.
 #
-# `{ config, pkgs, lib, ... }:` is the NixOS module function signature.
+# `{ config, pkgs, lib, pkgsUnstable ? pkgs, ... }:` is the NixOS module function signature.
 # NixOS calls this function and passes in:
-#   config — the fully resolved system config (for reading other modules' values)
-#   pkgs   — the Nix package set
-#   lib    — helper functions (merging, filtering, etc.)
-#   ...    — catches any extra args so the module stays forward-compatible
-{ config, pkgs, lib, ... }:
+#   config      — the fully resolved system config (for reading other modules' values)
+#   pkgs        — the stable Nix package set (nixos-25.11)
+#   pkgsUnstable— optional newer package set for selected tools
+#   lib         — helper functions (merging, filtering, etc.)
+#   ...         — catches any extra args so the module stays forward-compatible
+{ config, pkgs, lib, pkgsUnstable ? pkgs, ... }:
 
 # `let ... in` binds local variables. Everything between `let` and `in`
 # is only visible within this file.
@@ -650,9 +651,10 @@ in
     # Terminal multiplexer (recommended for pi background tasks)
     tmux
 
-    # AI coding tools (minimal Pi install path)
-    piWrapper
-    nixpiCli
+    # AI coding tools
+    piWrapper                  # Pi SDK CLI (npm-backed wrapper)
+    (pkgsUnstable."claude-code-bin") # Claude Code CLI (native binary, patched for NixOS)
+    nixpiCli                  # Primary Nixpi wrapper command
   ];
 
   # Ensure ~/.local/bin is in PATH

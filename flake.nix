@@ -8,14 +8,20 @@
   # in flake.lock, so every build uses identical inputs.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # Track a newer Claude Code binary package while keeping the base system on 25.11.
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nixpkgs-unstable }:
     let
       lib = nixpkgs.lib;
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
+      };
+      pkgsUnstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
       };
 
       # Auto-discover hosts: every .nix file in hosts/ becomes a NixOS config.
@@ -32,6 +38,9 @@
       # declares part of the system config. NixOS deep-merges them all together.
       mkHost = name: nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = {
+          inherit pkgsUnstable;
+        };
         modules = [
           ./infra/nixos/base.nix
           (hostDir + "/${name}.nix")
