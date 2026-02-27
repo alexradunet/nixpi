@@ -3,11 +3,20 @@
 This folder is organized as a modular knowledge base.
 
 ## Navigation
-- [Operating Model](./runtime/OPERATING_MODEL.md) — multi-agent runtime/evolution workflow
+
+### Runtime & Architecture
+- [Operating Model](./runtime/OPERATING_MODEL.md) — multi-agent runtime/evolution workflow, autonomous services
 - [Reinstall on Fresh NixOS](./runtime/REINSTALL.md) — copy-paste recovery/reinstall checklist (includes automated clone + first rebuild)
+
+### Agents & Skills
 - [Agents Overview](./agents/README.md) — role contracts and responsibilities
-- [Agent Skills Index](./agents/SKILLS.md) — concise map of agent skill contracts
+- [Agent Skills Index](./agents/SKILLS.md) — concise map of all agent skill contracts (13 skills)
 - [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md) — standard inter-agent artifacts
+
+### Identity
+- [Persona](../persona/) — OpenPersona 4-layer identity (SOUL, BODY, FACULTY, SKILL)
+
+### Governance
 - [Source of Truth Map](./meta/SOURCE_OF_TRUTH.md) — canonical ownership and precedence
 - [Emoji Dictionary](./ux/EMOJI_DICTIONARY.md) — visual language for low-cognitive-load communication
 - [Docs Style Guide](./meta/DOCS_STYLE.md) — documentation conventions, linking rules, and structure

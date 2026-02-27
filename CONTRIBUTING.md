@@ -13,12 +13,25 @@ All project-wide policies (TDD, safety, Nix/NixOS conventions, standards-first, 
 - Repository files + tests + git history are the source of truth.
 - If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
 
+## Project Layout
+- **npm workspaces** (root `package.json`): `packages/nixpi-core/`, `services/whatsapp-bridge/`
+- **Shell scripts**: `scripts/nixpi-object.sh` (requires yq-go + jq)
+- **NixOS modules**: `infra/nixos/modules/` with shared factory in `infra/nixos/lib/mk-nixpi-service.nix`
+
 ## Validation
 Run relevant tests for changed code, and for repo-wide checks run:
 
 ```bash
-# Run repository tests
+# Shell tests (require yq-go in PATH)
 ./scripts/test.sh
+# or: nix-shell -p yq-go --run "./scripts/test.sh"
+
+# TypeScript — build and test @nixpi/core
+npm -w packages/nixpi-core run build
+npm -w packages/nixpi-core test
+
+# TypeScript — build WhatsApp bridge
+npm -w services/whatsapp-bridge run build
 
 # Full checks (tests + flake validation)
 ./scripts/check.sh

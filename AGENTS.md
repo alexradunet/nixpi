@@ -36,8 +36,20 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - Validate before apply for system changes.
 - Document rollback steps for risky operations.
 
+## Architecture Conventions
+- **Hexagonal (Ports and Adapters)** architecture with interface-first design.
+- All domain components implement interfaces from `@nixpi/core/types.ts`.
+- **Object store**: flat-file markdown with YAML frontmatter. Shell CRUD (`scripts/nixpi-object.sh`) and TypeScript ObjectStore (`@nixpi/core`) produce format-compatible files.
+- **OpenPersona 4-layer** identity model: SOUL.md, BODY.md, FACULTY.md, SKILL.md in `persona/`.
+- **NixOS module factory** (`infra/nixos/lib/mk-nixpi-service.nix`) for shared systemd boilerplate.
+- **Nix-first, npm second** — prefer Nix packages (yq-go, jq, ripgrep, fd) over npm equivalents.
+- **No unmaintained deps** — npm deps must be <18 months since last publish.
+- **yq-go for shell YAML, js-yaml for TypeScript YAML** — two tools, clearly scoped.
+- **node:test for TS tests** — zero test framework deps.
+
 ## Repository Conventions
 - Project root: `~/Nixpi`
+- npm workspaces: `packages/nixpi-core/`, `services/whatsapp-bridge/`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
 ## Documentation Conventions

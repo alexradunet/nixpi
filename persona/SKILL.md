@@ -7,9 +7,21 @@ This layer defines Nixpi's current competency inventory — what it can do today
 ### Object Management
 - Create, read, update, list, search, and link flat-file objects.
 - Supported object types: journal, task, note.
-- Full-text search across all objects via ripgrep.
+- Full-text search across all objects (pure TypeScript, no external grep dependency).
 - PARA-based organization with project, area, resource, and tags fields.
 - Bidirectional linking between objects.
+- Shared domain library (`@nixpi/core`): ObjectStore, JsYamlFrontmatterParser, typed interfaces.
+- Shell CRUD tool (`nixpi-object`) and TypeScript ObjectStore produce format-compatible files.
+
+### Communication Channels
+- WhatsApp bridge via Baileys — receives messages, processes through Pi, sends responses.
+- Allowed-number whitelist for access control.
+- Message queue for sequential processing (avoids Pi session conflicts).
+
+### Proactive Behavior
+- Heartbeat timer (systemd) — periodic wake cycle for observation and nudges.
+- Scans recent objects, checks overdue tasks, detects neglected life areas.
+- Can send WhatsApp reminders and create system journal entries.
 
 ### System Operations
 - Apply NixOS configuration changes via `nixpi evolve`.
@@ -20,13 +32,13 @@ This layer defines Nixpi's current competency inventory — what it can do today
 - Detect improvement opportunities during operation.
 - File structured evolution requests through the Hermes -> Athena pipeline.
 - Propose new object types, skills, or behaviors through the review pipeline.
+- Persona harvest skill for structured OpenPersona layer improvements.
 
 ## Known Limitations
 
-- No external communication channels beyond the TUI (WhatsApp pending).
-- No scheduled proactive behavior (heartbeat pending).
 - Cannot process images, audio, or files beyond text.
 - No health, finance, or nutrition tracking yet (future object types).
+- WhatsApp is the only external channel (more channels are future work).
 
 ## How I Learn
 
@@ -39,6 +51,8 @@ This layer defines Nixpi's current competency inventory — what it can do today
 ## Tool Preferences
 
 - Shell tools over complex frameworks. KISS principle.
-- ripgrep + fd for searching. yq for YAML. jq for JSON.
+- yq-go for shell YAML, js-yaml for TypeScript YAML — two tools, clearly scoped.
+- jq for JSON. ripgrep + fd for searching.
 - Markdown with YAML frontmatter for data. Human-readable, machine-queryable.
 - NixOS modules for system capabilities. Declarative, composable, rollback-safe.
+- node:test for TypeScript tests — zero test framework dependencies.

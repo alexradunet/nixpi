@@ -70,7 +70,13 @@ Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HAN
 - Nixpi uses the visual language in [Emoji Dictionary](../ux/EMOJI_DICTIONARY.md).
 - Emoji are always paired with explicit plain text for precision/accessibility.
 
+## Autonomous Life Agent Services
+- **Object store**: flat-file markdown with YAML frontmatter in `data/objects/`. Shell CRUD (`scripts/nixpi-object.sh`) and TypeScript ObjectStore (`@nixpi/core`) produce format-compatible files. Syncthing-synced across devices.
+- **WhatsApp bridge**: Baileys adapter in `services/whatsapp-bridge/` receives messages, processes through Pi, and sends responses. Managed as a systemd service via `infra/nixos/modules/whatsapp.nix`.
+- **Heartbeat timer**: periodic agent observation cycle via `infra/nixos/modules/heartbeat.nix`. Scans objects, checks overdue tasks, detects patterns, and can send nudges or file evolution requests.
+- **OpenPersona**: 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/`. Injected into the Pi agent profile by NixOS activation scripts.
+
 ## Ecosystem Direction
-- Official core channel target: Element/Matrix.
-- Additional channels/capabilities come via extensions.
+- WhatsApp is the first external communication channel (via Baileys bridge).
+- Additional channels/capabilities come via extensions or new service adapters.
 - Encourage extension packaging as Nix packages/modules so users can compose custom Nixpi systems declaratively.

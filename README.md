@@ -7,10 +7,14 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Component | Description |
 |-----------|-------------|
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
+| **@nixpi/core** | Shared TypeScript domain library: ObjectStore, JsYamlFrontmatterParser, typed interfaces (`packages/nixpi-core/`) |
+| **Object Store** | Flat-file markdown with YAML frontmatter in `data/objects/` (Syncthing-synced); shell + TS implementations |
+| **WhatsApp Bridge** | Baileys-based WhatsApp adapter (`services/whatsapp-bridge/`); receives messages, processes through Pi |
+| **Heartbeat Timer** | Systemd timer for periodic agent observation cycles (`infra/nixos/modules/heartbeat.nix`) |
+| **OpenPersona** | 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/` |
 | **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration |
 | **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with the GNOME default |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
-| **Simple Text Editor** | Installed system-wide as `nano` for quick file edits |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (single instance), powered by Pi SDK |
 | **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via lightweight npm-backed wrapper (SDK/advanced CLI) |
 | **`claude` command** | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS |
@@ -24,6 +28,8 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Service | Config location | Notes |
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
+| Heartbeat | `modules/heartbeat.nix` — systemd timer | Periodic agent observation cycle; configurable interval |
+| WhatsApp Bridge | `modules/whatsapp.nix` — systemd service | Baileys adapter; processes messages through Pi; number whitelist |
 | GNOME Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (GDM + GNOME + Wi-Fi tray tooling) |
 | Desktop reuse mode | `base.nix` + `scripts/add-host.sh` | If existing desktop options are detected, host file sets `nixpi.desktopProfile = "preserve"` and keeps current UI |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
@@ -31,7 +37,6 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
 | VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
-| Simple Text Editor | `base.nix` — `environment.systemPackages` | Lightweight terminal editor (`nano`) |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`) |
 | pi | `base.nix` — `piWrapper` + `environment.systemPackages` | npm-backed wrapper for SDK/advanced CLI |
 | claude | `base.nix` — `environment.systemPackages` (`pkgsUnstable."claude-code-bin"`) | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
@@ -55,19 +60,32 @@ Nixpi/
   CONTRIBUTING.md              # Developer workflow and contribution rules
   flake.nix                    # Flake: dev shell + NixOS configurations
   flake.lock
+  package.json                 # Root npm workspace config
+  persona/                     # OpenPersona 4-layer identity (SOUL, BODY, FACULTY, SKILL)
+  data/objects/                # Flat-file object store (gitignored, Syncthing-synced)
   docs/
     README.md                  # Docs hub
     runtime/OPERATING_MODEL.md # Runtime/evolution operating model
     agents/                    # Agent role contracts + handoff templates
     ux/EMOJI_DICTIONARY.md     # Visual communication dictionary
     meta/                      # Docs style + source-of-truth map
+  packages/
+    nixpi-core/                # @nixpi/core — shared domain lib (ObjectStore, frontmatter parser, types)
+  services/
+    whatsapp-bridge/           # Baileys WhatsApp → Pi bridge (imports @nixpi/core)
   infra/
     nixos/
       base.nix                 # Base config + GNOME desktop + web terminal + nixpi wrapper + profile seeding
+      lib/mk-nixpi-service.nix # Factory for systemd services with shared boilerplate
+      modules/
+        objects.nix            # Object store data directory provisioning
+        heartbeat.nix          # Heartbeat timer (periodic agent observation cycle)
+        whatsapp.nix           # WhatsApp bridge systemd service
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
     pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
+    nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
     bootstrap-fresh-nixos.sh   # Clone + guided Pi install workflow for fresh NixOS installs
     add-host.sh                # Generate a new host config from hardware
     test.sh                    # Run repository shell test suite
@@ -77,7 +95,7 @@ Nixpi/
     list-handoffs.sh           # List handoff files (supports type/date filters)
   tests/
     helpers.sh                 # Shared test assertion helpers
-    test_*.sh                  # Policy/tooling regression tests
+    test_*.sh                  # Policy/tooling regression tests (shell + cross-tool)
 ```
 
 ## Flake Layout Policy
@@ -213,13 +231,22 @@ A local development shell is available via the flake:
 nix develop
 ```
 
-Provides: git, Node.js 22, sqlite, jq, ripgrep, fd, and language servers (nixd, bash-language-server, shellcheck, typescript-language-server).
+Provides: git, Node.js 22, sqlite, jq, yq-go, ripgrep, fd, and language servers (nixd, bash-language-server, shellcheck, typescript-language-server).
+
+The project uses npm workspaces (root `package.json`) with packages under `packages/` and `services/`.
 
 ## Build & Check
 
 ```bash
-# Run repository tests
+# Run repository shell tests
 ./scripts/test.sh
+
+# Build and test @nixpi/core (TypeScript)
+npm -w packages/nixpi-core run build
+npm -w packages/nixpi-core test
+
+# Build WhatsApp bridge
+npm -w services/whatsapp-bridge run build
 
 # Full project checks (tests + flake checks)
 ./scripts/check.sh
