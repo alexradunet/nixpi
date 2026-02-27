@@ -29,7 +29,7 @@ cd ~/Nixpi
 ./scripts/bootstrap-fresh-nixos.sh
 ```
 
-Optional unattended mode (skips Pi guidance and applies directly):
+Optional unattended mode (skips guided install and applies directly):
 
 ```bash
 ./scripts/bootstrap-fresh-nixos.sh --non-interactive
@@ -68,15 +68,15 @@ cd ~/Nixpi
 
 This refresh avoids stale disk UUIDs and maps `nixpi.primaryUser` / `nixpi.repoRoot` to your current installer user.
 
-### Guided Pi install session (recommended)
+### Guided install session (recommended)
 
-If `pi` is installed:
+If `nixpi` is installed:
 
 ```bash
-pi --skill ./infra/pi/skills/install-nixpi/SKILL.md
+nixpi --skill ./infra/pi/skills/install-nixpi/SKILL.md
 ```
 
-If `pi` is not installed yet:
+If `nixpi` is not installed yet (fresh system):
 
 ```bash
 nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill ./infra/pi/skills/install-nixpi/SKILL.md
@@ -103,11 +103,7 @@ nixpi --help
 ./scripts/verify-nixpi.sh
 ```
 
-Authenticate Pi if needed:
-
-```bash
-pi login
-```
+Authenticate if needed (provider setup through `nixpi`).
 
 ## 4) Rollback (safety)
 

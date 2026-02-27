@@ -21,7 +21,7 @@ assert_executable "$SCRIPT"
 assert_file_contains "$SCRIPT" 'nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git'
 assert_file_contains "$SCRIPT" './scripts/add-host.sh --force "$(hostname)"'
 assert_file_contains "$SCRIPT" 'INSTALL_SKILL="$TARGET_DIR/infra/pi/skills/install-nixpi/SKILL.md"'
-assert_file_contains "$SCRIPT" 'pi --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"'
+assert_file_contains "$SCRIPT" 'nixpi --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"'
 assert_file_contains "$SCRIPT" 'shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"'
 
 # Failure path: clear guard for non-repo target collisions and unknown options.

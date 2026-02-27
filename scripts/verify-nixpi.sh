@@ -12,7 +12,7 @@ fi
 
 # Help should be available for the single-instance wrapper.
 help_output="$(nixpi --help 2>&1 || true)"
-echo "$help_output" | grep -Fq 'nixpi [pi-args...]' || fail "help output missing base usage"
+echo "$help_output" | grep -Fq 'nixpi [args...]' || fail "help output missing base usage"
 
 echo "$help_output" | grep -Fq 'single instance' || fail "help output missing single-instance note"
 

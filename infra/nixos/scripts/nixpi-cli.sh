@@ -150,10 +150,10 @@ run_rollback() {
 case "${1-}" in
   --help|-h|help)
     cat <<'EOF'
-nixpi - primary CLI for the Nixpi assistant (powered by Pi SDK)
+nixpi - primary CLI for the Nixpi assistant
 
 Usage:
-  nixpi [pi-args...]                         Run Nixpi (single instance)
+  nixpi [args...]                            Run Nixpi (single instance)
   nixpi evolve [--yes]                       Apply NixOS config with validation + auto-rollback on failed checks
   nixpi rollback [--yes]                     Roll back to the previous NixOS generation
   nixpi npm install <package@x.y.z...>       Install pinned extension(s) and track them in-repo
@@ -161,7 +161,6 @@ Usage:
   nixpi help                                 Show this help
 
 Notes:
-  - `pi` remains available as SDK/advanced CLI.
   - `nixpi` uses PI_CODING_AGENT_DIR from nixpi.piDir.
   - `nixpi evolve` runs `sudo nixos-rebuild switch --flake .` from nixpi.repoRoot.
   - `nixpi rollback` runs `sudo nixos-rebuild switch --rollback` from nixpi.repoRoot.

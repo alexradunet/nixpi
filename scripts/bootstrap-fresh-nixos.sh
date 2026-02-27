@@ -58,7 +58,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
   if [ "$NON_INTERACTIVE" -eq 1 ]; then
     echo "DRY RUN: would apply sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"$FLAKE_REF\""
   else
-    echo "DRY RUN: would launch Pi guided install with skill at $TARGET_DIR/infra/pi/skills/install-nixpi/SKILL.md"
+    echo "DRY RUN: would launch guided install with skill at $TARGET_DIR/infra/pi/skills/install-nixpi/SKILL.md"
   fi
 
   echo "bootstrap-fresh-nixos: dry run complete"
@@ -93,8 +93,8 @@ fi
 
 INSTALL_PROMPT="Use the install-nixpi skill from this repository. Guide me through reviewing infra/nixos/hosts/$(hostname).nix, validating disk and user settings, then applying the system with sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"$FLAKE_REF\". Ask before risky actions and keep steps concise."
 
-if command -v pi >/dev/null 2>&1; then
-  pi --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"
+if command -v nixpi >/dev/null 2>&1; then
+  nixpi --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"
 else
   nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"
 fi

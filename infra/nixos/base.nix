@@ -76,6 +76,7 @@ let
 
   # Lightweight Pi install path: use npm package directly via npx,
   # avoiding the large llm-agents flake dependency.
+  # Internal-only — used by nixpiCli and service modules, not exposed in PATH.
   piWrapper = pkgs.writeShellApplication {
     name = "pi";
     runtimeInputs = [ pkgs.nodejs_22 ];
@@ -205,6 +206,12 @@ in
     description = "Shared npm environment setup snippet for Pi-based wrappers. Internal use only.";
   };
 
+  options.nixpi._internal.piWrapperBin = lib.mkOption {
+    type = lib.types.str;
+    readOnly = true;
+    description = "Store path to the internal pi wrapper binary. Internal use only.";
+  };
+
   options.nixpi.persona.dir = lib.mkOption {
     type = lib.types.path;
     default = ../../persona;
@@ -234,6 +241,7 @@ in
 
   config = {
     nixpi._internal.npmEnvSetup = npmEnvSetup;
+    nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
     nixpi.objects.enable = lib.mkDefault true;
 
     assertions = [
@@ -464,11 +472,10 @@ in
     tree
     htop
 
-    # Terminal multiplexer (recommended for pi background tasks)
+    # Terminal multiplexer
     tmux
 
     # AI coding tools
-    piWrapper                  # Pi SDK CLI (npm-backed wrapper)
     (pkgsUnstable."claude-code-bin") # Claude Code CLI (native binary, patched for NixOS)
     nixpiCli                  # Primary Nixpi wrapper command
   ];

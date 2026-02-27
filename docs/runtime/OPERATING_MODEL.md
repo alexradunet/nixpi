@@ -13,21 +13,20 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 ### Does the user need to run `pi install`?
 No for core Nixpi.
 
-`nixpi` (wrapper), `pi` (SDK CLI), and `claude` are installed declaratively via NixOS (`base.nix`; Pi uses a lightweight npm-backed wrapper, Claude uses nixpkgs `claude-code-bin`).
+`nixpi` and `claude` are installed declaratively via NixOS (`base.nix`; Claude uses nixpkgs `claude-code-bin`).
 For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
-The bootstrap flow launches Pi with the `install-nixpi` skill so host disks/user settings are reviewed before the first rebuild.
-After the first rebuild, all three commands are available (`nixpi`, `pi`, and `claude`).
+The bootstrap flow launches Nixpi with the `install-nixpi` skill so host disks/user settings are reviewed before the first rebuild.
+After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow
 1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default, or preserved existing desktop when detected).
 2. User launches Nixpi with `nixpi`.
-3. User configures provider/auth as needed (`pi login` and provider setup remain compatible).
-4. User adds/updates pinned extension sources with `nixpi npm install <package@version>`, runs `nixpi npm sync` when needed, and enables desired resources via `pi config`.
+3. User configures provider/auth as needed.
+4. User adds/updates pinned extension sources with `nixpi npm install <package@version>` and runs `nixpi npm sync` when needed.
 5. Hermes (Runtime) runs in background and waits for events/tasks/channels.
 
 ### Single Nixpi instance model
 - `nixpi` → single Nixpi instance (primary path).
-- `pi` remains available for SDK/advanced usage.
 - The single profile preloads shared Nixpi skills (see [Agent Skills Index](../agents/SKILLS.md)).
 
 ### Configuration source of truth

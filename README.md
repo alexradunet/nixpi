@@ -1,6 +1,6 @@
 # Nixpi
 
-Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the product/user-facing assistant layer, and **Pi** is the underlying SDK/agent harness. The AI agent is the primary control layer; Linux provides the execution layer underneath.
+Nixpi is an AI-first operating environment built on NixOS. The AI agent is the primary control layer; Linux provides the execution layer underneath.
 
 ## What's Included
 
@@ -15,8 +15,7 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration |
 | **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with the GNOME default |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
-| **`nixpi` command** | Primary Nixpi CLI wrapper (single instance), powered by Pi SDK |
-| **`pi` command** | [pi-coding-agent](https://github.com/badlogic/pi-mono) via lightweight npm-backed wrapper (SDK/advanced CLI) |
+| **`nixpi` command** | Primary Nixpi CLI wrapper (single instance) |
 | **`claude` command** | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
@@ -38,7 +37,6 @@ Nixpi is an AI-first operating environment built on NixOS. **Nixpi** is the prod
 | Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
 | VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
 | nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`) |
-| pi | `base.nix` — `piWrapper` + `environment.systemPackages` | npm-backed wrapper for SDK/advanced CLI |
 | claude | `base.nix` — `environment.systemPackages` (`pkgsUnstable."claude-code-bin"`) | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
 
 ## Access Methods
@@ -180,11 +178,8 @@ Commands available system-wide:
 
 ```bash
 nixpi           # Nixpi assistant (single instance; see docs/agents/SKILLS.md)
-pi              # Pi SDK/advanced CLI
 claude          # Claude Code CLI (installed from nixpkgs unstable binary package)
 ```
-
-`pi` remains available as SDK/advanced CLI when you need direct Pi behavior.
 
 `claude` is provided declaratively by NixOS; you should not need to run `claude install`.
 
@@ -222,7 +217,7 @@ Optional host override (if you need a different layout):
 ```
 
 ### Is Nixpi preinstalled?
-Yes. After `nixos-rebuild switch --flake .`, `nixpi` is installed automatically as part of the system configuration (along with `pi` and `claude`). No separate `pi install` or `claude install` step is required.
+Yes. After `nixos-rebuild switch --flake .`, `nixpi` and `claude` are installed automatically as part of the system configuration. No separate install step is required.
 
 ## Dev Shell
 
@@ -278,7 +273,7 @@ nix flake check --no-build
 
 See the full runtime and evolution workflow in the [Operating Model](./docs/runtime/OPERATING_MODEL.md) and agent role contracts in [Agents Overview](./docs/agents/README.md).
 
-- **End users do not need `pi install`** for core Nixpi — `nixpi` and `pi` are provided declaratively by NixOS config.
+- **End users do not need separate install steps** — `nixpi` and `claude` are provided declaratively by NixOS config.
 - `nixpi` → single Nixpi instance (primary user command).
 - Nixpi uses a multi-agent model (Hermes, Athena, Hephaestus, Themis) where the runtime does not directly rewrite live core; it creates evolution requests handled through planned, tested, reviewable changes.
 
@@ -298,15 +293,6 @@ The flake auto-discovers hosts from `infra/nixos/hosts/`. Just add a file and re
    ```
 
 On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
-
-## Updating Pi
-
-Pi is installed via npm-backed wrapper in `infra/nixos/base.nix` (`piWrapper`).
-To update, bump the package spec there, then rebuild:
-
-```bash
-sudo nixos-rebuild switch --flake .
-```
 
 ## Updating Claude Code
 

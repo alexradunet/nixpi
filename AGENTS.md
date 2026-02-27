@@ -69,10 +69,9 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - If compatibility is temporarily unavoidable, document why and add a removal task/milestone.
 
 ## Pi Integration
-- `pi` is provided via a lightweight npm-backed wrapper in `base.nix` (`piWrapper`).
-- `nixpi` is the primary wrapper command (single instance) built declaratively in `base.nix`.
+- Pi is the internal engine, used by `nixpi` under the hood (not exposed as a user-facing command).
+- `nixpi` is the only user-facing assistant CLI (single instance) built declaratively in `base.nix`.
 - Config directory: `~/Nixpi/.pi/agent/`
-- Auth remains managed through Pi-compatible flow (`pi login`).
 - System prompts/settings are seeded by NixOS activation script in `base.nix`.
 - Update path: bump Pi package version in `base.nix` then `sudo nixos-rebuild switch --flake .`.
 
@@ -98,6 +97,6 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - Hephaestus performs code evolution in controlled repo context with strict TDD and validation before apply.
 - Themis performs independent quality/security/policy review before apply.
 - See role contracts in `docs/agents/`.
-- Hermes is the master orchestrator — spawns sub-agents via `pi -p --skill infra/pi/skills/<agent>/SKILL.md`.
+- Hermes is the master orchestrator — spawns sub-agents via `nixpi --skill infra/pi/skills/<agent>/SKILL.md`.
 - Evolution objects (`data/objects/evolution/`) track pipeline state across agent handoffs.
 - Rework loop: Themis can send structured findings back to Hephaestus (max 2 cycles before human escalation).

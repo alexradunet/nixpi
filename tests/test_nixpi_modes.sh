@@ -30,7 +30,7 @@ assert_file_contains "$CLI_SCRIPT" 'exec "$PI_BIN" "$@"'
 
 # Docs: single command/single instance model.
 assert_file_contains "$README" '`nixpi` command'
-assert_file_contains "$README" '`pi` remains available as SDK'
+assert_not_contains "$README_CONTENT" '`pi` remains available as SDK'
 assert_file_contains "$README" 'Single Nixpi instance: `~/Nixpi/.pi/agent/`'
 assert_not_contains "$README_CONTENT" 'nixpi dev'
 assert_not_contains "$README_CONTENT" 'Developer mode: `~/Nixpi/.pi/agent-dev/`'
@@ -43,5 +43,6 @@ assert_executable "$VERIFY_SCRIPT"
 assert_file_contains "$VERIFY_SCRIPT" 'nixpi --help'
 assert_file_contains "$VERIFY_SCRIPT" 'nixpi dev'
 assert_file_contains "$VERIFY_SCRIPT" 'verify-nixpi: OK'
+assert_file_contains "$VERIFY_SCRIPT" "nixpi [args...]"
 
 echo "PASS: nixpi single-instance checks"

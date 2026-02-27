@@ -22,6 +22,7 @@ let
     execStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
     extraEnv = [
       "NIXPI_REPO_ROOT=${repoRoot}"
+      "NIXPI_PI_COMMAND=${config.nixpi._internal.piWrapperBin}"
       "NIXPI_WHATSAPP_ALLOWED=${lib.concatStringsSep "," cfg.allowedNumbers}"
       "NODE_ENV=production"
     ];

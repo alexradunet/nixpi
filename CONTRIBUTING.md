@@ -9,7 +9,6 @@ All project-wide policies (TDD, safety, Nix/NixOS conventions, standards-first, 
 ## Development Operating Model
 - Build in **Nixpi** (repo + shell + tests).
 - Use **`nixpi`** as the primary assistant interface.
-- Use **Pi** (`pi` / `pi -p`) as the underlying SDK/advanced CLI when needed.
 - Repository files + tests + git history are the source of truth.
 - If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
 
