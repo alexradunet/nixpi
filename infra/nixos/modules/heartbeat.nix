@@ -20,24 +20,22 @@ let
     needs attention, say so and exit.
   '';
 
-  piWrapper = pkgs.writeShellScript "nixpi-heartbeat-run" ''
-    set -euo pipefail
-    export npm_config_update_notifier=false
-    export npm_config_audit=false
-    export npm_config_fund=false
-    export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/nixpi-npm"
-    export npm_config_prefix="''${XDG_DATA_HOME:-$HOME/.local/share}/nixpi-npm-global"
-    mkdir -p "$npm_config_cache" "$npm_config_prefix"
-    ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} \
-      -p "${heartbeatPrompt}" \
-      --skill "${repoRoot}/infra/pi/skills/heartbeat/SKILL.md"
-  '';
+  heartbeatRunner = pkgs.writeShellApplication {
+    name = "nixpi-heartbeat-run";
+    runtimeInputs = [ pkgs.nodejs_22 ];
+    text = ''
+      ${config.nixpi._internal.npmEnvSetup}
+      npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} \
+        -p "${heartbeatPrompt}" \
+        --skill "${repoRoot}/infra/pi/skills/heartbeat/SKILL.md"
+    '';
+  };
 
   serviceConfig = mkNixpiService {
     name = "nixpi-heartbeat";
     description = "Nixpi heartbeat — periodic agent observation cycle";
     serviceType = "oneshot";
-    execStart = "${piWrapper}";
+    execStart = lib.getExe heartbeatRunner;
     timeoutStartSec = "5min";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];

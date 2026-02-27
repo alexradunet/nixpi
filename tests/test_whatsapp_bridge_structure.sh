@@ -11,7 +11,6 @@ BRIDGE_DIR="services/whatsapp-bridge"
 
 # Happy path: package.json has correct dependencies.
 assert_file_contains "$BRIDGE_DIR/package.json" '"@whiskeysockets/baileys"'
-assert_file_contains "$BRIDGE_DIR/package.json" '"@hapi/boom"'
 assert_file_contains "$BRIDGE_DIR/package.json" '"pino"'
 assert_file_contains "$BRIDGE_DIR/package.json" '"typescript"'
 

@@ -1,14 +1,16 @@
 # WhatsApp channel module — Baileys bridge service for WhatsApp messaging.
 #
-# When enabled, a systemd service runs the WhatsApp bridge that connects
-# Baileys to Pi print mode. Messages from allowed numbers are processed
-# sequentially through Pi and responses sent back via WhatsApp.
+# When enabled, a systemd service runs the pre-built WhatsApp bridge that
+# connects Baileys to Pi print mode. Messages from allowed numbers are
+# processed sequentially through Pi and responses sent back via WhatsApp.
 { config, pkgs, lib, ... }:
 
 let
   cfg = config.nixpi.channels.whatsapp;
   repoRoot = config.nixpi.repoRoot;
-  bridgeDir = "${repoRoot}/services/whatsapp-bridge";
+
+  whatsappBridge = import ../packages/whatsapp-bridge.nix { inherit pkgs; };
+  bridgeLib = "${whatsappBridge}/lib/nixpi-whatsapp-bridge";
 
   mkNixpiService = import ../lib/mk-nixpi-service.nix { inherit config pkgs lib; };
 
@@ -16,8 +18,7 @@ let
     name = "nixpi-whatsapp";
     description = "Nixpi WhatsApp bridge (Baileys → Pi)";
     serviceType = "simple";
-    workingDirectory = bridgeDir;
-    execStartPre = "${pkgs.nodejs_22}/bin/npm install --omit=dev --prefer-offline";
+    workingDirectory = bridgeLib;
     execStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
     extraEnv = [
       "NIXPI_REPO_ROOT=${repoRoot}"
@@ -30,7 +31,7 @@ let
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     stateDirectory = "nixpi-whatsapp";
-    readWritePaths = [ bridgeDir config.nixpi.piDir ];
+    readWritePaths = [ config.nixpi.piDir ];
   };
 in
 {

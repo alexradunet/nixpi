@@ -3,6 +3,8 @@ import path from "node:path";
 import type { IFrontmatterParser, IObjectStore, ObjectData, ObjectRef } from "./types.js";
 import { JsYamlFrontmatterParser } from "./frontmatter.js";
 
+// Canonical runtime implementation: scripts/nixpi-object.sh (used by Pi skills).
+// This TypeScript version serves as a typed reference implementation for tests.
 export class ObjectStore implements IObjectStore {
   private readonly parser: IFrontmatterParser;
 

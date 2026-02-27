@@ -120,7 +120,6 @@ class BaileysWhatsAppChannel implements MessageChannel {
   async connect(): Promise<void> {
     const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } =
       await import("@whiskeysockets/baileys");
-    const { Boom } = await import("@hapi/boom");
     const pino = (await import("pino")).default;
 
     const logger = pino({ level: "silent" });
@@ -148,10 +147,7 @@ class BaileysWhatsAppChannel implements MessageChannel {
 
         if (connection === "close") {
           self.sock = undefined;
-          const isBoom = lastDisconnect?.error instanceof Boom;
-          const statusCode = isBoom
-            ? (lastDisconnect!.error as InstanceType<typeof Boom>).output.statusCode
-            : undefined;
+          const statusCode = (lastDisconnect?.error as any)?.output?.statusCode as number | undefined;
           const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
           if (shouldReconnect) {
