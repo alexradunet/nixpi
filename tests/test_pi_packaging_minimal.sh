@@ -20,8 +20,9 @@ REINSTALL_CONTENT="$(<"$REINSTALL")"
 assert_not_contains "$FLAKE_CONTENT" 'llm-agents.url'
 assert_not_contains "$FLAKE_CONTENT" 'llm-agents.overlays.default'
 assert_not_contains "$LOCK_CONTENT" 'llm-agents'
-assert_file_contains "$BASE" 'writeShellScriptBin "pi"'
-assert_file_contains "$BASE" 'npx --yes @mariozechner/pi-coding-agent@0.55.1'
+assert_file_contains "$BASE" 'writeShellApplication'
+assert_file_contains "$BASE" 'name = "pi"'
+assert_file_contains "$BASE" 'npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion}'
 
 # Failure path: old heavy llm-agents wiring stays removed.
 assert_not_contains "$BASE_CONTENT" 'pkgs.llm-agents.pi'

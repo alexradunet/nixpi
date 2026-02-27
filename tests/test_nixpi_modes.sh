@@ -3,25 +3,30 @@ set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
 BASE="infra/nixos/base.nix"
+CLI_SCRIPT="infra/nixos/scripts/nixpi-cli.sh"
 README="README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"
 VERIFY_SCRIPT="scripts/verify-nixpi.sh"
 
 BASE_CONTENT="$(<"$BASE")"
+CLI_CONTENT="$(<"$CLI_SCRIPT")"
 README_CONTENT="$(<"$README")"
 OPERATING_CONTENT="$(<"$OPERATING")"
 
 # Feature (happy path): nixpi wrapper exists and always uses one Nixpi instance dir.
-assert_file_contains "$BASE" 'writeShellScriptBin "nixpi"'
+assert_file_contains "$BASE" 'writeShellApplication'
+assert_file_contains "$BASE" 'name = "nixpi"'
 assert_file_contains "$BASE" 'PI_DIR="${piDir}"'
-assert_file_contains "$BASE" 'export PI_CODING_AGENT_DIR="$PI_DIR"'
+assert_file_contains "$CLI_SCRIPT" 'export PI_CODING_AGENT_DIR="$PI_DIR"'
 assert_file_contains "$BASE" 'nixpi.piDir'
 assert_not_contains "$BASE_CONTENT" 'RUNTIME_DIR='
 assert_not_contains "$BASE_CONTENT" 'DEV_DIR='
+assert_not_contains "$CLI_CONTENT" 'RUNTIME_DIR='
+assert_not_contains "$CLI_CONTENT" 'DEV_DIR='
 
 # Feature (edge case): default invocation still forwards to pi with the configured single dir.
-assert_file_contains "$BASE" '*)'
-assert_file_contains "$BASE" 'exec "$PI_BIN" "$@"'
+assert_file_contains "$CLI_SCRIPT" '*)'
+assert_file_contains "$CLI_SCRIPT" 'exec "$PI_BIN" "$@"'
 
 # Docs: single command/single instance model.
 assert_file_contains "$README" '`nixpi` command'

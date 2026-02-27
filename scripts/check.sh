@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+./scripts/lint.sh
 ./scripts/test.sh
 
 # --no-build: checks flake evaluation (syntax, module structure) but does NOT

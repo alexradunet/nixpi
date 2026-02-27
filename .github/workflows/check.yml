@@ -6,5 +6,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - run: ./scripts/test.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm -w packages/nixpi-core test
+      - run: nix-shell -p shellcheck --run "./scripts/lint.sh"
+      - run: nix-shell -p yq-go --run "./scripts/test.sh"
       - run: nix flake check --no-build
