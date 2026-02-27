@@ -5,6 +5,7 @@ set -euo pipefail
 command -v yq >/dev/null 2>&1 || { echo "error: yq not in PATH (try: nix-shell -p yq-go)" >&2; exit 1; }
 
 pattern="${1:-test_*.sh}"
+# shellcheck disable=SC2206  # intentional glob expansion
 TEST_FILES=(tests/$pattern)
 
 if [ "${TEST_FILES[0]}" = "tests/$pattern" ]; then

@@ -2,7 +2,6 @@
 set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
-BASE="infra/nixos/base.nix"
 CLI_SCRIPT="infra/nixos/scripts/nixpi-cli.sh"
 README="README.md"
 OPERATING="docs/runtime/OPERATING_MODEL.md"

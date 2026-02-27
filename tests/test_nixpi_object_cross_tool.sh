@@ -44,8 +44,6 @@ modified_val="$(yq --front-matter=extract '.modified' "$filepath")"
 [[ "$modified_val" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] || fail "modified doesn't look like ISO: '$modified_val'"
 
 # 5. Verify body contains markdown heading.
-body="$(yq --front-matter=extract '""' "$filepath" 2>/dev/null || true)"
-# Body after frontmatter should contain the title heading
 assert_file_contains "$filepath" "# Cross Tool Test"
 
 # 6. Verify field key validation rejects dots.

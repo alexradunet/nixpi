@@ -95,7 +95,6 @@ write_object() {
   # Build JSON via jq --arg per key (safe for tabs/newlines in values), convert to YAML via yq.
   local yaml
   local -a jq_args=()
-  local jq_expr="."
   local i=0
 
   for k in "${ordered_keys[@]}"; do
@@ -154,6 +153,7 @@ cmd_create() {
   fields[type]="$type"
   fields[slug]="$slug"
   fields[created]="$(now_iso)"
+  # shellcheck disable=SC2034  # used via nameref in write_object
   fields[modified]="$(now_iso)"
 
   write_object "$filepath" fields
