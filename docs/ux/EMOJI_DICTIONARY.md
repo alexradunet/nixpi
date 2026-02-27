@@ -59,6 +59,16 @@ A compact visual language for Nixpi user communication.
 - 📨 Evolution request created by Hermes
 - 🧾 Reviewable diff/PR artifact
 
+## Documentation Types
+- 📖 Guide / walkthrough
+- 📋 Reference / specification
+- 🗺️ Overview / architecture map
+- 💡 Concept / explanation
+- 📝 How-to / procedure
+- 🔗 Cross-reference / see also
+- 📌 Important note / callout
+- 🏷️ Metadata / configuration
+
 ## Decision & Approval Signals
 - 👍 Approved / proceed
 - ❓ Clarification needed

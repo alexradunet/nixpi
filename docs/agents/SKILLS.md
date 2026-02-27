@@ -4,7 +4,7 @@ Related: [Agents Home](./README.md) · [Operating Model](../runtime/OPERATING_MO
 
 Concise map of Nixpi agent skills used by `nixpi`.
 
-## Canonical agent-role skills
+## 🤖 Canonical agent-role skills
 - **Nixpi Runtime (Hermes)** — user-facing runtime behavior contract
   [`infra/pi/skills/nixpi-runtime/SKILL.md`](../../infra/pi/skills/nixpi-runtime/SKILL.md)
 - **Athena (Technical Architect)** — planning, acceptance criteria, and conformance contract
@@ -14,7 +14,7 @@ Concise map of Nixpi agent skills used by `nixpi`.
 - **Themis (Reviewer)** — independent quality/security/policy review contract
   [`infra/pi/skills/themis-reviewer/SKILL.md`](../../infra/pi/skills/themis-reviewer/SKILL.md)
 
-## Object management skills
+## 📦 Object management skills
 - **Journal objects** — create, query, and reflect on daily journal entries
   [`infra/pi/skills/object-journal/SKILL.md`](../../infra/pi/skills/object-journal/SKILL.md)
 - **Task objects** — create, complete, list, and organize actionable items
@@ -22,7 +22,7 @@ Concise map of Nixpi agent skills used by `nixpi`.
 - **Note objects** — capture, search, and link knowledge with PARA methodology
   [`infra/pi/skills/object-note/SKILL.md`](../../infra/pi/skills/object-note/SKILL.md)
 
-## Shared cross-role skills
+## 🔗 Shared cross-role skills
 - **TDD policy** — mandatory Red -> Green -> Refactor behavior
   [`infra/pi/skills/tdd/SKILL.md`](../../infra/pi/skills/tdd/SKILL.md)
 - **Install bootstrap guidance** — first-time Nixpi install flow

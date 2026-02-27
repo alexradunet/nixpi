@@ -47,3 +47,4 @@ Use standard Markdown links as the default and canonical format:
 - Updated docs home (`docs/README.md`) when adding a major doc?
 - Updated `docs/meta/SOURCE_OF_TRUTH.md` if ownership/precedence changed?
 - Kept examples executable and current?
+- Used documentation emojis from `docs/ux/EMOJI_DICTIONARY.md` consistently?

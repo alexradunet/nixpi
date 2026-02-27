@@ -7,7 +7,7 @@ This layer defines Nixpi's current competency inventory — what it can do today
 ### Object Management
 - Create, read, update, list, search, and link flat-file objects.
 - Supported object types: journal, task, note.
-- Full-text search across all objects (pure TypeScript, no external grep dependency).
+- Full-text search across all objects. TypeScript implementation uses in-memory matching; shell CRUD uses grep.
 - PARA-based organization with project, area, resource, and tags fields.
 - Bidirectional linking between objects.
 - Shared domain library (`@nixpi/core`): ObjectStore, JsYamlFrontmatterParser, typed interfaces.

@@ -80,6 +80,8 @@ If `pi` is not installed yet:
 
 ```bash
 nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill ./infra/pi/skills/install-nixpi/SKILL.md
+# NOTE: The version above (0.55.1) should match `nixpi.piAgentVersion` in infra/nixos/base.nix.
+# Check the current value there before running this command.
 ```
 
 ### Manual first rebuild (if you skip guided mode)

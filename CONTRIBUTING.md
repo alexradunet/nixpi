@@ -24,7 +24,7 @@ Run relevant tests for changed code, and for repo-wide checks run:
 ```bash
 # Shell tests (require yq-go in PATH)
 ./scripts/test.sh
-# or: nix-shell -p yq-go --run "./scripts/test.sh"
+# or: nix shell nixpkgs#yq-go -c ./scripts/test.sh
 
 # TypeScript — build and test @nixpi/core
 npm -w packages/nixpi-core run build

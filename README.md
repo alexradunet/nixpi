@@ -83,6 +83,7 @@ Nixpi/
         whatsapp.nix           # WhatsApp bridge systemd service
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
+        nixos.nix              # NixOS host configuration
     pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
     nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
@@ -200,11 +201,11 @@ This installs pinned extensions in your active Nixpi profile and records their s
 Apply/rollback system evolution with guardrails:
 
 ```bash
-nixpi evolve
-nixpi rollback
+nixpi evolve [--yes]
+nixpi rollback [--yes]
 ```
 
-`nixpi evolve` runs `sudo nixos-rebuild switch --flake .`, then executes `./scripts/verify-nixpi.sh`; if validation fails, it automatically runs rollback.
+`nixpi evolve` runs `sudo nixos-rebuild switch --flake .`, then executes `./scripts/verify-nixpi.sh`; if validation fails, it automatically runs rollback. Use `--yes` to skip the interactive confirmation prompt (for unattended operations).
 
 Single Nixpi instance: `~/Nixpi/.pi/agent/`
 
@@ -263,15 +264,15 @@ nix flake check --no-build
 
 ## Development Rules
 
-- Development model and contribution policy: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- Agent behavior policy: [`AGENTS.md`](./AGENTS.md)
-- Agent skills index: [`docs/agents/SKILLS.md`](./docs/agents/SKILLS.md)
-- Documentation hub: [`docs/README.md`](./docs/README.md)
-- Runtime operating model: [`docs/runtime/OPERATING_MODEL.md`](./docs/runtime/OPERATING_MODEL.md)
-- Agents overview and responsibilities: [`docs/agents/README.md`](./docs/agents/README.md)
-- Source-of-truth precedence: [`docs/meta/SOURCE_OF_TRUTH.md`](./docs/meta/SOURCE_OF_TRUTH.md)
-- Emoji concept dictionary (visual communication): [`docs/ux/EMOJI_DICTIONARY.md`](./docs/ux/EMOJI_DICTIONARY.md)
-- Documentation style guide: [`docs/meta/DOCS_STYLE.md`](./docs/meta/DOCS_STYLE.md)
+- 📝 Development model and contribution policy: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- 📋 Agent behavior policy: [`AGENTS.md`](./AGENTS.md)
+- 📋 Agent skills index: [`docs/agents/SKILLS.md`](./docs/agents/SKILLS.md)
+- 🗺️ Documentation hub: [`docs/README.md`](./docs/README.md)
+- 🗺️ Runtime operating model: [`docs/runtime/OPERATING_MODEL.md`](./docs/runtime/OPERATING_MODEL.md)
+- 📋 Agents overview and responsibilities: [`docs/agents/README.md`](./docs/agents/README.md)
+- 🏷️ Source-of-truth precedence: [`docs/meta/SOURCE_OF_TRUTH.md`](./docs/meta/SOURCE_OF_TRUTH.md)
+- 📖 Emoji concept dictionary (visual communication): [`docs/ux/EMOJI_DICTIONARY.md`](./docs/ux/EMOJI_DICTIONARY.md)
+- 📋 Documentation style guide: [`docs/meta/DOCS_STYLE.md`](./docs/meta/DOCS_STYLE.md)
 
 ## Runtime Model (High Level)
 
