@@ -45,15 +45,24 @@ If a host needs a different repository/profile location, override these Nix opti
 See role contracts and canonical codenames in [AGENTS.md](../../AGENTS.md#agent-role-policy), individual agent docs in [Agents Overview](../agents/README.md), and standardized exchange artifacts in [Agent Handoff Templates](../agents/HANDOFF_TEMPLATES.md).
 
 ## Evolution Workflow
-1. Hermes (Runtime) identifies improvement opportunity and creates an evolution request.
+1. Hermes (Runtime) identifies improvement opportunity and creates an evolution object (`nixpi-object create evolution ...`).
 2. Athena (Technical Architect) analyzes request, gathers user preferences, and produces an implementation plan.
 3. Hephaestus (Maintainer) executes in controlled dev context with strict TDD and validation.
 4. Themis (Reviewer) performs independent quality/security/policy review.
+   - **Pass**: proceed to step 5.
+   - **Rework**: loop back to step 3 with structured findings (max 2 cycles, then escalate to human).
+   - **Fail**: reject evolution, report to human with all findings.
 5. Athena performs final conformance review against plan and standards.
 6. Human approval gate decides apply/no-apply.
 7. Approved system changes are applied declaratively (`nixos-rebuild switch --flake ...`) with rollback available.
 
 > **Tip:** The preferred operator path for local guarded apply/rollback is `nixpi evolve` and `nixpi rollback`.
+
+### Evolution State Tracking
+Each evolution is tracked as an `evolution` object in `data/objects/evolution/`. The object's `status` field reflects the current pipeline stage (`proposed` -> `planning` -> `implementing` -> `reviewing` -> `conformance` -> `approved` -> `applied`). The `agent` field tracks which agent currently owns the work. Hermes updates both fields at each transition.
+
+### Stall Detection and Escalation
+During heartbeat cycles, Hermes checks for active evolutions not modified in >24h and flags them as `stalled`. Stalled evolutions are surfaced to the human for triage.
 
 ## Why this model
 - Prevents unsafe live self-mutation.

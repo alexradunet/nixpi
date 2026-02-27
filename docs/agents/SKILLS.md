@@ -21,6 +21,8 @@ Concise map of Nixpi agent skills used by `nixpi`.
   [`infra/pi/skills/object-task/SKILL.md`](../../infra/pi/skills/object-task/SKILL.md)
 - **Note objects** — capture, search, and link knowledge with PARA methodology
   [`infra/pi/skills/object-note/SKILL.md`](../../infra/pi/skills/object-note/SKILL.md)
+- **Evolution objects** — track pipeline state for Nixpi self-evolution from proposal through apply
+  [`infra/pi/skills/object-evolution/SKILL.md`](../../infra/pi/skills/object-evolution/SKILL.md)
 
 ## 🔗 Shared cross-role skills
 - **TDD policy** — mandatory Red -> Green -> Refactor behavior

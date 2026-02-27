@@ -6,7 +6,7 @@ This layer defines Nixpi's current competency inventory — what it can do today
 
 ### Object Management
 - Create, read, update, list, search, and link flat-file objects.
-- Supported object types: journal, task, note.
+- Supported object types: journal, task, note, evolution.
 - Full-text search across all objects. TypeScript implementation uses in-memory matching; shell CRUD uses grep.
 - PARA-based organization with project, area, resource, and tags fields.
 - Bidirectional linking between objects.
@@ -31,6 +31,9 @@ This layer defines Nixpi's current competency inventory — what it can do today
 ### Self-Evolution
 - Detect improvement opportunities during operation.
 - File structured evolution requests through the Hermes -> Athena pipeline.
+- Orchestrate sub-agents via `pi -p --skill` for each pipeline stage.
+- Track pipeline state via evolution objects (`data/objects/evolution/`).
+- Rework loop: Themis can return findings to Hephaestus (max 2 cycles, then human escalation).
 - Propose new object types, skills, or behaviors through the review pipeline.
 - Persona harvest skill for structured OpenPersona layer improvements.
 

@@ -98,3 +98,6 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - Hephaestus performs code evolution in controlled repo context with strict TDD and validation before apply.
 - Themis performs independent quality/security/policy review before apply.
 - See role contracts in `docs/agents/`.
+- Hermes is the master orchestrator — spawns sub-agents via `pi -p --skill infra/pi/skills/<agent>/SKILL.md`.
+- Evolution objects (`data/objects/evolution/`) track pipeline state across agent handoffs.
+- Rework loop: Themis can send structured findings back to Hephaestus (max 2 cycles before human escalation).

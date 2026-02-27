@@ -13,7 +13,7 @@ assert_file_contains "$AGENTS_OVERVIEW" "Themis (Reviewer Agent)"
 
 # One skill per canonical agent role.
 for skill in \
-  hermes-runtime \
+  nixpi-runtime \
   athena-technical-architect \
   hephaestus-maintainer \
   themis-reviewer
@@ -27,7 +27,7 @@ assert_file_contains "$BASE" 'if [ ! -f "$PI_DIR/settings.json" ]; then'
 assert_file_contains "$BASE" '"${repoRoot}/infra/pi/skills"'
 
 # Spot-check each skill front matter.
-assert_file_contains "infra/pi/skills/hermes-runtime/SKILL.md" "name: hermes-runtime"
+assert_file_contains "infra/pi/skills/nixpi-runtime/SKILL.md" "name: nixpi-runtime"
 assert_file_contains "infra/pi/skills/athena-technical-architect/SKILL.md" "name: athena-technical-architect"
 assert_file_contains "infra/pi/skills/hephaestus-maintainer/SKILL.md" "name: hephaestus-maintainer"
 assert_file_contains "infra/pi/skills/themis-reviewer/SKILL.md" "name: themis-reviewer"

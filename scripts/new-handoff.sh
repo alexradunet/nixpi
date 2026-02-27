@@ -16,6 +16,7 @@ Handoff types:
   implementation-plan
   change-package
   review-report
+  rework-request
   final-conformance
 
 Environment overrides:
@@ -173,6 +174,40 @@ EOF
 - Approve / Request changes / Reject
 EOF
       ;;
+    rework-request)
+      cat <<'EOF'
+# Rework Request
+
+## Evolution
+- Slug:
+- Rework cycle: 1 | 2
+
+## Verdict Context
+- Original verdict: rework
+- Summary: why rework is needed
+
+## Findings
+
+### Finding 1
+- Severity: low | medium
+- File:
+- Line: (if applicable)
+- Issue:
+- Recommendation:
+- Test suggestion:
+
+### Finding 2
+- Severity:
+- File:
+- Issue:
+- Recommendation:
+- Test suggestion:
+
+## Scope Constraints
+- Only address listed findings — do not expand scope.
+- Produce updated change package with rework evidence section.
+EOF
+      ;;
     final-conformance)
       cat <<'EOF'
 # Final Conformance Summary
@@ -196,7 +231,7 @@ EOF
 EOF
       ;;
     *)
-      fail "invalid handoff type '$handoff_type' (expected: evolution-request, implementation-plan, change-package, review-report, final-conformance)"
+      fail "invalid handoff type '$handoff_type' (expected: evolution-request, implementation-plan, change-package, review-report, rework-request, final-conformance)"
       ;;
   esac
 }

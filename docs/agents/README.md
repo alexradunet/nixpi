@@ -27,3 +27,5 @@ See the canonical role policy and boundaries in [AGENTS.md](../../AGENTS.md#agen
 ## Evolution Hand-off
 
 See the canonical 7-step evolution workflow in the [Operating Model](../runtime/OPERATING_MODEL.md#evolution-workflow). Use [Handoff Templates](./HANDOFF_TEMPLATES.md) for standardized artifacts between steps.
+
+Hermes orchestrates the pipeline by spawning sub-agents via `pi -p --skill`. Each pipeline stage is tracked via an `evolution` object in `data/objects/evolution/`, with `status` and `agent` fields updated at each transition. The rework loop (Themis -> Hephaestus, max 2 cycles) uses the `rework-request` handoff template.

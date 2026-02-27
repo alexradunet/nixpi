@@ -29,6 +29,7 @@ Supported handoff types:
 - `implementation-plan`
 - `change-package`
 - `review-report`
+- `rework-request`
 - `final-conformance`
 
 ## Format Rule
@@ -168,6 +169,43 @@ Supported handoff types:
 - Approve / Request changes / Reject
 ```
 
+## 4b) Themis (Reviewer) -> Hephaestus (Rework Request)
+
+### Template
+
+```md
+# Rework Request
+
+## Evolution
+- Slug:
+- Rework cycle: 1 | 2
+
+## Verdict Context
+- Original verdict: rework
+- Summary: why rework is needed
+
+## Findings
+
+### Finding 1
+- Severity: low | medium
+- File:
+- Line: (if applicable)
+- Issue:
+- Recommendation:
+- Test suggestion:
+
+### Finding 2
+- Severity:
+- File:
+- Issue:
+- Recommendation:
+- Test suggestion:
+
+## Scope Constraints
+- Only address listed findings — do not expand scope.
+- Produce updated change package with rework evidence section.
+```
+
 ## 5) Athena (Technical Architect) -> Human Approval Gate
 
 ### Template
@@ -199,7 +237,7 @@ Use when sending through APIs/queues.
 
 ```json
 {
-  "handoffType": "evolution-request|implementation-plan|change-package|review-report|final-conformance",
+  "handoffType": "evolution-request|implementation-plan|change-package|review-report|rework-request|final-conformance",
   "fromRole": "runtime|technical-architect|maintainer|reviewer",
   "toRole": "technical-architect|maintainer|reviewer|human",
   "fromCodeName": "Hermes|Athena|Hephaestus|Themis",

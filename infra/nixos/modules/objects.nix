@@ -24,7 +24,7 @@ in
 
     types = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "journal" "task" "note" ];
+      default = [ "journal" "task" "note" "evolution" ];
       example = [ "journal" "task" "note" "person" "event" "health" ];
       description = ''
         Object types to create subdirectories for.
