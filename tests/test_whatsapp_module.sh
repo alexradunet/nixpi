@@ -15,21 +15,20 @@ assert_file_contains "$MODULE" "mkEnableOption"
 # Happy path: module defines allowedNumbers option.
 assert_file_contains "$MODULE" "allowedNumbers"
 
-# Happy path: module defines systemd service.
-assert_file_contains "$MODULE" "systemd.services"
+# Happy path: module uses service factory with correct name.
+assert_file_contains "$MODULE" "mkNixpiService"
 assert_file_contains "$MODULE" "nixpi-whatsapp"
 
 # Happy path: service runs the bridge.
 assert_file_contains "$MODULE" "dist/index.js"
 
-# Happy path: service passes environment variables.
-assert_file_contains "$MODULE" "PI_CODING_AGENT_DIR"
+# Happy path: service passes allowed numbers via env.
 assert_file_contains "$MODULE" "NIXPI_WHATSAPP_ALLOWED"
 
 # Happy path: base.nix imports the whatsapp module.
 assert_file_contains "$BASE" "whatsapp.nix"
 
 # Happy path: service restarts on failure.
-assert_file_contains "$MODULE" 'Restart = "on-failure"'
+assert_file_contains "$MODULE" "on-failure"
 
 echo "PASS: WhatsApp NixOS module is properly configured"

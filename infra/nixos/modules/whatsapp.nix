@@ -17,7 +17,7 @@ let
     description = "Nixpi WhatsApp bridge (Baileys → Pi)";
     serviceType = "simple";
     workingDirectory = bridgeDir;
-    execStartPre = "${pkgs.nodejs_22}/bin/npm install --omit=dev";
+    execStartPre = "${pkgs.nodejs_22}/bin/npm install --omit=dev --prefer-offline";
     execStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
     extraEnv = [
       "NIXPI_REPO_ROOT=${repoRoot}"
@@ -29,6 +29,8 @@ let
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
+    stateDirectory = "nixpi-whatsapp";
+    readWritePaths = [ bridgeDir config.nixpi.piDir ];
   };
 in
 {
@@ -46,7 +48,15 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    inherit (serviceConfig) systemd;
-  };
+  config = lib.mkIf cfg.enable (lib.mkMerge [
+    serviceConfig
+    {
+      assertions = [
+        {
+          assertion = cfg.allowedNumbers != [];
+          message = "nixpi.channels.whatsapp.allowedNumbers must not be empty when the WhatsApp channel is enabled. Specify at least one allowed phone number.";
+        }
+      ];
+    }
+  ]);
 }

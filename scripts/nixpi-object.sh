@@ -19,6 +19,8 @@ set -euo pipefail
 
 OBJECTS_DIR="${NIXPI_OBJECTS_DIR:-${HOME}/Nixpi/data/objects}"
 
+[[ -d "$OBJECTS_DIR" ]] || { echo "Error: objects directory not found: $OBJECTS_DIR" >&2; exit 1; }
+
 die() {
   echo "Error: $*" >&2
   exit 1
@@ -90,7 +92,7 @@ write_object() {
     [[ -v "seen[$k]" ]] || rest+=("$k")
   done
   if [[ ${#rest[@]} -gt 0 ]]; then
-    IFS=$'\n' rest=($(sort <<<"${rest[*]}")); unset IFS 2>/dev/null || true
+    mapfile -t rest < <(printf '%s\n' "${rest[@]}" | sort)
     for k in "${rest[@]}"; do
       [[ -n "$k" ]] && ordered_keys+=("$k")
     done
@@ -121,6 +123,7 @@ write_object() {
 
   yaml=$(jq -n "${jq_args[@]}" "${jq_build} | del(.. | nulls)" | yq -P)
 
+  local tmpfile="${filepath}.tmp.$$"
   {
     echo "---"
     printf '%s\n' "$yaml"
@@ -130,7 +133,8 @@ write_object() {
       echo "# ${_fm[title]}"
       echo ""
     fi
-  } > "$filepath"
+  } > "$tmpfile"
+  mv "$tmpfile" "$filepath"
 }
 
 cmd_create() {
@@ -288,6 +292,13 @@ cmd_search() {
   local pattern="${1:-}"
   [[ -z "$pattern" ]] && die "usage: nixpi-object search <pattern>"
 
+  local grep_output grep_rc=0
+  grep_output="$(grep -rl "$pattern" "${OBJECTS_DIR}" 2>&1)" || grep_rc=$?
+  if [[ $grep_rc -eq 2 ]]; then
+    die "grep error searching objects directory: $grep_output"
+  fi
+  [[ -z "$grep_output" ]] && return 0
+
   local -A seen=()
   while IFS=: read -r filepath _; do
     [[ -f "$filepath" ]] || continue
@@ -305,7 +316,7 @@ cmd_search() {
         echo "${key}"
       fi
     fi
-  done < <(grep -rl "$pattern" "${OBJECTS_DIR}" 2>/dev/null || true)
+  done <<< "$grep_output"
 }
 
 cmd_link() {

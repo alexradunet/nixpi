@@ -68,7 +68,7 @@ let
     mkdir -p "$npm_config_cache" "$npm_config_prefix"
 
     # Pin package version to keep behavior stable across rebuilds.
-    exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.55.1 "$@"
+    exec ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} "$@"
   '';
 
   nixpiCli = pkgs.writeShellScriptBin "nixpi" ''
@@ -402,6 +402,15 @@ in
     example = "/home/alex/Nixpi";
     description = ''
       Repository root for Nixpi on disk.
+    '';
+  };
+
+  options.nixpi.piAgentVersion = lib.mkOption {
+    type = lib.types.str;
+    default = "0.55.1";
+    example = "0.56.0";
+    description = ''
+      Version of @mariozechner/pi-coding-agent to use across all services.
     '';
   };
 

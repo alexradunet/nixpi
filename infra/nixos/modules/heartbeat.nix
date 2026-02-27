@@ -28,7 +28,7 @@ let
     export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/nixpi-npm"
     export npm_config_prefix="''${XDG_DATA_HOME:-$HOME/.local/share}/nixpi-npm-global"
     mkdir -p "$npm_config_cache" "$npm_config_prefix"
-    ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@0.55.1 \
+    ${pkgs.nodejs_22}/bin/npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} \
       -p "${heartbeatPrompt}" \
       --skill "${repoRoot}/infra/pi/skills/heartbeat/SKILL.md"
   '';
@@ -39,6 +39,9 @@ let
     serviceType = "oneshot";
     execStart = "${piWrapper}";
     timeoutStartSec = "5min";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    readWritePaths = [ repoRoot config.nixpi.piDir ];
   };
 in
 {

@@ -17,6 +17,7 @@
 #     after = [ "network.target" ];   # optional
 #     wants = [ "network.target" ];   # optional
 #     wantedBy = [ "multi-user.target" ];  # optional, for long-running services
+#     noHardening ? false;            # optional, disable security hardening
 #   }
 { config, pkgs, lib }:
 
@@ -33,6 +34,10 @@
 , after ? []
 , wants ? []
 , wantedBy ? []
+, noHardening ? false
+, stateDirectory ? null
+, stateDirectoryMode ? "0700"
+, readWritePaths ? []
 }:
 
 let
@@ -68,6 +73,19 @@ in
       RestartSec = restartSec;
     } // lib.optionalAttrs (timeoutStartSec != null) {
       TimeoutStartSec = timeoutStartSec;
+    } // lib.optionalAttrs (stateDirectory != null) {
+      StateDirectory = stateDirectory;
+      StateDirectoryMode = stateDirectoryMode;
+    } // lib.optionalAttrs (readWritePaths != []) {
+      ReadWritePaths = readWritePaths;
+    } // lib.optionalAttrs (!noHardening) {
+      # Security hardening defaults
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      StartLimitBurst = 5;
+      StartLimitIntervalSec = 60;
     };
   };
 }

@@ -10,6 +10,7 @@
  */
 
 import { execFile } from "node:child_process";
+import fs from "node:fs";
 import { promisify } from "node:util";
 import type { IncomingMessage, MessageChannel, AgentConfig } from "@nixpi/core";
 
@@ -43,7 +44,9 @@ function isAllowed(jid: string, config: WhatsAppBridgeConfig): boolean {
 let processingQueue: Promise<void> = Promise.resolve();
 
 function enqueue(fn: () => Promise<void>): Promise<void> {
-  processingQueue = processingQueue.then(fn, fn);
+  processingQueue = processingQueue.then(fn).catch((err) => {
+    console.error("Queue processing error:", err instanceof Error ? err.message : String(err));
+  });
   return processingQueue;
 }
 
@@ -81,6 +84,8 @@ class BaileysWhatsAppChannel implements MessageChannel {
   private messageHandler?: (msg: IncomingMessage) => Promise<string>;
   private config: WhatsAppBridgeConfig;
   private sock?: ReturnType<typeof import("@whiskeysockets/baileys").default>;
+  private reconnectAttempts = 0;
+  private static readonly MAX_RECONNECT_DELAY_MS = 30_000;
 
   constructor(config: WhatsAppBridgeConfig) {
     this.config = config;
@@ -91,15 +96,25 @@ class BaileysWhatsAppChannel implements MessageChannel {
   }
 
   async sendMessage(to: string, text: string): Promise<void> {
-    if (!this.sock) {
+    const sock = this.sock;
+    if (!sock) {
       throw new Error("Cannot send message: not connected");
     }
-    await this.sock.sendMessage(to, { text });
+    await sock.sendMessage(to, { text });
   }
 
   async disconnect(): Promise<void> {
     this.sock?.end(undefined);
     this.sock = undefined;
+  }
+
+  private reconnectDelay(): number {
+    const delay = Math.min(
+      1000 * Math.pow(2, this.reconnectAttempts),
+      BaileysWhatsAppChannel.MAX_RECONNECT_DELAY_MS,
+    );
+    this.reconnectAttempts++;
+    return delay;
   }
 
   async connect(): Promise<void> {
@@ -113,7 +128,7 @@ class BaileysWhatsAppChannel implements MessageChannel {
 
     const self = this;
 
-    async function connect(): Promise<void> {
+    async function connectInner(): Promise<void> {
       const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
       const sock = makeWASocket({
@@ -133,13 +148,20 @@ class BaileysWhatsAppChannel implements MessageChannel {
 
         if (connection === "close") {
           self.sock = undefined;
-          const statusCode = (lastDisconnect?.error as InstanceType<typeof Boom>)
-            ?.output?.statusCode;
+          const isBoom = lastDisconnect?.error instanceof Boom;
+          const statusCode = isBoom
+            ? (lastDisconnect!.error as InstanceType<typeof Boom>).output.statusCode
+            : undefined;
           const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
           if (shouldReconnect) {
-            console.log("Connection closed. Reconnecting...");
-            connect();
+            const delay = self.reconnectDelay();
+            console.log(`Connection closed. Reconnecting in ${delay}ms...`);
+            setTimeout(() => {
+              connectInner().catch((err) => {
+                console.error("Reconnect failed:", err instanceof Error ? err.message : String(err));
+              });
+            }, delay);
           } else {
             console.log("Logged out from WhatsApp. Exiting.");
             process.exit(0);
@@ -147,6 +169,7 @@ class BaileysWhatsAppChannel implements MessageChannel {
         }
 
         if (connection === "open") {
+          self.reconnectAttempts = 0;
           console.log("Connected to WhatsApp.");
         }
       });
@@ -197,14 +220,30 @@ class BaileysWhatsAppChannel implements MessageChannel {
       });
     }
 
-    await connect();
+    await connectInner();
   }
 }
 
 // --- Main ---
 
+function validateJid(number: string): boolean {
+  return /^\d{7,15}$/.test(number);
+}
+
 async function main(): Promise<void> {
   const config = { ...DEFAULT_CONFIG };
+
+  // Validate allowed numbers format
+  for (const num of config.allowedNumbers) {
+    if (!validateJid(num)) {
+      throw new Error(`Invalid phone number format in NIXPI_WHATSAPP_ALLOWED: '${num}' (expected 7-15 digits)`);
+    }
+  }
+
+  // Validate piDir exists
+  if (!fs.existsSync(config.piDir)) {
+    throw new Error(`Pi directory not found: ${config.piDir}`);
+  }
 
   console.log("Nixpi WhatsApp Bridge starting...");
   console.log(`  Pi command: ${config.piCommand}`);

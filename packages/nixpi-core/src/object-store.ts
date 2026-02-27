@@ -27,9 +27,6 @@ export class ObjectStore implements IObjectStore {
     fields: Record<string, string> = {}
   ): string {
     const filepath = this.objectPath(type, slug);
-    if (fs.existsSync(filepath)) {
-      throw new Error(`object already exists: ${type}/${slug}`);
-    }
 
     fs.mkdirSync(path.dirname(filepath), { recursive: true });
 
@@ -68,17 +65,32 @@ export class ObjectStore implements IObjectStore {
 
     const title = data.title as string | undefined;
     const body = title ? `# ${title}\n` : "";
-    fs.writeFileSync(filepath, this.parser.stringify(data, body));
+
+    // Atomic exclusive-create: flag 'wx' fails if file already exists,
+    // preventing race conditions between check and write.
+    try {
+      fs.writeFileSync(filepath, this.parser.stringify(data, body), { flag: "wx" });
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "EEXIST") {
+        throw new Error(`object already exists: ${type}/${slug}`);
+      }
+      throw err;
+    }
 
     return `created ${type}/${slug}`;
   }
 
   read(type: string, slug: string): ObjectData {
     const filepath = this.objectPath(type, slug);
-    if (!fs.existsSync(filepath)) {
-      throw new Error(`object not found: ${type}/${slug}`);
+    let raw: string;
+    try {
+      raw = fs.readFileSync(filepath, "utf-8");
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error(`object not found: ${type}/${slug}`);
+      }
+      throw err;
     }
-    const raw = fs.readFileSync(filepath, "utf-8");
     return this.parser.parse(raw);
   }
 
@@ -148,11 +160,15 @@ export class ObjectStore implements IObjectStore {
     fields: Record<string, string>
   ): void {
     const filepath = this.objectPath(type, slug);
-    if (!fs.existsSync(filepath)) {
-      throw new Error(`object not found: ${type}/${slug}`);
+    let raw: string;
+    try {
+      raw = fs.readFileSync(filepath, "utf-8");
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error(`object not found: ${type}/${slug}`);
+      }
+      throw err;
     }
-
-    const raw = fs.readFileSync(filepath, "utf-8");
     const parsed = this.parser.parse(raw);
     const data = parsed.data;
 
@@ -222,15 +238,25 @@ export class ObjectStore implements IObjectStore {
     const pathA = this.objectPath(a.type, a.slug);
     const pathB = this.objectPath(b.type, b.slug);
 
-    if (!fs.existsSync(pathA))
-      throw new Error(`object not found: ${refA}`);
-    if (!fs.existsSync(pathB))
-      throw new Error(`object not found: ${refB}`);
+    // Validate both exist before mutating either (read will throw ENOENT)
+    this.readFileOrThrow(pathA, refA);
+    this.readFileOrThrow(pathB, refB);
 
     this.addLink(pathA, refB);
     this.addLink(pathB, refA);
 
     return `linked ${refA} <-> ${refB}`;
+  }
+
+  private readFileOrThrow(filepath: string, ref: string): string {
+    try {
+      return fs.readFileSync(filepath, "utf-8");
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new Error(`object not found: ${ref}`);
+      }
+      throw err;
+    }
   }
 
   private addLink(filepath: string, linkRef: string): void {

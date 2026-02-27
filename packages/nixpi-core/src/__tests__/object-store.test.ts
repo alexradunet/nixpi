@@ -239,4 +239,57 @@ describe("ObjectStore integration (real parser)", () => {
     assert.ok(keys.indexOf("created") > keys.indexOf("custom"));
     assert.ok(keys.indexOf("modified") > keys.indexOf("custom"));
   });
+
+  it("concurrent create of same slug fails for one caller", async () => {
+    const results = await Promise.allSettled(
+      Array.from({ length: 5 }, (_, i) =>
+        new Promise<string>((resolve, reject) => {
+          try {
+            resolve(store.create("task", "race", { title: `Writer ${i}` }));
+          } catch (err) {
+            reject(err);
+          }
+        })
+      )
+    );
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    const rejected = results.filter((r) => r.status === "rejected");
+    assert.equal(fulfilled.length, 1, "exactly one create should succeed");
+    assert.equal(rejected.length, 4, "remaining creates should fail");
+    for (const r of rejected) {
+      assert.ok((r as PromiseRejectedResult).reason.message.includes("already exists"));
+    }
+  });
+
+  it("concurrent updates do not corrupt file", async () => {
+    store.create("task", "cu", { title: "Concurrent", status: "active" });
+    await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        new Promise<void>((resolve) => {
+          store.update("task", "cu", { status: `status-${i}` });
+          resolve();
+        })
+      )
+    );
+    const result = store.read("task", "cu");
+    // File should still be valid and readable
+    assert.equal(result.data.type, "task");
+    assert.ok(String(result.data.status).startsWith("status-"));
+  });
+
+  it("concurrent link operations do not duplicate links", async () => {
+    store.create("task", "lt");
+    store.create("note", "ln");
+    await Promise.all(
+      Array.from({ length: 5 }, () =>
+        new Promise<void>((resolve) => {
+          store.link("task/lt", "note/ln");
+          resolve();
+        })
+      )
+    );
+    const t = store.read("task", "lt");
+    const links = t.data.links as string[];
+    assert.equal(links.filter((l) => l === "note/ln").length, 1, "link should not be duplicated");
+  });
 });

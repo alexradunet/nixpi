@@ -15,8 +15,8 @@ assert_file_contains "$MODULE" "mkEnableOption"
 # Happy path: module defines interval option.
 assert_file_contains "$MODULE" "intervalMinutes"
 
-# Happy path: module defines systemd timer and service.
-assert_file_contains "$MODULE" "systemd.services"
+# Happy path: module uses service factory and defines timer.
+assert_file_contains "$MODULE" "mkNixpiService"
 assert_file_contains "$MODULE" "systemd.timers"
 assert_file_contains "$MODULE" "nixpi-heartbeat"
 
