@@ -7,10 +7,29 @@
 
 let
   cfg = config.nixpi.channels.whatsapp;
-  primaryUser = config.nixpi.primaryUser;
   repoRoot = config.nixpi.repoRoot;
-  piDir = config.nixpi.piDir;
   bridgeDir = "${repoRoot}/services/whatsapp-bridge";
+
+  mkNixpiService = import ../lib/mk-nixpi-service.nix { inherit config pkgs lib; };
+
+  serviceConfig = mkNixpiService {
+    name = "nixpi-whatsapp";
+    description = "Nixpi WhatsApp bridge (Baileys → Pi)";
+    serviceType = "simple";
+    workingDirectory = bridgeDir;
+    execStartPre = "${pkgs.nodejs_22}/bin/npm install --omit=dev";
+    execStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
+    extraEnv = [
+      "NIXPI_REPO_ROOT=${repoRoot}"
+      "NIXPI_WHATSAPP_ALLOWED=${lib.concatStringsSep "," cfg.allowedNumbers}"
+      "NODE_ENV=production"
+    ];
+    restart = "on-failure";
+    restartSec = "30s";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
 in
 {
   options.nixpi.channels.whatsapp = {
@@ -28,32 +47,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.services.nixpi-whatsapp = {
-      description = "Nixpi WhatsApp bridge (Baileys → Pi)";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
-      wantedBy = [ "multi-user.target" ];
-
-      serviceConfig = {
-        Type = "simple";
-        User = primaryUser;
-        Group = "users";
-        WorkingDirectory = bridgeDir;
-        Environment = [
-          "PI_CODING_AGENT_DIR=${piDir}"
-          "NIXPI_OBJECTS_DIR=${config.nixpi.objects.dataDir}"
-          "NIXPI_REPO_ROOT=${repoRoot}"
-          "NIXPI_WHATSAPP_ALLOWED=${lib.concatStringsSep "," cfg.allowedNumbers}"
-          "HOME=/home/${primaryUser}"
-          "NODE_ENV=production"
-        ];
-        ExecStartPre = "${pkgs.nodejs_22}/bin/npm install --omit=dev";
-        ExecStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
-        Restart = "on-failure";
-        RestartSec = "30s";
-        StandardOutput = "journal";
-        StandardError = "journal";
-      };
-    };
+    inherit (serviceConfig) systemd;
   };
 }

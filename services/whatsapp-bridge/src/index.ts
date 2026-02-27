@@ -2,7 +2,7 @@
  * Nixpi WhatsApp Bridge — Minimal Baileys → Pi print mode bridge.
  *
  * Architecture (Ports and Adapters):
- * - Port: MessageChannel interface (receive message, send response)
+ * - Port: MessageChannel interface (from @nixpi/core)
  * - Adapter: Baileys implementation of MessageChannel
  * - Core: Message → spawn `pi -p` → capture stdout → respond
  *
@@ -11,37 +11,19 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import type { IncomingMessage, MessageChannel, AgentConfig } from "@nixpi/core";
 
 const execFileAsync = promisify(execFile);
 
-// --- Port (interface) ---
+// --- WhatsApp-specific config (extends core AgentConfig) ---
 
-export interface IncomingMessage {
-  from: string; // sender JID (e.g. "1234567890@s.whatsapp.net")
-  text: string; // message body
-  timestamp: number;
-}
-
-export interface MessageChannel {
-  onMessage(handler: (msg: IncomingMessage) => Promise<string>): void;
-  sendMessage(to: string, text: string): Promise<void>;
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
+interface WhatsAppBridgeConfig extends AgentConfig {
+  allowedNumbers: string[];
 }
 
 // --- Core: Pi Agent Bridge ---
 
-export interface AgentConfig {
-  piCommand: string;
-  piDir: string;
-  repoRoot: string;
-  objectsDir: string;
-  skillsDir: string;
-  allowedNumbers: string[];
-  timeoutMs: number;
-}
-
-const DEFAULT_CONFIG: AgentConfig = {
+const DEFAULT_CONFIG: WhatsAppBridgeConfig = {
   piCommand: process.env.NIXPI_PI_COMMAND || "pi",
   piDir: process.env.PI_CODING_AGENT_DIR || `${process.env.HOME}/Nixpi/.pi/agent`,
   repoRoot: process.env.NIXPI_REPO_ROOT || `${process.env.HOME}/Nixpi`,
@@ -51,7 +33,7 @@ const DEFAULT_CONFIG: AgentConfig = {
   timeoutMs: Number(process.env.NIXPI_WHATSAPP_TIMEOUT_MS) || 120_000,
 };
 
-function isAllowed(jid: string, config: AgentConfig): boolean {
+function isAllowed(jid: string, config: WhatsAppBridgeConfig): boolean {
   if (config.allowedNumbers.length === 0) return true; // no whitelist = allow all
   const number = jid.replace(/@.*$/, "");
   return config.allowedNumbers.includes(number);
@@ -67,7 +49,7 @@ function enqueue(fn: () => Promise<void>): Promise<void> {
 
 export async function processMessage(
   text: string,
-  config: AgentConfig = DEFAULT_CONFIG
+  config: WhatsAppBridgeConfig = DEFAULT_CONFIG
 ): Promise<string> {
   try {
     const { stdout } = await execFileAsync(
@@ -94,90 +76,129 @@ export async function processMessage(
 
 // --- Adapter: Baileys WhatsApp ---
 
-async function startBaileysAdapter(config: AgentConfig): Promise<void> {
-  // Dynamic import for Baileys (ESM)
-  const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } =
-    await import("@whiskeysockets/baileys");
-  const { Boom } = await import("@hapi/boom");
-  const pino = (await import("pino")).default;
+class BaileysWhatsAppChannel implements MessageChannel {
+  readonly name = "whatsapp";
+  private messageHandler?: (msg: IncomingMessage) => Promise<string>;
+  private config: WhatsAppBridgeConfig;
+  private sock?: ReturnType<typeof import("@whiskeysockets/baileys").default>;
 
-  const logger = pino({ level: "silent" });
-  const authDir = `${config.piDir}/whatsapp-auth`;
-
-  async function connect(): Promise<void> {
-    const { state, saveCreds } = await useMultiFileAuthState(authDir);
-
-    const sock = makeWASocket({
-      auth: state,
-      logger,
-      printQRInTerminal: true,
-    });
-
-    sock.ev.on("connection.update", (update) => {
-      const { connection, lastDisconnect, qr } = update;
-
-      if (qr) {
-        console.log("Scan the QR code above with WhatsApp to pair.");
-      }
-
-      if (connection === "close") {
-        const statusCode = (lastDisconnect?.error as InstanceType<typeof Boom>)
-          ?.output?.statusCode;
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-        if (shouldReconnect) {
-          console.log("Connection closed. Reconnecting...");
-          connect();
-        } else {
-          console.log("Logged out from WhatsApp. Exiting.");
-          process.exit(0);
-        }
-      }
-
-      if (connection === "open") {
-        console.log("Connected to WhatsApp.");
-      }
-    });
-
-    sock.ev.on("creds.update", saveCreds);
-
-    sock.ev.on("messages.upsert", (event) => {
-      for (const msg of event.messages) {
-        // Skip non-text messages, group messages, and own messages.
-        if (!msg.message) continue;
-        if (msg.key.fromMe) continue;
-        if (!msg.key.remoteJid) continue;
-        if (msg.key.remoteJid.endsWith("@g.us")) continue; // no groups
-
-        const text =
-          msg.message.conversation ||
-          msg.message.extendedTextMessage?.text;
-        if (!text) continue;
-
-        const from = msg.key.remoteJid;
-
-        if (!isAllowed(from, config)) {
-          console.log(`Blocked message from unauthorized number: ${from}`);
-          continue;
-        }
-
-        console.log(`Message from ${from}: ${text.substring(0, 50)}...`);
-
-        // Enqueue for sequential processing.
-        enqueue(async () => {
-          const response = await processMessage(text, config);
-          try {
-            await sock.sendMessage(from, { text: response });
-          } catch (sendErr: unknown) {
-            const errMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
-            console.error(`Failed to send response: ${errMsg}`);
-          }
-        });
-      }
-    });
+  constructor(config: WhatsAppBridgeConfig) {
+    this.config = config;
   }
 
-  await connect();
+  onMessage(handler: (msg: IncomingMessage) => Promise<string>): void {
+    this.messageHandler = handler;
+  }
+
+  async sendMessage(to: string, text: string): Promise<void> {
+    if (!this.sock) {
+      throw new Error("Cannot send message: not connected");
+    }
+    await this.sock.sendMessage(to, { text });
+  }
+
+  async disconnect(): Promise<void> {
+    this.sock?.end(undefined);
+    this.sock = undefined;
+  }
+
+  async connect(): Promise<void> {
+    const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } =
+      await import("@whiskeysockets/baileys");
+    const { Boom } = await import("@hapi/boom");
+    const pino = (await import("pino")).default;
+
+    const logger = pino({ level: "silent" });
+    const authDir = `${this.config.piDir}/whatsapp-auth`;
+
+    const self = this;
+
+    async function connect(): Promise<void> {
+      const { state, saveCreds } = await useMultiFileAuthState(authDir);
+
+      const sock = makeWASocket({
+        auth: state,
+        logger,
+        printQRInTerminal: true,
+      });
+
+      self.sock = sock;
+
+      sock.ev.on("connection.update", (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+          console.log("Scan the QR code above with WhatsApp to pair.");
+        }
+
+        if (connection === "close") {
+          self.sock = undefined;
+          const statusCode = (lastDisconnect?.error as InstanceType<typeof Boom>)
+            ?.output?.statusCode;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+          if (shouldReconnect) {
+            console.log("Connection closed. Reconnecting...");
+            connect();
+          } else {
+            console.log("Logged out from WhatsApp. Exiting.");
+            process.exit(0);
+          }
+        }
+
+        if (connection === "open") {
+          console.log("Connected to WhatsApp.");
+        }
+      });
+
+      sock.ev.on("creds.update", saveCreds);
+
+      sock.ev.on("messages.upsert", (event) => {
+        for (const msg of event.messages) {
+          if (!msg.message) continue;
+          if (msg.key.fromMe) continue;
+          if (!msg.key.remoteJid) continue;
+          if (msg.key.remoteJid.endsWith("@g.us")) continue;
+
+          const text =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text;
+          if (!text) continue;
+
+          const from = msg.key.remoteJid;
+
+          if (!isAllowed(from, self.config)) {
+            console.log(`Blocked message from unauthorized number: ${from}`);
+            continue;
+          }
+
+          console.log(`Message from ${from}: ${text.substring(0, 50)}...`);
+
+          enqueue(async () => {
+            const incoming: IncomingMessage = {
+              from,
+              text,
+              timestamp: Date.now(),
+              channel: "whatsapp",
+            };
+
+            const response = self.messageHandler
+              ? await self.messageHandler(incoming)
+              : await processMessage(text, self.config);
+
+            try {
+              await self.sendMessage(from, response);
+            } catch (sendErr: unknown) {
+              const errMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
+              console.error(`Failed to send response: ${errMsg}`);
+            }
+          });
+        }
+      });
+    }
+
+    await connect();
+  }
 }
 
 // --- Main ---
@@ -191,7 +212,9 @@ async function main(): Promise<void> {
   console.log(`  Objects dir: ${config.objectsDir}`);
   console.log(`  Allowed numbers: ${config.allowedNumbers.length === 0 ? "all" : config.allowedNumbers.join(", ")}`);
 
-  await startBaileysAdapter(config);
+  const channel = new BaileysWhatsAppChannel(config);
+  channel.onMessage(async (msg) => processMessage(msg.text, config));
+  await channel.connect();
 }
 
 main().catch((err) => {

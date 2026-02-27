@@ -6,6 +6,8 @@ set -euo pipefail
 # Object files are Markdown with YAML frontmatter stored under NIXPI_OBJECTS_DIR.
 # Each object type gets its own subdirectory (e.g. journal/, task/, note/).
 #
+# Requires: yq (yq-go), jq
+#
 # Usage:
 #   nixpi-object create <type> <slug> [--field=value ...]
 #   nixpi-object read <type> <slug>
@@ -32,7 +34,6 @@ object_path() {
 }
 
 # Parse --key=value arguments into associative array.
-# Usage: parse_fields dest_array_name "$@"
 parse_fields() {
   local -n _fields="$1"
   shift
@@ -42,6 +43,10 @@ parse_fields() {
         local key="${arg%%=*}"
         key="${key#--}"
         local value="${arg#*=}"
+        # Reject keys that would create nested YAML (contain dots or invalid chars)
+        if [[ ! "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
+          die "invalid field name: '$key' (must match [a-zA-Z_][a-zA-Z0-9_-]*)"
+        fi
         _fields["$key"]="$value"
         ;;
       *)
@@ -51,91 +56,81 @@ parse_fields() {
   done
 }
 
-# Write YAML frontmatter + empty body to a file.
+# Read a single frontmatter value from a file using yq.
+read_frontmatter_value() {
+  local filepath="$1" key="$2"
+  yq --front-matter=extract ".$key" "$filepath" 2>/dev/null | grep -v '^null$'
+}
+
+# Read all links from frontmatter using yq.
+read_frontmatter_links() {
+  local filepath="$1"
+  yq --front-matter=extract '.links[]' "$filepath" 2>/dev/null || true
+}
+
+# Write YAML frontmatter + body to a file using jq (build JSON) + yq (convert to YAML).
 write_object() {
   local filepath="$1"
-  shift
-  # Remaining args are key=value pairs (already parsed).
-  local -n _fm="$1"
-  shift
+  local -n _fm="$2"
+
+  # Collect keys: priority order first, then remaining alphabetically.
+  local -a ordered_keys=()
+  local -a priority_keys=(type slug title status priority project area)
+  local -A seen=()
+
+  for k in "${priority_keys[@]}"; do
+    if [[ -v "_fm[$k]" ]]; then
+      ordered_keys+=("$k")
+      seen["$k"]=1
+    fi
+  done
+
+  local -a rest=()
+  for k in "${!_fm[@]}"; do
+    [[ -v "seen[$k]" ]] || rest+=("$k")
+  done
+  if [[ ${#rest[@]} -gt 0 ]]; then
+    IFS=$'\n' rest=($(sort <<<"${rest[*]}")); unset IFS 2>/dev/null || true
+    for k in "${rest[@]}"; do
+      [[ -n "$k" ]] && ordered_keys+=("$k")
+    done
+  fi
+
+  # Build JSON via jq --arg per key (safe for tabs/newlines in values), convert to YAML via yq.
+  local yaml
+  local -a jq_args=()
+  local jq_expr="."
+  local i=0
+
+  for k in "${ordered_keys[@]}"; do
+    local v="${_fm[$k]}"
+    jq_args+=(--arg "k_${i}" "$k" --arg "v_${i}" "$v")
+    i=$((i + 1))
+  done
+
+  # Build the jq expression that constructs the ordered object
+  local jq_build="null"
+  for ((j=0; j<i; j++)); do
+    local k="${ordered_keys[$j]}"
+    if [[ "$k" == "tags" || "$k" == "links" ]]; then
+      jq_build="${jq_build} | . + {(\$k_${j}): (\$v_${j} | split(\",\") | map(gsub(\"^\\\\s+|\\\\s+$\"; \"\")))}"
+    else
+      jq_build="${jq_build} | . + {(\$k_${j}): \$v_${j}}"
+    fi
+  done
+
+  yaml=$(jq -n "${jq_args[@]}" "${jq_build} | del(.. | nulls)" | yq -P)
 
   {
     echo "---"
-    # Write fields in a stable order: type, slug, title first, then alphabetical.
-    local -a priority_keys=(type slug title status priority project area)
-    local -A written=()
-
-    for key in "${priority_keys[@]}"; do
-      if [[ -v "_fm[$key]" ]]; then
-        local val="${_fm[$key]}"
-        if [[ "$key" == "tags" ]]; then
-          echo "tags:"
-          IFS=',' read -ra tag_arr <<< "$val"
-          for t in "${tag_arr[@]}"; do
-            echo "  - ${t}"
-          done
-        elif [[ "$key" == "links" ]]; then
-          echo "links:"
-          IFS=',' read -ra link_arr <<< "$val"
-          for l in "${link_arr[@]}"; do
-            echo "  - ${l}"
-          done
-        else
-          echo "${key}: ${val}"
-        fi
-        written["$key"]=1
-      fi
-    done
-
-    # Write remaining keys alphabetically.
-    local -a remaining_keys=()
-    for key in "${!_fm[@]}"; do
-      if [[ ! -v "written[$key]" ]]; then
-        remaining_keys+=("$key")
-      fi
-    done
-    IFS=$'\n' sorted=($(sort <<< "${remaining_keys[*]}")); unset IFS 2>/dev/null || true
-
-    for key in "${sorted[@]}"; do
-      [[ -z "$key" ]] && continue
-      local val="${_fm[$key]}"
-      if [[ "$key" == "tags" ]]; then
-        echo "tags:"
-        IFS=',' read -ra tag_arr <<< "$val"
-        for t in "${tag_arr[@]}"; do
-          echo "  - ${t}"
-        done
-      elif [[ "$key" == "links" ]]; then
-        echo "links:"
-        IFS=',' read -ra link_arr <<< "$val"
-        for l in "${link_arr[@]}"; do
-          echo "  - ${l}"
-        done
-      else
-        echo "${key}: ${val}"
-      fi
-    done
-
+    printf '%s\n' "$yaml"
     echo "---"
     echo ""
-    # Title as markdown heading if present.
     if [[ -v "_fm[title]" ]]; then
       echo "# ${_fm[title]}"
       echo ""
     fi
   } > "$filepath"
-}
-
-# Read frontmatter value from a file.
-read_frontmatter_value() {
-  local filepath="$1" key="$2"
-  sed -n '/^---$/,/^---$/p' "$filepath" | grep -E "^${key}:" | head -1 | sed "s/^${key}: *//"
-}
-
-# Read all links from frontmatter.
-read_frontmatter_links() {
-  local filepath="$1"
-  sed -n '/^---$/,/^---$/{ /^links:/,/^[^ -]/{ /^  - /{ s/^  - //; p; } } }' "$filepath"
 }
 
 cmd_create() {
@@ -158,7 +153,6 @@ cmd_create() {
     parse_fields fields "$@"
   fi
 
-  # Set mandatory fields.
   fields[type]="$type"
   fields[slug]="$slug"
   fields[created]="$(now_iso)"
@@ -189,7 +183,6 @@ cmd_list() {
   local list_all=0
   local -A filters=()
 
-  # Parse arguments.
   local -a positional=()
   for arg in "$@"; do
     case "$arg" in
@@ -234,8 +227,7 @@ cmd_list() {
       for fkey in "${!filters[@]}"; do
         local fval="${filters[$fkey]}"
         if [[ "$fkey" == "tag" ]]; then
-          # Check if tag is in the tags list.
-          if ! sed -n '/^---$/,/^---$/p' "$filepath" | grep -qF -- "- ${fval}"; then
+          if ! yq --front-matter=extract '.tags[]' "$filepath" 2>/dev/null | grep -qF -- "$fval"; then
             match=0
             break
           fi
@@ -280,99 +272,22 @@ cmd_update() {
 
   local -A updates=()
   parse_fields updates "$@"
-
-  # Always update modified timestamp.
   updates[modified]="$(now_iso)"
 
-  # Read existing file, update frontmatter in-place.
-  local in_frontmatter=0
-  local frontmatter_started=0
-  local -a body_lines=()
-  local -a fm_lines=()
-  local -A existing_keys=()
-
-  while IFS= read -r line; do
-    if [[ "$line" == "---" && "$frontmatter_started" -eq 0 ]]; then
-      frontmatter_started=1
-      in_frontmatter=1
-      continue
-    fi
-    if [[ "$line" == "---" && "$in_frontmatter" -eq 1 ]]; then
-      in_frontmatter=0
-      continue
-    fi
-    if [[ "$in_frontmatter" -eq 1 ]]; then
-      # Check if this is a list continuation (starts with "  - ").
-      if [[ "$line" =~ ^[[:space:]]*-[[:space:]] ]]; then
-        fm_lines+=("$line")
-        continue
-      fi
-      local key="${line%%:*}"
-      existing_keys["$key"]=1
-      if [[ -v "updates[$key]" ]]; then
-        local val="${updates[$key]}"
-        if [[ "$key" == "tags" ]]; then
-          fm_lines+=("tags:")
-          IFS=',' read -ra tag_arr <<< "$val"
-          for t in "${tag_arr[@]}"; do
-            fm_lines+=("  - ${t}")
-          done
-        elif [[ "$key" == "links" ]]; then
-          fm_lines+=("links:")
-          IFS=',' read -ra link_arr <<< "$val"
-          for l in "${link_arr[@]}"; do
-            fm_lines+=("  - ${l}")
-          done
-        else
-          fm_lines+=("${key}: ${val}")
-        fi
-        unset "updates[$key]"
-      else
-        fm_lines+=("$line")
-      fi
-    else
-      body_lines+=("$line")
-    fi
-  done < "$filepath"
-
-  # Append any new fields from updates.
   for key in "${!updates[@]}"; do
     local val="${updates[$key]}"
-    if [[ "$key" == "tags" ]]; then
-      fm_lines+=("tags:")
-      IFS=',' read -ra tag_arr <<< "$val"
-      for t in "${tag_arr[@]}"; do
-        fm_lines+=("  - ${t}")
-      done
-    elif [[ "$key" == "links" ]]; then
-      fm_lines+=("links:")
-      IFS=',' read -ra link_arr <<< "$val"
-      for l in "${link_arr[@]}"; do
-        fm_lines+=("  - ${l}")
-      done
+    if [[ "$key" == "tags" || "$key" == "links" ]]; then
+      YQ_VAL="$val" yq --front-matter=process -i ".${key} = (env(YQ_VAL) | split(\",\") | map(sub(\"^\\s+\"; \"\") | sub(\"\\s+$\"; \"\")))" "$filepath"
     else
-      fm_lines+=("${key}: ${val}")
+      YQ_VAL="$val" yq --front-matter=process -i ".${key} = env(YQ_VAL)" "$filepath"
     fi
   done
-
-  # Write back.
-  {
-    echo "---"
-    for line in "${fm_lines[@]}"; do
-      echo "$line"
-    done
-    echo "---"
-    for line in "${body_lines[@]}"; do
-      echo "$line"
-    done
-  } > "$filepath"
 }
 
 cmd_search() {
   local pattern="${1:-}"
   [[ -z "$pattern" ]] && die "usage: nixpi-object search <pattern>"
 
-  # Use grep across all object files, output type/slug for matches.
   local -A seen=()
   while IFS=: read -r filepath _; do
     [[ -f "$filepath" ]] || continue
@@ -399,7 +314,6 @@ cmd_link() {
 
   [[ -z "$ref_a" || -z "$ref_b" ]] && die "usage: nixpi-object link <type/slug> <type/slug>"
 
-  # Validate format: must contain exactly one slash.
   [[ "$ref_a" == */* ]] || die "invalid reference format: '$ref_a' (expected type/slug)"
   [[ "$ref_b" == */* ]] || die "invalid reference format: '$ref_b' (expected type/slug)"
 
@@ -413,87 +327,12 @@ cmd_link() {
   [[ -f "$path_a" ]] || die "object not found: ${ref_a}"
   [[ -f "$path_b" ]] || die "object not found: ${ref_b}"
 
-  # Add link from A -> B if not already present.
   add_link_to_file() {
     local filepath="$1" link_ref="$2"
-
-    # Check if link already exists.
-    if sed -n '/^---$/,/^---$/p' "$filepath" | grep -qF -- "- ${link_ref}"; then
+    if yq --front-matter=extract '.links[]' "$filepath" 2>/dev/null | grep -qF -- "$link_ref"; then
       return 0
     fi
-
-    # Check if links section exists.
-    if sed -n '/^---$/,/^---$/p' "$filepath" | grep -q "^links:"; then
-      # Insert new link after existing links entries.
-      # Find the last "  - " line in the links section and add after it.
-      local tmpfile
-      tmpfile="$(mktemp)"
-      local in_fm=0 fm_started=0 in_links=0 link_added=0
-      while IFS= read -r line; do
-        if [[ "$line" == "---" && "$fm_started" -eq 0 ]]; then
-          fm_started=1
-          in_fm=1
-          echo "$line" >> "$tmpfile"
-          continue
-        fi
-        if [[ "$line" == "---" && "$in_fm" -eq 1 ]]; then
-          if [[ "$in_links" -eq 1 && "$link_added" -eq 0 ]]; then
-            echo "  - ${link_ref}" >> "$tmpfile"
-            link_added=1
-          fi
-          in_fm=0
-          in_links=0
-          echo "$line" >> "$tmpfile"
-          continue
-        fi
-        if [[ "$in_fm" -eq 1 ]]; then
-          if [[ "$line" == "links:" ]]; then
-            in_links=1
-            echo "$line" >> "$tmpfile"
-            continue
-          fi
-          if [[ "$in_links" -eq 1 ]]; then
-            if [[ "$line" =~ ^[[:space:]]*-[[:space:]] ]]; then
-              echo "$line" >> "$tmpfile"
-              continue
-            else
-              # End of links section — add our link.
-              if [[ "$link_added" -eq 0 ]]; then
-                echo "  - ${link_ref}" >> "$tmpfile"
-                link_added=1
-              fi
-              in_links=0
-              echo "$line" >> "$tmpfile"
-              continue
-            fi
-          fi
-        fi
-        echo "$line" >> "$tmpfile"
-      done < "$filepath"
-      mv "$tmpfile" "$filepath"
-    else
-      # No links section — add one before the closing ---.
-      local tmpfile
-      tmpfile="$(mktemp)"
-      local in_fm=0 fm_started=0
-      while IFS= read -r line; do
-        if [[ "$line" == "---" && "$fm_started" -eq 0 ]]; then
-          fm_started=1
-          in_fm=1
-          echo "$line" >> "$tmpfile"
-          continue
-        fi
-        if [[ "$line" == "---" && "$in_fm" -eq 1 ]]; then
-          echo "links:" >> "$tmpfile"
-          echo "  - ${link_ref}" >> "$tmpfile"
-          in_fm=0
-          echo "$line" >> "$tmpfile"
-          continue
-        fi
-        echo "$line" >> "$tmpfile"
-      done < "$filepath"
-      mv "$tmpfile" "$filepath"
-    fi
+    YQ_REF="$link_ref" yq --front-matter=process -i '.links = (.links // []) + [env(YQ_REF)]' "$filepath"
   }
 
   add_link_to_file "$path_a" "$ref_b"

@@ -5,6 +5,10 @@
 # Life data (synced via Syncthing, not version-controlled)
 /data/objects/
 
+# Package build artifacts and dependencies
+/packages/nixpi-core/node_modules/
+/packages/nixpi-core/dist/
+
 # WhatsApp bridge build artifacts and dependencies
 /services/whatsapp-bridge/node_modules/
 /services/whatsapp-bridge/dist/

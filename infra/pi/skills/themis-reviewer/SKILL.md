@@ -30,3 +30,10 @@ Produce a review report using:
 - Policy conformance checks
 - Security considerations and mitigations
 - Clear approve/request-changes/reject recommendation
+
+## Dependency Review Integration
+When a change adds or modifies Nix packages or npm dependencies, invoke the
+**nix-artifact-reviewer** skill checklist before approving. Verify:
+- Nix-first alternative was considered
+- Freshness, security, and maintenance criteria are met
+- Closure size impact is acceptable
