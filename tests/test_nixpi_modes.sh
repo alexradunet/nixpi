@@ -19,10 +19,6 @@ assert_file_contains "$BASE" 'nixpi.piDir'
 assert_not_contains "$BASE_CONTENT" 'RUNTIME_DIR='
 assert_not_contains "$BASE_CONTENT" 'DEV_DIR='
 
-# Feature (failure path): deprecated selectors fail with a clear migration error.
-assert_file_contains "$BASE" 'Unknown/deprecated nixpi subcommand:'
-assert_file_contains "$BASE" 'Use: nixpi [pi-args...]'
-
 # Feature (edge case): default invocation still forwards to pi with the configured single dir.
 assert_file_contains "$BASE" '*)'
 assert_file_contains "$BASE" 'exec "$PI_BIN" "$@"'

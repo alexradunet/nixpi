@@ -148,11 +148,6 @@ run_rollback() {
 }
 
 case "${1-}" in
-  dev|mode|runtime)
-    echo "Unknown/deprecated nixpi subcommand: ${1-}" >&2
-    echo "Use: nixpi [pi-args...]" >&2
-    exit 2
-    ;;
   --help|-h|help)
     cat <<'EOF'
 nixpi - primary CLI for the Nixpi assistant (powered by Pi SDK)

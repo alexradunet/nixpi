@@ -11,10 +11,7 @@ This section defines each Nixpi agent role as a modular contract.
 - [Themis (Reviewer Agent)](./reviewer/README.md)
 
 ## Mythic Identity (Canonical Codenames)
-- **Hermes** = Runtime Agent
-- **Athena** = Technical Architect Agent
-- **Hephaestus** = Maintainer Agent
-- **Themis** = Reviewer Agent
+See the canonical codename mapping and role policy in [AGENTS.md](../../AGENTS.md#agent-role-policy).
 
 ## Shared Contracts
 - [Agent Handoff Templates](./HANDOFF_TEMPLATES.md)
@@ -25,10 +22,7 @@ This section defines each Nixpi agent role as a modular contract.
 - [Agent Skills Index](./SKILLS.md) — short descriptions + links to skill contracts used by `nixpi`.
 
 ## Role Boundaries
-- Hermes (Runtime) does not directly self-modify Nixpi core.
-- Athena (Technical Architect) plans and validates architecture/process alignment.
-- Hephaestus (Maintainer) implements changes in controlled development context using strict TDD.
-- Themis (Reviewer) performs independent quality/security/pattern review.
+See the canonical role policy and boundaries in [AGENTS.md](../../AGENTS.md#agent-role-policy).
 
 ## Evolution Hand-off
 

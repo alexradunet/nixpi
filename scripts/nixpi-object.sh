@@ -64,12 +64,6 @@ read_frontmatter_value() {
   yq --front-matter=extract ".$key" "$filepath" 2>/dev/null | grep -v '^null$'
 }
 
-# Read all links from frontmatter using yq.
-read_frontmatter_links() {
-  local filepath="$1"
-  yq --front-matter=extract '.links[]' "$filepath" 2>/dev/null || true
-}
-
 # Write YAML frontmatter + body to a file using jq (build JSON) + yq (convert to YAML).
 write_object() {
   local filepath="$1"

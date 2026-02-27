@@ -30,11 +30,7 @@
   nixpi.primaryUser = "alex";
   nixpi.repoRoot = "/home/alex/Nixpi";
   nixpi.timeZone = "Europe/Bucharest";
-  # Bootloader defaults (UEFI first)
+  # Bootloader (UEFI / systemd-boot)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-
-  # BIOS fallback (uncomment and adjust disk if needed)
-  # boot.loader.grub.enable = true;
-  # boot.loader.grub.devices = [ "/dev/sda" ];
 }

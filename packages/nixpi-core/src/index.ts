@@ -7,6 +7,5 @@ export type {
   IObjectStore,
   IncomingMessage,
   MessageChannel,
-  MessageRouter,
   AgentConfig,
 } from "./types.js";

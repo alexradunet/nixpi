@@ -42,13 +42,7 @@ If a host needs a different repository/profile location, override these Nix opti
 - `nixpi.piDir`
 
 ## Multi-Agent Architecture (Mandatory)
-See role contracts in [Agents Overview](../agents/README.md).
-Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HANDOFF_TEMPLATES.md).
-
-- [Hermes (Runtime Agent)](../agents/runtime/README.md)
-- [Athena (Technical Architect Agent)](../agents/technical-architect/README.md)
-- [Hephaestus (Maintainer Agent)](../agents/maintainer/README.md)
-- [Themis (Reviewer Agent)](../agents/reviewer/README.md)
+See role contracts and canonical codenames in [AGENTS.md](../../AGENTS.md#agent-role-policy), individual agent docs in [Agents Overview](../agents/README.md), and standardized exchange artifacts in [Agent Handoff Templates](../agents/HANDOFF_TEMPLATES.md).
 
 ## Evolution Workflow
 1. Hermes (Runtime) identifies improvement opportunity and creates an evolution request.
@@ -58,7 +52,8 @@ Use standardized exchange artifacts from [Agent Handoff Templates](../agents/HAN
 5. Athena performs final conformance review against plan and standards.
 6. Human approval gate decides apply/no-apply.
 7. Approved system changes are applied declaratively (`nixos-rebuild switch --flake ...`) with rollback available.
-8. Preferred operator path for local guarded apply/rollback is `nixpi evolve` and `nixpi rollback`.
+
+> **Tip:** The preferred operator path for local guarded apply/rollback is `nixpi evolve` and `nixpi rollback`.
 
 ## Why this model
 - Prevents unsafe live self-mutation.
