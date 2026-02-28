@@ -158,8 +158,9 @@ if ! echo "$HW_CONFIG" | grep -q 'boot.loader.systemd-boot.enable' && \
   HW_CONFIG="$(append_block_before_final_brace "$HW_CONFIG" '  # Bootloader defaults (UEFI first)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = false;
 
-  # BIOS fallback (uncomment and adjust disk if needed)
+  # BIOS fallback (uncomment grub lines, comment systemd-boot lines above)
   # boot.loader.grub.enable = true;
   # boot.loader.grub.devices = [ "/dev/sda" ];')"
 fi

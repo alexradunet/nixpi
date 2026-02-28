@@ -247,6 +247,10 @@ in
     # so it defaults to disabled unlike other modules.
     nixpi.channels.matrix.enable = lib.mkDefault false;
 
+    # Prevent GRUB assertion on UEFI systems. Hosts that need GRUB
+    # can override with boot.loader.grub.enable = true.
+    boot.loader.grub.enable = lib.mkDefault false;
+
     assertions = [
       {
         assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;
