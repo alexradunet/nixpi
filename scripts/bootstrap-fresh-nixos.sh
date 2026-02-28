@@ -33,12 +33,54 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# --- Phase 1: Prepare OS (enable flakes, install git) ---
+prepare_os() {
+  # Skip if flakes already work (idempotent)
+  if nix flake --help &>/dev/null 2>&1; then
+    echo "Flakes already enabled, skipping OS preparation."
+    return 0
+  fi
+
+  echo "Phase 1: Preparing NixOS (enabling flakes + git)..."
+
+  local existing_config="/etc/nixos/configuration.nix"
+  if [ ! -f "$existing_config" ]; then
+    echo "No /etc/nixos/configuration.nix found, enabling flakes via nix.conf..."
+    mkdir -p /etc/nix
+    grep -q 'experimental-features.*nix-command.*flakes' /etc/nix/nix.conf 2>/dev/null || \
+      echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
+    systemctl restart nix-daemon.service 2>/dev/null || true
+    return 0
+  fi
+
+  # Create a wrapper config that imports the installer's config
+  # (preserving its boot loader, users, network) and adds flakes + git.
+  local prepare_config
+  prepare_config="$(mktemp /tmp/nixpi-prepare-XXXXXX.nix)"
+  cat > "$prepare_config" <<'PREPEOF'
+{ config, pkgs, ... }:
+{
+  imports = [ /etc/nixos/configuration.nix ];
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  environment.systemPackages = [ pkgs.git ];
+}
+PREPEOF
+
+  nixos-rebuild switch -I "nixos-config=$prepare_config"
+  rm -f "$prepare_config"
+  echo "Phase 1 complete: flakes enabled, git installed."
+}
+
 if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "DRY RUN: would prepare OS (enable flakes + git)"
   echo "DRY RUN: would clone $NIXPI_REPO to $BOOTSTRAP_DIR"
   echo "DRY RUN: would run setup wizard targeting $TARGET_DIR"
   echo "DRY RUN: would nixos-rebuild switch"
   exit 0
 fi
+
+# Phase 1: ensure flakes and git are available
+prepare_os
 
 # Clone Nixpi repo for bootstrap scripts
 if [[ ! -d "$BOOTSTRAP_DIR/.git" ]]; then
@@ -46,7 +88,7 @@ if [[ ! -d "$BOOTSTRAP_DIR/.git" ]]; then
     git clone "$NIXPI_REPO" "$BOOTSTRAP_DIR"
 fi
 
-# Run setup wizard
+# Phase 2: Run setup wizard
 if [[ "$NON_INTERACTIVE" -eq 1 ]]; then
   echo "Non-interactive mode: generating default config at $TARGET_DIR"
   mkdir -p "$TARGET_DIR"
@@ -64,7 +106,7 @@ if [[ "$NON_INTERACTIVE" -eq 1 ]]; then
     --output "$TARGET_DIR/nixpi-config.nix"
 
   (cd "$TARGET_DIR" && nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c bash -c 'git init && git add -A')
-  (cd "$TARGET_DIR" && nixos-rebuild switch --flake "path:.#$(hostname)")
+  (cd "$TARGET_DIR" && env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:.#$(hostname)")
 else
   nix --extra-experimental-features "nix-command flakes" shell nixpkgs#dialog nixpkgs#git -c \
     bash "$BOOTSTRAP_DIR/scripts/nixpi-setup.sh" "$TARGET_DIR"
