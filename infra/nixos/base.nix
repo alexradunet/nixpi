@@ -237,12 +237,14 @@ in
     ./modules/objects.nix
     ./modules/heartbeat.nix
     ./modules/matrix.nix
+    ./modules/tailscale.nix
   ];
 
   config = {
     nixpi._internal.npmEnvSetup = npmEnvSetup;
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
     nixpi.objects.enable = lib.mkDefault true;
+    nixpi.tailscale.enable = lib.mkDefault true;
 
     assertions = [
       {
@@ -380,20 +382,6 @@ in
     '';
   };
 
-  # Tailscale VPN
-  services.tailscale = {
-    enable = true;
-    # Keep Tailscale SSH disabled so OpenSSH remains the single SSH control plane.
-    extraSetFlags = [ "--ssh=false" ];
-  };
-  # Note: we intentionally do NOT set trustedInterfaces = [ "tailscale0" ] here.
-  # Instead, Tailscale traffic is controlled by the explicit IP-based rules above
-  # (100.0.0.0/8 + fd7a:115c:a1e0::/48 for SSH), giving us per-service
-  # granularity over what Tailscale peers can access rather than blanket-trusting
-  # all traffic on the interface.
-  # Tailscale needs UDP 41641 for direct WireGuard connections between nodes.
-  networking.firewall.allowedUDPPorts = [ 41641 ];
-
   # Syncthing for file synchronization
   services.syncthing = {
     enable = true;
@@ -458,7 +446,6 @@ in
     # Network tools
     curl
     wget
-    tailscale
 
     # Desktop helpers (local HDMI + Wi-Fi setup)
     networkmanagerapplet
