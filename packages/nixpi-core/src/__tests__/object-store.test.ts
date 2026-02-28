@@ -214,6 +214,17 @@ describe("ObjectStore integration (real parser)", () => {
     assert.deepEqual(result.data.links, ["task/a", "task/b"]);
   });
 
+  it("update rejects protected fields (type, slug, created)", () => {
+    store.create("task", "protected");
+    assert.throws(() => store.update("task", "protected", { type: "note" }), /protected field: type/);
+    assert.throws(() => store.update("task", "protected", { slug: "changed" }), /protected field: slug/);
+    assert.throws(() => store.update("task", "protected", { created: "2020-01-01T00:00:00Z" }), /protected field: created/);
+    // Non-protected fields still work
+    store.update("task", "protected", { status: "done" });
+    const result = store.read("task", "protected");
+    assert.equal(result.data.status, "done");
+  });
+
   it("update trims tags whitespace (M1)", () => {
     store.create("note", "trim-update");
     store.update("note", "trim-update", { tags: " a , b , c " });

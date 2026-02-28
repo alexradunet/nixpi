@@ -156,11 +156,18 @@ export class ObjectStore implements IObjectStore {
     return results;
   }
 
+  private static readonly PROTECTED_FIELDS = new Set(["type", "slug", "created"]);
+
   update(
     type: string,
     slug: string,
     fields: Record<string, string>
   ): void {
+    const protectedKey = Object.keys(fields).find((k) => ObjectStore.PROTECTED_FIELDS.has(k));
+    if (protectedKey) {
+      throw new Error(`cannot update protected field: ${protectedKey}`);
+    }
+
     const filepath = this.objectPath(type, slug);
     let raw: string;
     try {

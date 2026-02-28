@@ -1,7 +1,7 @@
 # Syncthing module — file synchronization service.
 #
 # When enabled, provisions Syncthing with a default ~/Shared folder,
-# GUI on 0.0.0.0:8384, and firewall restricted to Tailscale.
+# GUI on 127.0.0.1:8384, and firewall restricted to Tailscale.
 { config, pkgs, lib, ... }:
 
 let
@@ -37,7 +37,7 @@ in
         };
         gui = {
           enabled = true;
-          address = "0.0.0.0:8384";
+          address = "127.0.0.1:8384";
         };
         options = {
           relaysEnabled = true;
@@ -49,17 +49,17 @@ in
       install -d -o ${primaryUser} -g users "${cfg.sharedFolder}"
     '';
 
-    networking.firewall.extraInputRules = ''
+    networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
       # Allow Syncthing GUI (port 8384) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 8384 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 8384 accept
+      ip saddr ${ts.ipv4} tcp dport 8384 accept
+      ip6 saddr ${ts.ipv6} tcp dport 8384 accept
       tcp dport 8384 drop
 
       # Allow Syncthing sync (port 22000) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 22000 accept
-      ip saddr 100.0.0.0/8 udp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 udp dport 22000 accept
+      ip saddr ${ts.ipv4} tcp dport 22000 accept
+      ip saddr ${ts.ipv4} udp dport 22000 accept
+      ip6 saddr ${ts.ipv6} tcp dport 22000 accept
+      ip6 saddr ${ts.ipv6} udp dport 22000 accept
       tcp dport 22000 drop
       udp dport 22000 drop
     '';

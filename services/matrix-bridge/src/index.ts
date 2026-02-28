@@ -23,7 +23,7 @@ const execFileAsync = promisify(execFile);
 
 // --- Matrix-specific config (extends core AgentConfig) ---
 
-interface MatrixBridgeConfig extends AgentConfig {
+export interface MatrixBridgeConfig extends AgentConfig {
   homeserverUrl: string;
   accessToken: string;
   allowedUsers: string[];
@@ -45,7 +45,7 @@ const DEFAULT_CONFIG: MatrixBridgeConfig = {
   timeoutMs: Number(process.env.NIXPI_MATRIX_TIMEOUT_MS) || 120_000,
 };
 
-function isAllowed(userId: string, config: MatrixBridgeConfig): boolean {
+export function isAllowed(userId: string, config: MatrixBridgeConfig): boolean {
   if (config.allowedUsers.length === 0) return true; // no whitelist = allow all
   return config.allowedUsers.includes(userId);
 }
@@ -165,9 +165,7 @@ class MatrixBotChannel implements MessageChannel {
           channel: "matrix",
         };
 
-        const response = self.messageHandler
-          ? await self.messageHandler(incoming)
-          : await processMessage(text, self.config);
+        const response = await self.messageHandler!(incoming);
 
         try {
           await self.sendMessage(roomId, response);
@@ -185,7 +183,7 @@ class MatrixBotChannel implements MessageChannel {
 
 // --- Main ---
 
-function validateMatrixUserId(userId: string): boolean {
+export function validateMatrixUserId(userId: string): boolean {
   return /^@[a-zA-Z0-9._=/+-]+:[a-zA-Z0-9.-]+$/.test(userId);
 }
 
@@ -221,7 +219,11 @@ async function main(): Promise<void> {
   await channel.connect();
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+// Only run main when executed directly (not when imported for tests).
+const isDirectExecution = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/.*\//, ""));
+if (isDirectExecution) {
+  main().catch((err) => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });
+}

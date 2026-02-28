@@ -192,6 +192,12 @@ in
     description = "Store path to the internal pi wrapper binary. Internal use only.";
   };
 
+  options.nixpi._internal.tailscaleSubnets = lib.mkOption {
+    type = lib.types.attrsOf lib.types.str;
+    readOnly = true;
+    description = "Tailscale CIDR ranges for firewall rules. Internal use only.";
+  };
+
   options.nixpi.assistantUser = lib.mkOption {
     type = lib.types.str;
     default = "nixpi-agent";
@@ -222,12 +228,17 @@ in
   config = {
     nixpi._internal.npmEnvSetup = npmEnvSetup;
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
+    nixpi._internal.tailscaleSubnets = { ipv4 = "100.0.0.0/8"; ipv6 = "fd7a:115c:a1e0::/48"; };
     nixpi.objects.enable = lib.mkDefault true;
+    nixpi.heartbeat.enable = lib.mkDefault true;
     nixpi.tailscale.enable = lib.mkDefault true;
     nixpi.ttyd.enable = lib.mkDefault true;
     nixpi.syncthing.enable = lib.mkDefault true;
     nixpi.passwordPolicy.enable = lib.mkDefault true;
     nixpi.desktop.enable = lib.mkDefault true;
+    # Matrix requires setup (scripts/matrix-setup.sh) before it can work,
+    # so it defaults to disabled unlike other modules.
+    nixpi.channels.matrix.enable = lib.mkDefault false;
 
     assertions = [
       {
@@ -292,10 +303,10 @@ in
   networking.firewall = {
     enable = true;
 
-    extraInputRules = ''
+    extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
       # Allow SSH from Tailscale and local network
-      ip saddr 100.0.0.0/8 tcp dport 22 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22 accept
+      ip saddr ${ts.ipv4} tcp dport 22 accept
+      ip6 saddr ${ts.ipv6} tcp dport 22 accept
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop

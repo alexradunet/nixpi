@@ -29,7 +29,7 @@ let
     description = "Nixpi Matrix bridge (matrix-bot-sdk → Pi)";
     serviceType = "simple";
     workingDirectory = bridgeLib;
-    execStart = "${pkgs.nodejs_22}/bin/node dist/index.js";
+    execStart = "${lib.getExe pkgs.nodejs_22} dist/index.js";
     extraEnv = [
       "NIXPI_REPO_ROOT=${repoRoot}"
       "NIXPI_PI_COMMAND=${config.nixpi._internal.piWrapperBin}"
@@ -161,10 +161,10 @@ in
       };
 
       # Conduit port accessible from Tailscale only
-      networking.firewall.extraInputRules = ''
+      networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
         # Allow Conduit (port 6167) from Tailscale only
-        ip saddr 100.0.0.0/8 tcp dport 6167 accept
-        ip6 saddr fd7a:115c:a1e0::/48 tcp dport 6167 accept
+        ip saddr ${ts.ipv4} tcp dport 6167 accept
+        ip6 saddr ${ts.ipv6} tcp dport 6167 accept
         tcp dport 6167 drop
       '';
     })

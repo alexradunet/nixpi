@@ -19,7 +19,7 @@ assert_file_contains "$TTYD" 'enable = true;'
 assert_file_contains "$TTYD" 'writeable = true;'
 assert_file_contains "$TTYD" 'checkOrigin = true;'
 assert_file_contains "$TTYD" 'entrypoint = ['
-assert_file_contains "$TTYD" '"${pkgs.openssh}/bin/ssh"'
+assert_file_contains "$TTYD" '"${lib.getExe'"'"' pkgs.openssh "ssh"}"'
 assert_file_contains "$TTYD" '"${primaryUser}@127.0.0.1"'
 
 # Failure path: OliveTin/Cockpit/desktop-RDP paths are removed.
@@ -39,16 +39,16 @@ assert_file_contains "$TTYD" 'default = 7681;'
 assert_not_contains "$TTYD_CONTENT" '192.168.0.0/16'
 assert_not_contains "$TTYD_CONTENT" '10.0.0.0/8'
 
-# Syncthing UI/sync should also be Tailscale-only.
-assert_file_contains "$SYNCTHING" 'ip saddr 100.0.0.0/8 tcp dport 8384 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr fd7a:115c:a1e0::/48 tcp dport 8384 accept'
+# Syncthing UI/sync should also be Tailscale-only (using shared tailscaleSubnets).
+assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} tcp dport 8384 accept'
+assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} tcp dport 8384 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 tcp dport 8384 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 tcp dport 8384 accept'
 
-assert_file_contains "$SYNCTHING" 'ip saddr 100.0.0.0/8 tcp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip saddr 100.0.0.0/8 udp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr fd7a:115c:a1e0::/48 udp dport 22000 accept'
+assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} tcp dport 22000 accept'
+assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} udp dport 22000 accept'
+assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} tcp dport 22000 accept'
+assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} udp dport 22000 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 tcp dport 22000 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 udp dport 22000 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 tcp dport 22000 accept'

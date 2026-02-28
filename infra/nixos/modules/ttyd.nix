@@ -27,17 +27,17 @@ in
       writeable = true;
       checkOrigin = true;
       entrypoint = [
-        "${pkgs.openssh}/bin/ssh"
+        "${lib.getExe' pkgs.openssh "ssh"}"
         "-o"
         "StrictHostKeyChecking=accept-new"
         "${primaryUser}@127.0.0.1"
       ];
     };
 
-    networking.firewall.extraInputRules = ''
+    networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
       # Allow ttyd (port ${toString cfg.port}) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport ${toString cfg.port} accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport ${toString cfg.port} accept
+      ip saddr ${ts.ipv4} tcp dport ${toString cfg.port} accept
+      ip6 saddr ${ts.ipv6} tcp dport ${toString cfg.port} accept
       tcp dport ${toString cfg.port} drop
     '';
   };
