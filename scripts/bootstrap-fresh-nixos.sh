@@ -10,8 +10,8 @@ usage() {
 }
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "error: bootstrap must run as root (use sudo)" >&2
-  exit 1
+  echo "Elevating to root via sudo..."
+  exec sudo SUDO_HOME="$HOME" SUDO_USER="$(whoami)" bash "$0" "$@"
 fi
 
 DRY_RUN=0
@@ -63,10 +63,10 @@ if [[ "$NON_INTERACTIVE" -eq 1 ]]; then
     --heartbeat false --matrix false \
     --output "$TARGET_DIR/nixpi-config.nix"
 
-  (cd "$TARGET_DIR" && git init && git add -A)
+  (cd "$TARGET_DIR" && nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c bash -c 'git init && git add -A')
   (cd "$TARGET_DIR" && nixos-rebuild switch --flake "path:.#$(hostname)")
 else
-  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#dialog -c \
+  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#dialog nixpkgs#git -c \
     bash "$BOOTSTRAP_DIR/scripts/nixpi-setup.sh" "$TARGET_DIR"
 fi
 
