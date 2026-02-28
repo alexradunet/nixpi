@@ -2,6 +2,6 @@
   "files": [],
   "references": [
     { "path": "packages/nixpi-core" },
-    { "path": "services/whatsapp-bridge" }
+    { "path": "services/matrix-bridge" }
   ]
 }

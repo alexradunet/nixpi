@@ -16,7 +16,7 @@ Persona layers (SOUL.md, BODY.md, FACULTY.md, SKILL.md) define how Nixpi behaves
 - User explicitly requests a persona change ("be more brief", "remind me about X").
 - Repeated friction detected (user corrects tone, format, or behavior multiple times).
 - New capability added that should update SKILL.md competency inventory.
-- Channel behavior needs adjustment (WhatsApp responses too long, TUI too terse).
+- Channel behavior needs adjustment (Matrix responses too long, TUI too terse).
 
 ## Process
 

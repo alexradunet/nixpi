@@ -9,7 +9,7 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 | **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
 | **@nixpi/core** | Shared TypeScript domain library: ObjectStore, JsYamlFrontmatterParser, typed interfaces (`packages/nixpi-core/`) |
 | **Object Store** | Flat-file markdown with YAML frontmatter in `data/objects/` (Syncthing-synced); shell + TS implementations |
-| **WhatsApp Bridge** | Baileys-based WhatsApp adapter (`services/whatsapp-bridge/`); receives messages, processes through Pi |
+| **Matrix Bridge** | matrix-bot-sdk adapter (`services/matrix-bridge/`); receives messages, processes through Pi |
 | **Heartbeat Timer** | Systemd timer for periodic agent observation cycles (`infra/nixos/modules/heartbeat.nix`) |
 | **OpenPersona** | 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/` |
 | **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration |
@@ -28,7 +28,7 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 |---------|----------------|-------|
 | SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
 | Heartbeat | `modules/heartbeat.nix` — systemd timer | Periodic agent observation cycle; configurable interval |
-| WhatsApp Bridge | `modules/whatsapp.nix` — systemd service | Baileys adapter; processes messages through Pi; number whitelist |
+| Matrix Bridge | `modules/matrix.nix` — systemd service | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
 | GNOME Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (GDM + GNOME + Wi-Fi tray tooling) |
 | Desktop reuse mode | `base.nix` + `scripts/add-host.sh` | If existing desktop options are detected, host file sets `nixpi.desktopProfile = "preserve"` and keeps current UI |
 | ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
@@ -70,7 +70,7 @@ Nixpi/
   packages/
     nixpi-core/                # @nixpi/core — shared domain lib (ObjectStore, frontmatter parser, types)
   services/
-    whatsapp-bridge/           # Baileys WhatsApp → Pi bridge (imports @nixpi/core)
+    matrix-bridge/             # Matrix → Pi bridge via matrix-bot-sdk (imports @nixpi/core)
   infra/
     nixos/
       base.nix                 # Base config + GNOME desktop + web terminal + nixpi wrapper + profile seeding
@@ -78,7 +78,7 @@ Nixpi/
       modules/
         objects.nix            # Object store data directory provisioning
         heartbeat.nix          # Heartbeat timer (periodic agent observation cycle)
-        whatsapp.nix           # WhatsApp bridge systemd service
+        matrix.nix             # Matrix bridge systemd service + Conduit homeserver
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
         nixos.nix              # NixOS host configuration
@@ -241,8 +241,8 @@ The project uses npm workspaces (root `package.json`) with packages under `packa
 npm -w packages/nixpi-core run build
 npm -w packages/nixpi-core test
 
-# Build WhatsApp bridge
-npm -w services/whatsapp-bridge run build
+# Build Matrix bridge
+npm -w services/matrix-bridge run build
 
 # Full project checks (tests + flake checks)
 ./scripts/check.sh

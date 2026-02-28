@@ -35,8 +35,8 @@ let
     - Hexagonal (Ports and Adapters) with TDD-first development
     - Shared domain library: @nixpi/core (packages/nixpi-core/)
     - Shell CRUD: scripts/nixpi-object.sh (requires yq-go + jq)
-    - WhatsApp bridge: services/whatsapp-bridge/ (Baileys adapter)
-    - NixOS modules: infra/nixos/modules/ (objects, heartbeat, whatsapp)
+    - Matrix bridge: services/matrix-bridge/ (matrix-bot-sdk adapter)
+    - NixOS modules: infra/nixos/modules/ (objects, heartbeat, matrix)
     - Service factory: infra/nixos/lib/mk-nixpi-service.nix
 
     ## Guidelines
@@ -175,7 +175,7 @@ in
 
   options.nixpi.piAgentVersion = lib.mkOption {
     type = lib.types.str;
-    default = "0.55.1";
+    default = "0.55.3";
     example = "0.56.0";
     description = ''
       Version of @mariozechner/pi-coding-agent to use across all services.
@@ -236,7 +236,7 @@ in
   imports = [
     ./modules/objects.nix
     ./modules/heartbeat.nix
-    ./modules/whatsapp.nix
+    ./modules/matrix.nix
   ];
 
   config = {

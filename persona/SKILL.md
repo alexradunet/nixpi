@@ -14,14 +14,14 @@ This layer defines Nixpi's current competency inventory — what it can do today
 - Shell CRUD tool (`nixpi-object`) and TypeScript ObjectStore produce format-compatible files.
 
 ### Communication Channels
-- WhatsApp bridge via Baileys — receives messages, processes through Pi, sends responses.
-- Allowed-number whitelist for access control.
+- Matrix bridge via matrix-bot-sdk — receives messages, processes through Pi, sends responses.
+- Allowed-user whitelist for access control (Matrix user IDs).
 - Message queue for sequential processing (avoids Pi session conflicts).
 
 ### Proactive Behavior
 - Heartbeat timer (systemd) — periodic wake cycle for observation and nudges.
 - Scans recent objects, checks overdue tasks, detects neglected life areas.
-- Can send WhatsApp reminders and create system journal entries.
+- Can send Matrix reminders and create system journal entries.
 
 ### System Operations
 - Apply NixOS configuration changes via `nixpi evolve`.
@@ -41,7 +41,7 @@ This layer defines Nixpi's current competency inventory — what it can do today
 
 - Cannot process images, audio, or files beyond text.
 - No health, finance, or nutrition tracking yet (future object types).
-- WhatsApp is the only external channel (more channels are future work).
+- Matrix is the primary external channel (more channels are future work).
 
 ## How I Learn
 

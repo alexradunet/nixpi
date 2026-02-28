@@ -13,7 +13,7 @@ All project-wide policies (TDD, safety, Nix/NixOS conventions, standards-first, 
 - If policies/docs conflict, resolve using `docs/meta/SOURCE_OF_TRUTH.md`.
 
 ## Project Layout
-- **npm workspaces** (root `package.json`): `packages/nixpi-core/`, `services/whatsapp-bridge/`
+- **npm workspaces** (root `package.json`): `packages/nixpi-core/`, `services/matrix-bridge/`
 - **Shell scripts**: `scripts/nixpi-object.sh` (requires yq-go + jq)
 - **NixOS modules**: `infra/nixos/modules/` with shared factory in `infra/nixos/lib/mk-nixpi-service.nix`
 
@@ -29,8 +29,8 @@ Run relevant tests for changed code, and for repo-wide checks run:
 npm -w packages/nixpi-core run build
 npm -w packages/nixpi-core test
 
-# TypeScript — build WhatsApp bridge
-npm -w services/whatsapp-bridge run build
+# TypeScript — build Matrix bridge
+npm -w services/matrix-bridge run build
 
 # Full checks (tests + flake validation)
 ./scripts/check.sh

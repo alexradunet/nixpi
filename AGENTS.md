@@ -49,7 +49,7 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 
 ## Repository Conventions
 - Project root: `~/Nixpi`
-- npm workspaces: `packages/nixpi-core/`, `services/whatsapp-bridge/`
+- npm workspaces: `packages/nixpi-core/`, `services/matrix-bridge/`
 - Commit messages should be clear and scoped (`feat:`, `fix:`, `chore:`, `docs:`)
 
 ## Documentation Conventions

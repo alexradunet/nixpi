@@ -66,7 +66,7 @@ export interface IncomingMessage {
   channel: string;
 }
 
-/** Port interface for message channels (WhatsApp, Telegram, etc.). */
+/** Port interface for message channels (Matrix, Telegram, etc.). */
 export interface MessageChannel {
   readonly name: string;
   onMessage(handler: (msg: IncomingMessage) => Promise<string>): void;

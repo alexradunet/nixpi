@@ -33,4 +33,11 @@
   # Bootloader (UEFI / systemd-boot)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  nixpi.channels.matrix = {
+    enable = true;
+    serverName = "nixpi.local";
+    allowedUsers = [ "@alex:nixpi.local" ];
+    accessTokenFile = "/run/secrets/nixpi-matrix-token";
+  };      
 }

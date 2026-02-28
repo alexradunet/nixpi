@@ -1,8 +1,8 @@
 {
-  "name": "nixpi-whatsapp-bridge",
+  "name": "nixpi-matrix-bridge",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal WhatsApp bridge: Baileys → Pi print mode",
+  "description": "Minimal Matrix bridge: matrix-bot-sdk → Pi print mode",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@nixpi/core": "*",
-    "@whiskeysockets/baileys": "^6.7.16",
-    "pino": "^9.6.0"
+    "matrix-bot-sdk": "^0.8.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
