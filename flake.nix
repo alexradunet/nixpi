@@ -107,6 +107,7 @@
         vm-objects-data-dir   = mkVmTest ./tests/vm/objects-data-dir.nix;
         vm-persona-injection  = mkVmTest ./tests/vm/persona-injection.nix;
         vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
+        vm-matrix-bridge      = mkVmTest ./tests/vm/matrix-bridge.nix;
       };
     };
 }

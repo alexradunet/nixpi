@@ -39,8 +39,7 @@
       # Don't fail on missing token file at service start — we write it during the test
       systemd.services.nixpi-matrix-bridge.serviceConfig.EnvironmentFile = lib.mkForce [];
 
-      # Ensure the bridge can start without the token (we restart it after writing one)
-      # and disable auto-start so we control the lifecycle
+      # Disable auto-start so we control the lifecycle
       systemd.services.nixpi-matrix-bridge.wantedBy = lib.mkForce [];
 
       # Create required directories via activation script
@@ -53,41 +52,65 @@
       environment.systemPackages = with pkgs; [ curl jq ];
     };
 
-  testScript = ''
+  testScript = let
+    # Inline the test as a let-binding to keep the Nix string clean.
+    # All Python string literals use double quotes to avoid '' conflicts.
+    hs = "http://localhost:6167";
+    sn = "nixpi.local";
+  in ''
     import json, time
 
-    HOMESERVER = "http://localhost:6167"
-    SERVER_NAME = "nixpi.local"
+    HOMESERVER = "${hs}"
+    SERVER_NAME = "${sn}"
+
+    def write_json(path, data):
+        """Write a Python dict as JSON to a file inside the VM."""
+        payload = json.dumps(data)
+        # Escape for shell: write via printf to avoid quote issues
+        machine.succeed(f"printf '%s' {repr(payload)} > {path}")
 
     def register_user(username, password):
         """Register a Matrix user via the CS API (UIA flow)."""
         # Step 1: initiate to get UIA session
+        write_json("/tmp/reg.json", {"username": username, "password": password})
         init = machine.succeed(
-            f'curl -sf -X POST {HOMESERVER}/_matrix/client/v3/register '
-            f'-H "Content-Type: application/json" '
-            f'''-d '{{"username": "{username}", "password": "{password}"}}'  '''
+            "curl -sf -X POST "
+            + HOMESERVER
+            + "/_matrix/client/v3/register "
+            + "-H 'Content-Type: application/json' "
+            + "-d @/tmp/reg.json"
         )
         resp = json.loads(init)
 
-        # If server returned access_token directly, done
         if "access_token" in resp:
             return resp
 
         # Step 2: complete with dummy auth
         session = resp["session"]
+        write_json("/tmp/reg.json", {
+            "username": username,
+            "password": password,
+            "auth": {"type": "m.login.dummy", "session": session},
+        })
         result = machine.succeed(
-            f'curl -sf -X POST {HOMESERVER}/_matrix/client/v3/register '
-            f'-H "Content-Type: application/json" '
-            f'''-d '{{"username": "{username}", "password": "{password}", "auth": {{"type": "m.login.dummy", "session": "{session}"}}}}'  '''
+            "curl -sf -X POST "
+            + HOMESERVER
+            + "/_matrix/client/v3/register "
+            + "-H 'Content-Type: application/json' "
+            + "-d @/tmp/reg.json"
         )
         return json.loads(result)
 
     def matrix_api(method, path, token, data=None):
         """Call the Matrix CS API."""
-        cmd = f'curl -sf -X {method} {HOMESERVER}{path} -H "Authorization: Bearer {token}" -H "Content-Type: application/json"'
+        cmd = (
+            f"curl -sf -X {method} {HOMESERVER}{path} "
+            f"-H 'Authorization: Bearer {token}' "
+            f"-H 'Content-Type: application/json'"
+        )
         if data is not None:
-            payload = json.dumps(data).replace("'", "'\\''")
-            cmd += f" -d '{payload}'"
+            write_json("/tmp/matrix_req.json", data)
+            cmd += " -d @/tmp/matrix_req.json"
         return json.loads(machine.succeed(cmd))
 
     # --- Wait for Conduit ---
@@ -98,17 +121,15 @@
     bot_resp = register_user("nixpi", "botpass123456789!")
     bot_token = bot_resp["access_token"]
 
-    # --- Write token file and start the bridge ---
-    machine.succeed(f'echo "NIXPI_MATRIX_ACCESS_TOKEN={bot_token}" > /tmp/nixpi-matrix-token')
+    # --- Write token env and start the bridge ---
+    machine.succeed(
+        f"printf 'NIXPI_MATRIX_ACCESS_TOKEN=%s' '{bot_token}' > /tmp/nixpi-matrix-token"
+    )
     machine.succeed("chmod 644 /tmp/nixpi-matrix-token")
-
-    # Set the token in the service environment and start it
     machine.succeed(
-        f'systemctl set-environment NIXPI_MATRIX_ACCESS_TOKEN={bot_token}'
+        f"systemctl set-environment NIXPI_MATRIX_ACCESS_TOKEN={bot_token}"
     )
-    machine.succeed(
-        'systemctl start nixpi-matrix-bridge'
-    )
+    machine.succeed("systemctl start nixpi-matrix-bridge")
     machine.wait_for_unit("nixpi-matrix-bridge.service")
 
     # Give the bridge time to connect and start syncing
