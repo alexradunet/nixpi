@@ -111,6 +111,7 @@
         vm-ttyd-toggle        = mkVmTest ./tests/vm/ttyd-toggle.nix;
         vm-syncthing-toggle   = mkVmTest ./tests/vm/syncthing-toggle.nix;
         vm-password-policy-toggle = mkVmTest ./tests/vm/password-policy-toggle.nix;
+        vm-desktop-toggle     = mkVmTest ./tests/vm/desktop-toggle.nix;
       };
     };
 }

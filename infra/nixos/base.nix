@@ -194,17 +194,6 @@ in
     '';
   };
 
-  options.nixpi.desktopProfile = lib.mkOption {
-    type = lib.types.enum [ "gnome" "preserve" ];
-    default = "gnome";
-    example = "preserve";
-    description = ''
-      Desktop profile behavior.
-      - "gnome": manage a local default desktop stack (GDM + GNOME).
-      - "preserve": keep desktop options defined by the host configuration.
-    '';
-  };
-
   imports = [
     ./modules/objects.nix
     ./modules/heartbeat.nix
@@ -213,6 +202,7 @@ in
     ./modules/ttyd.nix
     ./modules/syncthing.nix
     ./modules/password-policy.nix
+    ./modules/desktop.nix
   ];
 
   config = {
@@ -223,6 +213,7 @@ in
     nixpi.ttyd.enable = lib.mkDefault true;
     nixpi.syncthing.enable = lib.mkDefault true;
     nixpi.passwordPolicy.enable = lib.mkDefault true;
+    nixpi.desktop.enable = lib.mkDefault true;
 
     assertions = [
       {
@@ -261,17 +252,6 @@ in
   # NixOS can generate rules from its firewall options and also accept raw
   # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
-
-  # Local desktop policy for HDMI-first setup (display + Wi-Fi onboarding).
-  # Default behavior mirrors standard GNOME installs. Hosts can opt into
-  # preserve mode by setting:
-  #   nixpi.desktopProfile = "preserve";
-  services.xserver.enable = config.nixpi.desktopProfile == "gnome";
-  services.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
-  services.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
-  services.xserver.xkb = {
-    layout = "us";
-  };
 
   # Timezone and locale
   time.timeZone = config.nixpi.timeZone;
@@ -320,9 +300,6 @@ in
     extraGroups = [ "wheel" "networkmanager" ];
   };
 
-  # Browser (CDP-compatible, for AI agent automation)
-  programs.chromium.enable = true;
-
   # System packages
   # `with pkgs;` brings all pkgs attributes into scope so we can write `git`
   # instead of `pkgs.git` for every package in the list.
@@ -334,7 +311,6 @@ in
     vim
     neovim
     nano
-    vscode
 
     # Language servers and linters
     nixd                          # Nix LSP
@@ -345,10 +321,6 @@ in
     # Network tools
     curl
     wget
-
-    # Desktop helpers (local HDMI + Wi-Fi setup)
-    networkmanagerapplet
-    xorg.xrandr
 
     # Search and utility tools
     jq
