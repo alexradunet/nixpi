@@ -88,6 +88,29 @@
         }
       );
 
+      # NixOS modules for external consumers.
+      # Use nixosModules.default for the full Nixpi stack.
+      # Use individual modules for selective imports.
+      nixosModules = {
+        default = ./infra/nixos/base.nix;
+        base = ./infra/nixos/base.nix;
+        tailscale = ./infra/nixos/modules/tailscale.nix;
+        syncthing = ./infra/nixos/modules/syncthing.nix;
+        ttyd = ./infra/nixos/modules/ttyd.nix;
+        matrix = ./infra/nixos/modules/matrix.nix;
+        heartbeat = ./infra/nixos/modules/heartbeat.nix;
+        objects = ./infra/nixos/modules/objects.nix;
+        passwordPolicy = ./infra/nixos/modules/password-policy.nix;
+        desktop = ./infra/nixos/modules/desktop.nix;
+      };
+
+      # Flake template for new Nixpi installations.
+      # Usage: nix flake init -t github:alexradunet/nixpi
+      templates.default = {
+        path = ./templates/default;
+        description = "Nixpi server configuration scaffold";
+      };
+
       # genAttrs turns a list of names into an attribute set by applying a
       # function to each name. This produces { nixpi = mkHost "nixpi"; ... }
       # for every host discovered above.
