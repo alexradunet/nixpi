@@ -12,15 +12,14 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 | **Matrix Bridge** | matrix-bot-sdk adapter (`services/matrix-bridge/`); receives messages, processes through Pi |
 | **Heartbeat Timer** | Systemd timer for periodic agent observation cycles (`infra/nixos/modules/heartbeat.nix`) |
 | **OpenPersona** | 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/` |
-| **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration |
-| **Desktop reuse mode** | if an existing desktop UI is detected, host config preserves it instead of replacing with the GNOME default |
+| **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration; disable with `nixpi.desktop.enable = false` |
 | **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
 | **`nixpi` command** | Primary Nixpi CLI wrapper (single instance) |
 | **`claude` command** | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS |
 | **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
 | **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
 | **Tailscale** | VPN for secure remote access |
-| **Syncthing** | File synchronization (GUI on `0.0.0.0:8384`, restricted to Tailscale via nftables) |
+| **Syncthing** | File synchronization (GUI on `127.0.0.1:8384`, restricted to Tailscale via nftables) |
 
 ## Services Reference
 
@@ -28,8 +27,8 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 |---------|----------------|-------------|-------|
 | SSH | `base.nix` — `services.openssh` | always on | Hardened; reachable from Tailscale + LAN (bootstrap path) |
 | Heartbeat | `modules/heartbeat.nix` — systemd timer | `nixpi.heartbeat.enable` | Periodic agent observation cycle; configurable interval |
-| Matrix Bridge | `modules/matrix.nix` — systemd service | `nixpi.matrix.enable` | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
-| Desktop | `modules/desktop.nix` | `nixpi.desktop.enable` | GNOME/GDM + Wi-Fi tray tooling, VS Code, Chromium; preserves existing desktop if detected |
+| Matrix Bridge | `modules/matrix.nix` — systemd service | `nixpi.channels.matrix.enable` | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
+| Desktop | `modules/desktop.nix` | `nixpi.desktop.enable` | GNOME/GDM + Wi-Fi tray tooling, VS Code, Chromium |
 | ttyd | `modules/ttyd.nix` | `nixpi.ttyd.enable` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
 | Tailscale | `modules/tailscale.nix` | `nixpi.tailscale.enable` | VPN for secure remote access |
 | Syncthing | `modules/syncthing.nix` | `nixpi.syncthing.enable` | File sync; GUI + sync ports are Tailscale-only |
@@ -163,7 +162,7 @@ For preview-only planning (no changes applied):
 ./scripts/bootstrap-fresh-nixos.sh --dry-run
 ```
 
-When `add-host.sh` runs on a machine that already has a desktop UI configured, it preserves that desktop automatically (`nixpi.desktopProfile = "preserve"`) instead of replacing it with the GNOME default.
+When `add-host.sh` runs on a machine that already has a desktop UI configured, it sets `nixpi.desktop.enable = false` and preserves the existing desktop options instead of replacing them with the GNOME default.
 
 ### Rebuild NixOS after config changes
 

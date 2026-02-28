@@ -174,8 +174,8 @@ while IFS= read -r option; do
 done < <(detect_desktop_options)
 
 if [ "${#DETECTED_DESKTOP_OPTIONS[@]}" -gt 0 ]; then
-  PRESERVE_BLOCK='  # Preserve existing desktop UI detected from current system options.
-  nixpi.desktopProfile = "preserve";'
+  PRESERVE_BLOCK='  # Preserve existing desktop UI — disable Nixpi GNOME default.
+  nixpi.desktop.enable = false;'
 
   for option in "${DETECTED_DESKTOP_OPTIONS[@]}"; do
     PRESERVE_BLOCK="${PRESERVE_BLOCK}"$'\n'"  ${option} = true;"

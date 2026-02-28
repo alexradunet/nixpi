@@ -32,27 +32,21 @@ assert_not_contains "$FLAKE_CONTENT" './infra/nixos/desktop.nix'
 assert_not_contains "$BASE_CONTENT" 'services.xrdp'
 assert_not_contains "$BASE_CONTENT" 'tcp dport 3389'
 
-# Edge-case regression: ttyd must be Tailscale-only (no LAN) while SSH keeps LAN bootstrap.
-assert_file_contains "$TTYD" 'tcp dport ${toString cfg.port} accept'
-assert_file_contains "$TTYD" 'tcp dport ${toString cfg.port} drop'
+# Edge-case regression: ttyd must be Tailscale-only (no LAN) via mkTailscaleFirewallRules.
+assert_file_contains "$TTYD" 'mkTailscaleFirewallRules'
+assert_file_contains "$TTYD" 'port = cfg.port;'
 assert_file_contains "$TTYD" 'default = 7681;'
 assert_not_contains "$TTYD_CONTENT" '192.168.0.0/16'
 assert_not_contains "$TTYD_CONTENT" '10.0.0.0/8'
+assert_not_contains "$TTYD_CONTENT" '100.0.0.0/8'
 
-# Syncthing UI/sync should also be Tailscale-only (using shared tailscaleSubnets).
-assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} tcp dport 8384 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} tcp dport 8384 accept'
+# Syncthing UI/sync should also be Tailscale-only via mkTailscaleFirewallRules.
+assert_file_contains "$SYNCTHING" 'mkTailscaleFirewallRules'
+assert_file_contains "$SYNCTHING" 'port = 8384;'
+assert_file_contains "$SYNCTHING" 'port = 22000;'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 tcp dport 8384 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 tcp dport 8384 accept'
-
-assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} tcp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip saddr ${ts.ipv4} udp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} tcp dport 22000 accept'
-assert_file_contains "$SYNCTHING" 'ip6 saddr ${ts.ipv6} udp dport 22000 accept'
-assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 tcp dport 22000 accept'
-assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 udp dport 22000 accept'
-assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 tcp dport 22000 accept'
-assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 udp dport 22000 accept'
+assert_not_contains "$SYNCTHING_CONTENT" '100.0.0.0/8'
 
 # SSH keeps LAN + Tailscale bootstrap path.
 assert_file_contains "$BASE" 'ip saddr 192.168.0.0/16 tcp dport 22 accept'

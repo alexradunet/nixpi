@@ -17,10 +17,15 @@
 #     after = [ "network.target" ];   # optional
 #     wants = [ "network.target" ];   # optional
 #     wantedBy = [ "multi-user.target" ];  # optional, for long-running services
-#     noHardening ? false;            # optional, disable security hardening
+#     hardening ? true;               # optional, enable security hardening (default: true)
 #   }
 { config, pkgs, lib }:
 
+# Parameters:
+#   stateDirectory — systemd-managed dir under /var/lib/, created and owned by
+#                    the service user, lifecycle tied to the service.
+#   readWritePaths — pre-existing paths (e.g. repoRoot, piDir) that need write
+#                    access within ProtectSystem=strict. Not created by systemd.
 { name
 , description
 , serviceType
@@ -34,7 +39,7 @@
 , after ? []
 , wants ? []
 , wantedBy ? []
-, noHardening ? false
+, hardening ? true
 , stateDirectory ? null
 , stateDirectoryMode ? "0700"
 , readWritePaths ? []
@@ -78,7 +83,7 @@ in
       StateDirectoryMode = stateDirectoryMode;
     } // lib.optionalAttrs (readWritePaths != []) {
       ReadWritePaths = readWritePaths;
-    } // lib.optionalAttrs (!noHardening) {
+    } // lib.optionalAttrs hardening {
       # Security hardening defaults
       ProtectSystem = "strict";
       ProtectHome = "read-only";

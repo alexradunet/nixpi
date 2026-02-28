@@ -61,3 +61,13 @@ assert_dir_exists() {
   local dir="$1"
   [ -d "$dir" ] || fail "expected directory to exist: $dir"
 }
+
+# Create an isolated tmpdir for object tests. Call from tests that need their
+# own NIXPI_OBJECTS_DIR. Uses NIXPI_TEST_TMPDIR from the runner when available.
+setup_test_tmpdir() {
+  local base="${NIXPI_TEST_TMPDIR:-$(mktemp -d)}"
+  local objects_dir="$base/objects"
+  mkdir -p "$objects_dir"
+  export NIXPI_OBJECTS_DIR="$objects_dir"
+  echo "$base"
+}

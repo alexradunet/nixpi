@@ -198,6 +198,12 @@ in
     description = "Tailscale CIDR ranges for firewall rules. Internal use only.";
   };
 
+  options.nixpi._internal.mkTailscaleFirewallRules = lib.mkOption {
+    type = lib.types.raw;
+    readOnly = true;
+    description = "Function to generate nftables Tailscale-only allow+drop rules. Internal use only.";
+  };
+
   options.nixpi.assistantUser = lib.mkOption {
     type = lib.types.str;
     default = "nixpi-agent";
@@ -229,6 +235,7 @@ in
     nixpi._internal.npmEnvSetup = npmEnvSetup;
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
     nixpi._internal.tailscaleSubnets = { ipv4 = "100.0.0.0/8"; ipv6 = "fd7a:115c:a1e0::/48"; };
+    nixpi._internal.mkTailscaleFirewallRules = import ./lib/mk-tailscale-firewall-rules.nix { inherit config; };
     nixpi.objects.enable = lib.mkDefault true;
     nixpi.heartbeat.enable = lib.mkDefault true;
     nixpi.tailscale.enable = lib.mkDefault true;

@@ -34,11 +34,9 @@ in
       ];
     };
 
-    networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
-      # Allow ttyd (port ${toString cfg.port}) from Tailscale only
-      ip saddr ${ts.ipv4} tcp dport ${toString cfg.port} accept
-      ip6 saddr ${ts.ipv6} tcp dport ${toString cfg.port} accept
-      tcp dport ${toString cfg.port} drop
+    networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
+      # Allow ttyd from Tailscale only
+      ${mkRules { port = cfg.port; }}
     '';
   };
 }

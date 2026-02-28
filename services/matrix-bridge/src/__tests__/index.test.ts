@@ -4,6 +4,7 @@ import {
   validateMatrixUserId,
   isAllowed,
   processMessage,
+  MatrixBotChannel,
 } from "../index.js";
 import type { MatrixBridgeConfig } from "../index.js";
 
@@ -92,5 +93,15 @@ describe("processMessage", () => {
     const config = makeConfig({ piCommand: "/nonexistent/command" });
     const result = await processMessage("test", config);
     assert.ok(result.includes("Sorry, I encountered an error"));
+  });
+});
+
+describe("MatrixBotChannel", () => {
+  it("throws if connect() is called without onMessage()", async () => {
+    const config = makeConfig();
+    const channel = new MatrixBotChannel(config);
+    await assert.rejects(() => channel.connect(), {
+      message: "onMessage must be called before connect()",
+    });
   });
 });

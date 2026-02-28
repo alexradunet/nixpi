@@ -61,7 +61,7 @@ parse_fields() {
 # Read a single frontmatter value from a file using yq.
 read_frontmatter_value() {
   local filepath="$1" key="$2"
-  yq --front-matter=extract ".$key" "$filepath" 2>/dev/null | grep -v '^null$'
+  yq --front-matter=extract ".$key // \"\"" "$filepath" 2>/dev/null
 }
 
 # Write YAML frontmatter + body to a file using jq (build JSON) + yq (convert to YAML).

@@ -45,7 +45,7 @@ chmod +x "$TMP_DIR/bin/nixos-option"
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" reuse-host >/dev/null
 HOST_FILE="$TMP_DIR/infra/nixos/hosts/reuse-host.nix"
 HOST_CONTENT="$(<"$HOST_FILE")"
-assert_contains "$HOST_CONTENT" 'nixpi.desktopProfile = "preserve";'
+assert_contains "$HOST_CONTENT" 'nixpi.desktop.enable = false;'
 assert_contains "$HOST_CONTENT" 'services.displayManager.gdm.enable = true;'
 assert_contains "$HOST_CONTENT" 'services.desktopManager.gnome.enable = true;'
 
@@ -58,7 +58,7 @@ chmod +x "$TMP_DIR/bin/nixos-option"
 
 PATH="$TMP_DIR/bin:$PATH" "$TMP_DIR/scripts/add-host.sh" fallback-host >/dev/null
 FALLBACK_CONTENT="$(<"$TMP_DIR/infra/nixos/hosts/fallback-host.nix")"
-assert_not_contains "$FALLBACK_CONTENT" 'nixpi.desktopProfile = "preserve";'
+assert_not_contains "$FALLBACK_CONTENT" 'nixpi.desktop.enable = false;'
 
 # Edge case: detected desktop options should not be duplicated.
 count_gdm="$(printf '%s' "$HOST_CONTENT" | grep -Fc 'services.displayManager.gdm.enable = true;')"

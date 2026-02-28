@@ -89,7 +89,7 @@ export async function processMessage(
 
 // --- Adapter: Matrix Bot SDK ---
 
-class MatrixBotChannel implements MessageChannel {
+export class MatrixBotChannel implements MessageChannel {
   readonly name = "matrix";
   private messageHandler?: (msg: IncomingMessage) => Promise<string>;
   private config: MatrixBridgeConfig;
@@ -116,6 +116,11 @@ class MatrixBotChannel implements MessageChannel {
   }
 
   async connect(): Promise<void> {
+    if (!this.messageHandler) {
+      throw new Error("onMessage must be called before connect()");
+    }
+    const handleMessage = this.messageHandler;
+
     // Ensure storage directory exists
     fs.mkdirSync(this.config.storageDir, { recursive: true });
 
@@ -165,7 +170,7 @@ class MatrixBotChannel implements MessageChannel {
           channel: "matrix",
         };
 
-        const response = await self.messageHandler!(incoming);
+        const response = await handleMessage(incoming);
 
         try {
           await self.sendMessage(roomId, response);

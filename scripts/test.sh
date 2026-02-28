@@ -15,12 +15,14 @@ fi
 passed=0 failed=0 failures=()
 
 for test_file in "${TEST_FILES[@]}"; do
-  if bash "$test_file"; then
+  test_tmpdir="$(mktemp -d)"
+  if NIXPI_TEST_TMPDIR="$test_tmpdir" bash "$test_file"; then
     passed=$((passed + 1))
   else
     failed=$((failed + 1))
     failures+=("$test_file")
   fi
+  rm -rf "$test_tmpdir"
 done
 
 # TypeScript tests (always run unless subset specified)

@@ -48,6 +48,8 @@ let
   };
 in
 {
+  # `channels` namespace is intentional — future channel adapters (Telegram,
+  # Signal, etc.) would live under nixpi.channels.<name>.
   options.nixpi.channels.matrix = {
     enable = lib.mkEnableOption "Nixpi Matrix channel (matrix-bot-sdk bridge)";
 
@@ -161,11 +163,9 @@ in
       };
 
       # Conduit port accessible from Tailscale only
-      networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
+      networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
         # Allow Conduit (port 6167) from Tailscale only
-        ip saddr ${ts.ipv4} tcp dport 6167 accept
-        ip6 saddr ${ts.ipv6} tcp dport 6167 accept
-        tcp dport 6167 drop
+        ${mkRules { port = 6167; }}
       '';
     })
   ]);

@@ -19,7 +19,7 @@ The bootstrap script runs as root and launches the `nixpi setup` wizard (dialog 
 After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow
-1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default, or preserved existing desktop when detected).
+1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default; disable with `nixpi.desktop.enable = false` on machines with an existing desktop).
 2. User launches Nixpi with `nixpi`.
 3. User configures provider/auth as needed.
 4. User adds/updates pinned extension sources with `nixpi npm install <package@version>` and runs `nixpi npm sync` when needed.

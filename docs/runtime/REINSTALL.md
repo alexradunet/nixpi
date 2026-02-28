@@ -2,7 +2,7 @@
 
 This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install from the interactive installer.
 
-Nixpi now defaults to a GNOME desktop profile (closer to standard NixOS GNOME setups) and preserves an existing desktop config when detected.
+Nixpi now defaults to a GNOME desktop profile (closer to standard NixOS GNOME setups). On machines with an existing desktop, `add-host.sh` sets `nixpi.desktop.enable = false` and preserves the detected options.
 
 ## 0) Assumptions (fresh install defaults)
 

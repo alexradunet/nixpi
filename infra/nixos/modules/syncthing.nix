@@ -49,19 +49,12 @@ in
       install -d -o ${primaryUser} -g users "${cfg.sharedFolder}"
     '';
 
-    networking.firewall.extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
+    networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
       # Allow Syncthing GUI (port 8384) from Tailscale only
-      ip saddr ${ts.ipv4} tcp dport 8384 accept
-      ip6 saddr ${ts.ipv6} tcp dport 8384 accept
-      tcp dport 8384 drop
+      ${mkRules { port = 8384; }}
 
       # Allow Syncthing sync (port 22000) from Tailscale only
-      ip saddr ${ts.ipv4} tcp dport 22000 accept
-      ip saddr ${ts.ipv4} udp dport 22000 accept
-      ip6 saddr ${ts.ipv6} tcp dport 22000 accept
-      ip6 saddr ${ts.ipv6} udp dport 22000 accept
-      tcp dport 22000 drop
-      udp dport 22000 drop
+      ${mkRules { port = 22000; protocols = ["tcp" "udp"]; }}
     '';
   };
 }
