@@ -420,6 +420,15 @@ JSONEOF
     options = "--delete-older-than 30d";
   };
 
+    # First-run setup hint for new installations.
+    environment.etc."profile.d/nixpi-first-run.sh".text = ''
+      if [ ! -f /etc/nixpi/.setup-complete ] && command -v nixpi >/dev/null 2>&1; then
+        echo ""
+        echo "  Welcome to Nixpi! Run 'nixpi setup' to configure your server."
+        echo ""
+      fi
+    '';
+
   # stateVersion tells NixOS which version's defaults to use for stateful data
   # (databases, state directories). It does NOT control package versions.
   # Never change this after install — it would break existing state assumptions.
