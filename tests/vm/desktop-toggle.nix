@@ -6,19 +6,19 @@
 {
   name = "vm-desktop-toggle";
 
-  nodes.disabled = {
+  nodes.machine = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
     nixpi.desktop.enable = false;
   };
 
   testScript = ''
     # --- Disabled node ---
-    disabled.wait_for_unit("multi-user.target")
+    machine.wait_for_unit("multi-user.target")
 
     # GDM should not be active
-    disabled.fail("systemctl is-active display-manager.service")
+    machine.fail("systemctl is-active display-manager.service")
 
     # GNOME session should not exist
-    disabled.fail("test -f /run/current-system/sw/share/xsessions/gnome.desktop")
+    machine.fail("test -f /run/current-system/sw/share/xsessions/gnome.desktop")
   '';
 }

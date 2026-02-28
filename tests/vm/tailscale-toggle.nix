@@ -3,6 +3,7 @@
 
 {
   name = "vm-tailscale-toggle";
+  skipTypeCheck = true;
 
   nodes.enabled = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];

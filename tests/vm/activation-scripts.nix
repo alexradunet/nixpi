@@ -17,8 +17,8 @@
     for subdir in ["sessions", "extensions", "skills", "prompts", "themes"]:
         machine.succeed(f"test -d {pi_dir}/{subdir}")
 
-    # Subdirectories are owned by testuser (activation script sets -o on these)
-    machine.succeed(f"stat -c '%U' {pi_dir}/sessions | grep -q testuser")
+    # Subdirectories are owned by nixpi-agent (activation script sets -o on these)
+    machine.succeed(f"stat -c '%U' {pi_dir}/sessions | grep -q nixpi-agent")
 
     # SYSTEM.md was created with expected content
     machine.succeed(f"test -f {pi_dir}/SYSTEM.md")
@@ -30,7 +30,11 @@
     settings = machine.succeed(f"cat {pi_dir}/settings.json")
     assert "skills" in settings, "settings.json missing skills key"
 
-    # Shared directory was created
+    # Shared directory created by syncthing module (enabled by default)
     machine.succeed("test -d /home/testuser/Shared")
+
+    # Secrets directory created with root-only permissions
+    machine.succeed("test -d /etc/nixpi/secrets")
+    machine.succeed("stat -c '%a' /etc/nixpi/secrets | grep -q 700")
   '';
 }
