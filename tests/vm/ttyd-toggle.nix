@@ -8,13 +8,11 @@
 
   nodes.enabled = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
-    networking.hostName = "enabled";
     nixpi.ttyd.enable = true;
   };
 
   nodes.disabled = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
-    networking.hostName = "disabled";
     nixpi.ttyd.enable = false;
   };
 

@@ -10,8 +10,11 @@ let
   passwordPolicyCheck = pkgs.writeShellScript "nixpi-password-policy-check" ''
     set -euo pipefail
 
-    # pam_exec with expose_authtok provides the candidate password on stdin.
-    IFS= read -r password || exit 1
+    # pam_exec with expose_authtok provides the candidate password on stdin
+    # WITHOUT a trailing newline, so read returns non-zero at EOF. Accept
+    # the data anyway; only bail if the password is truly empty.
+    IFS= read -r password || :
+    [ -n "$password" ] || exit 1
 
     if [ "''${#password}" -lt ${toString cfg.minLength} ]; then
       echo "Password must be at least ${toString cfg.minLength} characters." >&2

@@ -28,8 +28,8 @@
     timer_info = machine.succeed("systemctl show nixpi-heartbeat.timer --property=TimersCalendar")
     assert "0/15" in timer_info, f"expected 15-minute interval in timer config, got: {timer_info}"
 
-    # Service runs as testuser
+    # Service runs as nixpi-agent
     svc_info = machine.succeed("systemctl show nixpi-heartbeat.service --property=User")
-    assert "testuser" in svc_info, f"expected service to run as testuser, got: {svc_info}"
+    assert "nixpi-agent" in svc_info, f"expected service to run as nixpi-agent, got: {svc_info}"
   '';
 }
