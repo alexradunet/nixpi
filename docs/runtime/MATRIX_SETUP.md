@@ -2,7 +2,9 @@
 
 Related: [Operating Model](./OPERATING_MODEL.md) · [Reinstall Guide](./REINSTALL.md) · [Matrix Setup Skill](../../infra/pi/skills/matrix-setup/SKILL.md)
 
-The Matrix channel lets you message Nixpi from any Matrix client (Element, FluffyChat, etc.) over your Tailscale network. Messages are processed through Pi — same engine as the TUI, just delivered over Matrix.
+The Matrix channel lets you message Nixpi from any Matrix client (Element, FluffyChat, etc.) over your Tailscale network. Messages are processed through Pi -- same engine as the TUI, just delivered over Matrix.
+
+Matrix is a toggleable NixOS module. Enable it with `nixpi.channels.matrix.enable = true` in your host config, or select it during `nixpi setup`.
 
 ## Architecture
 
@@ -181,9 +183,9 @@ sudo systemctl restart nixpi-matrix-bridge
 
 ## Security Model
 
-- Conduit binds to `127.0.0.1:6167` — not exposed to the public internet.
+- Conduit binds to `127.0.0.1:6167` -- not exposed to the public internet.
 - Port 6167 firewall rules allow access from Tailscale IPs only.
-- Federation is disabled — your homeserver is isolated.
-- Registration is disabled by default — only enabled during initial setup.
-- The bot access token is stored in `/run/secrets/` via EnvironmentFile, never in the Nix store.
+- Federation is disabled -- your homeserver is isolated.
+- Registration is disabled by default -- only enabled during initial setup.
+- The bot access token is stored in `/run/secrets/` via EnvironmentFile, never in the Nix store. Future migration target: `/etc/nixpi/secrets/nixpi-matrix-token` (aligned with the centralised secrets directory at `/etc/nixpi/secrets/`).
 - Only users in the `allowedUsers` list can trigger Pi processing.

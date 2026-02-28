@@ -27,7 +27,7 @@ Concise map of Nixpi agent skills used by `nixpi`.
 ## 🔗 Shared cross-role skills
 - **TDD policy** — mandatory Red -> Green -> Refactor behavior
   [`infra/pi/skills/tdd/SKILL.md`](../../infra/pi/skills/tdd/SKILL.md)
-- **Install bootstrap guidance** — first-time Nixpi install flow
+- **Install bootstrap guidance** — guided first-time install via `nixpi setup` wizard and flake template
   [`infra/pi/skills/install-nixpi/SKILL.md`](../../infra/pi/skills/install-nixpi/SKILL.md)
 - **Matrix channel setup** — interactive Conduit + bridge setup with account provisioning
   [`infra/pi/skills/matrix-setup/SKILL.md`](../../infra/pi/skills/matrix-setup/SKILL.md)

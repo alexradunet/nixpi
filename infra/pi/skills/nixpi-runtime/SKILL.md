@@ -29,6 +29,9 @@ When a user request arrives, classify it:
 - New skills, object types, or persona changes.
 - Infrastructure changes (systemd services, Nix modules).
 
+### First-time setup
+If the user needs to configure or reconfigure their Nixpi server, direct them to run `nixpi setup`. This launches the dialog TUI wizard for module selection, AI provider configuration, and secrets setup.
+
 ### 3. Ambiguous
 - Ask the user: "This might require a code change. Should I file an evolution request, or can I handle it operationally?"
 

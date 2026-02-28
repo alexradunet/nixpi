@@ -20,9 +20,11 @@ This document defines canonical sources when information conflicts.
    - `docs/meta/DOCS_STYLE.md`
 
 ## Configuration Ownership
-- Nix-seeded Pi profile defaults are declared in `infra/nixos/base.nix`.
+- Core NixOS settings (SSH, nix, users, networking) are declared in `infra/nixos/base.nix`.
+- Each optional service module in `infra/nixos/modules/` is the canonical source for its service configuration (Tailscale, Syncthing, ttyd, desktop, password-policy, matrix, heartbeat, objects).
 - Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
-- Effective runtime profile files live in: `~/Nixpi/.pi/agent/`.
+- Pi agent state lives at `/var/lib/nixpi/agent/` (owned by `nixpi-agent` system user).
+- Secrets (API keys, tokens) are stored at `/etc/nixpi/secrets/` (root:root, mode 0700).
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 
 ## Generated Artifacts Policy
