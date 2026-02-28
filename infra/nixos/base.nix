@@ -238,6 +238,7 @@ in
     ./modules/heartbeat.nix
     ./modules/matrix.nix
     ./modules/tailscale.nix
+    ./modules/ttyd.nix
   ];
 
   config = {
@@ -245,6 +246,7 @@ in
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
     nixpi.objects.enable = lib.mkDefault true;
     nixpi.tailscale.enable = lib.mkDefault true;
+    nixpi.ttyd.enable = lib.mkDefault true;
 
     assertions = [
       {
@@ -313,21 +315,6 @@ in
     };
   };
 
-  # Web terminal interface (ttyd) that reuses localhost OpenSSH login.
-  services.ttyd = {
-    enable = true;
-    port = 7681;
-    user = primaryUser;
-    writeable = true;
-    checkOrigin = true;
-    entrypoint = [
-      "${pkgs.openssh}/bin/ssh"
-      "-o"
-      "StrictHostKeyChecking=accept-new"
-      "${primaryUser}@127.0.0.1"
-    ];
-  };
-
   # Password complexity policy for local account password changes.
   # Requirement: minimum 16 chars, at least one number, and at least one
   # special character.
@@ -348,7 +335,7 @@ in
   };
 
   # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap), while
-  # ttyd and Syncthing are Tailscale-only.
+  # Syncthing is Tailscale-only. ttyd rules live in modules/ttyd.nix.
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
   # input chain.
   networking.firewall = {
@@ -361,11 +348,6 @@ in
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
-
-      # Allow ttyd web terminal (port 7681) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 7681 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 7681 accept
-      tcp dport 7681 drop
 
       # Allow Syncthing GUI (port 8384) from Tailscale only
       ip saddr 100.0.0.0/8 tcp dport 8384 accept

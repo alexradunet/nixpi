@@ -108,6 +108,7 @@
         vm-persona-injection  = mkVmTest ./tests/vm/persona-injection.nix;
         vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
         vm-tailscale-toggle   = mkVmTest ./tests/vm/tailscale-toggle.nix;
+        vm-ttyd-toggle        = mkVmTest ./tests/vm/ttyd-toggle.nix;
       };
     };
 }
