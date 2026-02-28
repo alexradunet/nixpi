@@ -39,6 +39,7 @@ HOST_FILE="$TMP_DIR/infra/nixos/hosts/demo-host.nix"
 HOST_CONTENT="$(<"$HOST_FILE")"
 assert_contains "$HOST_CONTENT" 'boot.loader.systemd-boot.enable = true;'
 assert_contains "$HOST_CONTENT" 'boot.loader.efi.canTouchEfiVariables = true;'
+assert_contains "$HOST_CONTENT" 'boot.loader.grub.enable = false;'
 assert_contains "$HOST_CONTENT" '# boot.loader.grub.enable = true;'
 assert_contains "$HOST_CONTENT" '# boot.loader.grub.devices = [ "/dev/sda" ];'
 assert_contains "$HOST_CONTENT" 'networking.hostName = "demo-host";'

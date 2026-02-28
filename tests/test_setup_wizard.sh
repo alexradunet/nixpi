@@ -44,6 +44,7 @@ test_generate_nixpi_config() {
   assert_file_contains "$tmp_dir/nixpi-config.nix" 'nixpi.tailscale.enable = true'
   assert_file_contains "$tmp_dir/nixpi-config.nix" 'nixpi.ttyd.enable = false'
   assert_file_contains "$tmp_dir/nixpi-config.nix" 'nixpi.heartbeat.enable = false'
+  assert_file_contains "$tmp_dir/nixpi-config.nix" 'boot.loader.grub.enable = false'
 }
 
 test_generate_nixpi_config

@@ -41,7 +41,8 @@ generate_nixpi_config() {
   # --- Bootloader (UEFI / systemd-boot) ---
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  # BIOS fallback (uncomment and adjust disk if needed):
+  boot.loader.grub.enable = false;
+  # BIOS fallback (uncomment grub lines, comment systemd-boot lines above):
   # boot.loader.grub.enable = true;
   # boot.loader.grub.devices = [ "/dev/sda" ];
 
