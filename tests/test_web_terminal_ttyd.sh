@@ -6,11 +6,13 @@ FLAKE="flake.nix"
 BASE="infra/nixos/base.nix"
 TTYD="infra/nixos/modules/ttyd.nix"
 SYNCTHING="infra/nixos/modules/syncthing.nix"
+MATRIX="infra/nixos/modules/matrix.nix"
 README="README.md"
 FLAKE_CONTENT="$(<"$FLAKE")"
 BASE_CONTENT="$(<"$BASE")"
 TTYD_CONTENT="$(<"$TTYD")"
 SYNCTHING_CONTENT="$(<"$SYNCTHING")"
+MATRIX_CONTENT="$(<"$MATRIX")"
 README_CONTENT="$(<"$README")"
 
 # Happy path: ttyd web terminal is enabled and proxies to localhost SSH.
@@ -47,6 +49,10 @@ assert_file_contains "$SYNCTHING" 'port = 22000;'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 192.168.0.0/16 tcp dport 8384 accept'
 assert_not_contains "$SYNCTHING_CONTENT" 'ip saddr 10.0.0.0/8 tcp dport 8384 accept'
 assert_not_contains "$SYNCTHING_CONTENT" '100.0.0.0/8'
+
+# Matrix should also use mkTailscaleFirewallRules (Conduit port).
+assert_file_contains "$MATRIX" 'mkTailscaleFirewallRules'
+assert_not_contains "$MATRIX_CONTENT" '100.0.0.0/8'
 
 # SSH keeps LAN + Tailscale bootstrap path.
 assert_file_contains "$BASE" 'ip saddr 192.168.0.0/16 tcp dport 22 accept'
