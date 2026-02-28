@@ -98,7 +98,7 @@ let
 
   nixpiCli = pkgs.writeShellApplication {
     name = "nixpi";
-    runtimeInputs = [ pkgs.jq pkgs.nodejs_22 piWrapper ];
+    runtimeInputs = [ pkgs.jq pkgs.nodejs_22 pkgs.dialog piWrapper ];
     text = ''
       PI_BIN="${piWrapper}/bin/pi"
       PI_DIR="${piDir}"
