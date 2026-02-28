@@ -245,7 +245,7 @@ PIEOF
 
   # Apply NixOS config
   $DIALOG --title "Applying..." --infobox "Running nixos-rebuild switch...\nThis may take several minutes." 6 50
-  (cd "$TARGET_DIR" && sudo nixos-rebuild switch --flake "path:.#$HOSTNAME") 2>&1 | \
+  (cd "$TARGET_DIR" && sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:.#$HOSTNAME") 2>&1 | \
     $DIALOG --title "Build Progress" --programbox 20 80
 
   # Mark setup complete

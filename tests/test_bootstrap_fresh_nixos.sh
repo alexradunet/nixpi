@@ -39,8 +39,18 @@ assert_file_contains "$SCRIPT" 'NON_INTERACTIVE=0'
 assert_file_contains "$SCRIPT" 'nixos-rebuild switch --flake'
 assert_file_contains "$SCRIPT" 'bootstrap-fresh-nixos: complete!'
 
+# Phase 1: OS preparation step enables flakes before flake-based rebuild.
+assert_file_contains "$SCRIPT" 'prepare_os'
+assert_file_contains "$SCRIPT" 'nix flake --help'
+assert_file_contains "$SCRIPT" 'nixos-rebuild switch -I'
+assert_file_contains "$SCRIPT" '/etc/nixos/configuration.nix'
+
+# Safety net: non-interactive rebuild uses NIX_CONFIG for flakes.
+assert_file_contains "$SCRIPT" 'NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake'
+
 # Dry-run mode: preview commands and avoid mutating system.
 assert_file_contains "$SCRIPT" 'DRY_RUN=0'
+assert_file_contains "$SCRIPT" 'DRY RUN: would prepare OS'
 assert_file_contains "$SCRIPT" 'DRY RUN: would clone'
 assert_file_contains "$SCRIPT" 'DRY RUN: would nixos-rebuild switch'
 
