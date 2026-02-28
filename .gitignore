@@ -19,3 +19,4 @@
 # Generated agent handoff artifacts (local operational data)
 /docs/agents/handoffs/*.md
 !/docs/agents/handoffs/.gitkeep
+.worktrees/
