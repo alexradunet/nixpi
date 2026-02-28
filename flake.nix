@@ -115,6 +115,7 @@
         vm-desktop-toggle     = mkVmTest ./tests/vm/desktop-toggle.nix;
         vm-minimal-config     = mkVmTest ./tests/vm/minimal-config.nix;
         vm-full-stack         = mkVmTest ./tests/vm/full-stack.nix;
+        vm-secrets-directory  = mkVmTest ./tests/vm/secrets-directory.nix;
       };
     };
 }

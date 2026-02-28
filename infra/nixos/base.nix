@@ -83,6 +83,14 @@ let
     text = ''
       ${npmEnvSetup}
 
+      # Source API key from secrets if available
+      if [ -f /etc/nixpi/secrets/ai-provider.env ]; then
+        set -a
+        # shellcheck source=/dev/null
+        . /etc/nixpi/secrets/ai-provider.env
+        set +a
+      fi
+
       # Pin package version to keep behavior stable across rebuilds.
       exec npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} "$@"
     '';
@@ -387,6 +395,11 @@ JSONEOF
     if [ -f "$PI_DIR/settings.json" ]; then
       chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
     fi
+  '';
+
+  # Secrets directory — root-owned, not world-readable.
+  system.activationScripts.nixpiSecrets = lib.stringAfter [ "users" ] ''
+    install -d -m 0700 -o root -g root /etc/nixpi/secrets
   '';
 
   # Keep login-manager display name aligned with configured primary user
