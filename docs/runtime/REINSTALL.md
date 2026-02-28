@@ -12,6 +12,17 @@ Nixpi now defaults to a GNOME desktop profile (closer to standard NixOS GNOME se
 - You can log in locally or over SSH.
 - You have network connectivity.
 
+### Alternative: Flake template
+
+If you already have flakes and git available, you can scaffold a Nixpi config without cloning the full repo:
+
+```bash
+mkdir ~/Nixpi && cd ~/Nixpi
+nix flake init -t github:alexradunet/nixpi
+```
+
+Then edit `flake.nix` / host config and run `sudo nixos-rebuild switch --flake .`.
+
 ## 1) Fast path (automated clone + guided install)
 
 Single-command one-liner:
@@ -42,13 +53,15 @@ Optional preview mode (shows planned actions without changing anything):
 ```
 
 What `bootstrap-fresh-nixos.sh` does:
-1. Validates clone target path.
-2. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed.
-3. Regenerates the host file for the current machine:
+1. Runs as root (elevates via `sudo` if needed).
+2. Validates clone target path.
+3. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed.
+4. Regenerates the host file for the current machine:
    - `./scripts/add-host.sh --force "$(hostname)"`
-4. Default mode: launches Pi with the `install-nixpi` skill to guide final review + first rebuild.
-5. `--non-interactive` mode: runs first rebuild directly.
-6. `--dry-run` mode: prints the plan and exits without mutating the system.
+5. Default mode: launches the `nixpi setup` wizard (dialog-based TUI) for guided module selection and first rebuild.
+6. `--non-interactive` mode: runs first rebuild directly with defaults.
+7. `--dry-run` mode: prints the plan and exits without mutating the system.
+8. On completion, writes `/etc/nixpi/.setup-complete` to mark the system as configured. Subsequent boots skip the first-run wizard.
 
 ## 2) Manual path (same assumptions)
 
@@ -70,7 +83,15 @@ This refresh avoids stale disk UUIDs and maps `nixpi.primaryUser` / `nixpi.repoR
 
 ### Guided install session (recommended)
 
-If `nixpi` is installed:
+The preferred guided path is the setup wizard:
+
+```bash
+sudo nixpi setup
+```
+
+This launches a dialog-based TUI that walks through module selection (Tailscale, ttyd, Syncthing, desktop, etc.), provider/auth configuration, and triggers the first rebuild. The wizard writes `/etc/nixpi/.setup-complete` on success.
+
+If `nixpi` is already installed and you want the skill-based flow instead:
 
 ```bash
 nixpi --skill ./infra/pi/skills/install-nixpi/SKILL.md
@@ -103,7 +124,13 @@ nixpi --help
 ./scripts/verify-nixpi.sh
 ```
 
-Authenticate if needed (provider setup through `nixpi`).
+Confirm first-run detection marker exists:
+
+```bash
+ls -la /etc/nixpi/.setup-complete
+```
+
+Authenticate if needed (provider setup through `nixpi`). API keys are sourced from `/etc/nixpi/secrets/ai-provider.env`.
 
 ## 4) Set up Matrix channel (optional)
 

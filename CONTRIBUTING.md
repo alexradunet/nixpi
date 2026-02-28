@@ -42,6 +42,12 @@ NIXPI_CHECK_BUILD=1 NIXPI_CHECK_HOST=$(hostname) ./scripts/check.sh
 nix flake check --no-build
 ```
 
+## NixOS Modules
+
+- Each service module in `infra/nixos/modules/` has a `nixpi.<service>.enable` toggle.
+- New modules should include a toggle test in `tests/vm/` that verifies the module can be enabled and disabled.
+- New `.nix` files must be `git add`-ed before `nix flake check` can see them (flake check operates on git-tracked files only).
+
 ## Commit and PR Expectations
 - Use clear scoped commit messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
 - Keep PRs small and reversible.

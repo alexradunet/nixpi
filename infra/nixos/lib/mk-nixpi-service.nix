@@ -41,14 +41,14 @@
 }:
 
 let
-  primaryUser = config.nixpi.primaryUser;
+  assistantUser = config.nixpi.assistantUser;
   repoRoot = config.nixpi.repoRoot;
   piDir = config.nixpi.piDir;
 
   baseEnv = [
     "PI_CODING_AGENT_DIR=${piDir}"
     "NIXPI_OBJECTS_DIR=${config.nixpi.objects.dataDir}"
-    "HOME=/home/${primaryUser}"
+    "HOME=/var/lib/nixpi"
   ];
 in
 {
@@ -58,8 +58,8 @@ in
 
     serviceConfig = {
       Type = serviceType;
-      User = primaryUser;
-      Group = "users";
+      User = assistantUser;
+      Group = "nixpi";
       WorkingDirectory = workingDirectory;
       Environment = baseEnv ++ extraEnv;
       ExecStart = execStart;

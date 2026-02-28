@@ -1,103 +1,78 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Nixpi bootstrap — one-command install for fresh NixOS machines.
+# Run as root: sudo bash bootstrap-fresh-nixos.sh [target-dir]
+
 usage() {
-  echo "usage: $0 [--dry-run] [--non-interactive] [target-dir]" >&2
+  echo "usage: sudo $0 [--dry-run] [--non-interactive] [target-dir]" >&2
   exit 2
 }
 
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "error: bootstrap must run as root (use sudo)" >&2
+  exit 1
+fi
+
 DRY_RUN=0
 NON_INTERACTIVE=0
-TARGET_DIR="${NIXPI_REPO_DIR:-$HOME/Nixpi}"
+TARGET_DIR="${SUDO_HOME:-$HOME}/nixpi-server"
 POSITIONAL_SET=0
+NIXPI_REPO="https://github.com/alexradunet/nixpi.git"
+BOOTSTRAP_DIR="/tmp/nixpi-bootstrap"
 
-while [ "$#" -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run)
-      DRY_RUN=1
-      shift
-      ;;
-    --non-interactive)
-      NON_INTERACTIVE=1
-      shift
-      ;;
-    -h|--help)
-      usage
-      ;;
-    -* )
-      echo "error: unknown option: $1" >&2
-      usage
-      ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --non-interactive) NON_INTERACTIVE=1; shift ;;
+    -h|--help) usage ;;
+    -*) echo "error: unknown option: $1" >&2; usage ;;
     *)
-      if [ "$POSITIONAL_SET" -eq 1 ]; then
-        usage
-      fi
-      TARGET_DIR="$1"
-      POSITIONAL_SET=1
-      shift
-      ;;
+      if [[ "$POSITIONAL_SET" -eq 1 ]]; then usage; fi
+      TARGET_DIR="$1"; POSITIONAL_SET=1; shift ;;
   esac
 done
 
-if [ -e "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR/.git" ]; then
-  echo "error: $TARGET_DIR exists but is not a git repository" >&2
-  exit 1
-fi
-
-FLAKE_REF="path:$TARGET_DIR#$(hostname)"
-
-if [ "$DRY_RUN" -eq 1 ]; then
-  if [ ! -d "$TARGET_DIR/.git" ]; then
-    echo "DRY RUN: would clone https://github.com/alexradunet/nixpi.git into $TARGET_DIR"
-  else
-    echo "DRY RUN: Repository already present, skipping clone: $TARGET_DIR"
-  fi
-
-  echo 'DRY RUN: would refresh host config with ./scripts/add-host.sh --force "$(hostname)"'
-
-  if [ "$NON_INTERACTIVE" -eq 1 ]; then
-    echo "DRY RUN: would apply sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"$FLAKE_REF\""
-  else
-    echo "DRY RUN: would launch guided install with skill at $TARGET_DIR/infra/pi/skills/install-nixpi/SKILL.md"
-  fi
-
-  echo "bootstrap-fresh-nixos: dry run complete"
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "DRY RUN: would clone $NIXPI_REPO to $BOOTSTRAP_DIR"
+  echo "DRY RUN: would run setup wizard targeting $TARGET_DIR"
+  echo "DRY RUN: would nixos-rebuild switch"
   exit 0
 fi
 
-if [ ! -d "$TARGET_DIR/.git" ]; then
-  mkdir -p "$(dirname "$TARGET_DIR")"
-  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git "$TARGET_DIR"
+# Clone Nixpi repo for bootstrap scripts
+if [[ ! -d "$BOOTSTRAP_DIR/.git" ]]; then
+  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c \
+    git clone "$NIXPI_REPO" "$BOOTSTRAP_DIR"
+fi
+
+# Run setup wizard
+if [[ "$NON_INTERACTIVE" -eq 1 ]]; then
+  echo "Non-interactive mode: generating default config at $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"
+  nixos-generate-config --show-hardware-config > "$TARGET_DIR/hardware.nix"
+
+  NIXPI_SETUP_GENERATE_ONLY=1 source "$BOOTSTRAP_DIR/scripts/nixpi-setup.sh"
+  generate_flake_nix --hostname "$(hostname)" --output "$TARGET_DIR/flake.nix"
+  generate_nixpi_config \
+    --hostname "$(hostname)" \
+    --username "${SUDO_USER:-nixpi}" \
+    --timezone "UTC" \
+    --tailscale true --syncthing true --ttyd true \
+    --desktop true --password-policy true \
+    --heartbeat false --matrix false \
+    --output "$TARGET_DIR/nixpi-config.nix"
+
+  (cd "$TARGET_DIR" && git init && git add -A)
+  (cd "$TARGET_DIR" && nixos-rebuild switch --flake "path:.#$(hostname)")
 else
-  echo "Repository already present, skipping clone: $TARGET_DIR"
+  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#dialog -c \
+    bash "$BOOTSTRAP_DIR/scripts/nixpi-setup.sh" "$TARGET_DIR"
 fi
 
-cd "$TARGET_DIR"
+install -d -m 0755 /etc/nixpi
+touch /etc/nixpi/.setup-complete
 
-# Always refresh host hardware config for the current machine.
-# This avoids stale disk UUIDs if hostname collides with an existing host file.
-./scripts/add-host.sh --force "$(hostname)"
-
-if [ "$NON_INTERACTIVE" -eq 1 ]; then
-  sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "$FLAKE_REF"
-  echo "bootstrap-fresh-nixos: non-interactive apply finished"
-  echo "Next: nixpi --help && ./scripts/verify-nixpi.sh"
-  exit 0
-fi
-
-INSTALL_SKILL="$TARGET_DIR/infra/pi/skills/install-nixpi/SKILL.md"
-if [ ! -f "$INSTALL_SKILL" ]; then
-  echo "error: missing install skill at $INSTALL_SKILL" >&2
-  exit 1
-fi
-
-INSTALL_PROMPT="Use the install-nixpi skill from this repository. Guide me through reviewing infra/nixos/hosts/$(hostname).nix, validating disk and user settings, then applying the system with sudo env NIX_CONFIG=\"experimental-features = nix-command flakes\" nixos-rebuild switch --flake \"$FLAKE_REF\". Ask before risky actions and keep steps concise."
-
-if command -v nixpi >/dev/null 2>&1; then
-  nixpi --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"
-else
-  nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill "$INSTALL_SKILL" "$INSTALL_PROMPT"
-fi
-
-echo "bootstrap-fresh-nixos: guided install session finished"
-echo "If you exited before rebuild, rerun this script or apply manually when ready."
+echo "bootstrap-fresh-nixos: complete!"
+echo "Config directory: $TARGET_DIR"
+echo "Rebuild: cd $TARGET_DIR && sudo nixos-rebuild switch --flake ."

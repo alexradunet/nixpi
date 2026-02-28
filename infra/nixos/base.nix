@@ -83,6 +83,14 @@ let
     text = ''
       ${npmEnvSetup}
 
+      # Source API key from secrets if available
+      if [ -f /etc/nixpi/secrets/ai-provider.env ]; then
+        set -a
+        # shellcheck source=/dev/null
+        . /etc/nixpi/secrets/ai-provider.env
+        set +a
+      fi
+
       # Pin package version to keep behavior stable across rebuilds.
       exec npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} "$@"
     '';
@@ -90,7 +98,7 @@ let
 
   nixpiCli = pkgs.writeShellApplication {
     name = "nixpi";
-    runtimeInputs = [ pkgs.jq pkgs.nodejs_22 piWrapper ];
+    runtimeInputs = [ pkgs.jq pkgs.nodejs_22 pkgs.dialog piWrapper ];
     text = ''
       PI_BIN="${piWrapper}/bin/pi"
       PI_DIR="${piDir}"
@@ -98,34 +106,6 @@ let
       EXTENSIONS_MANIFEST="$REPO_ROOT/infra/pi/extensions/packages.json"
     '' + builtins.readFile ./scripts/nixpi-cli.sh;
   };
-
-  passwordPolicyCheck = pkgs.writeShellScript "nixpi-password-policy-check" ''
-    set -euo pipefail
-
-    # pam_exec with expose_authtok provides the candidate password on stdin.
-    IFS= read -r password || exit 1
-
-    if [ "''${#password}" -lt 16 ]; then
-      echo "Password must be at least 16 characters." >&2
-      exit 1
-    fi
-
-    case "$password" in
-      (*[0-9]*) ;;
-      (*)
-        echo "Password must include at least one number." >&2
-        exit 1
-        ;;
-    esac
-
-    case "$password" in
-      (*[[:punct:]]*) ;;
-      (*)
-        echo "Password must include at least one special character." >&2
-        exit 1
-        ;;
-    esac
-  '';
 
   # Read OpenPersona 4-layer files if persona dir exists.
   personaDir = config.nixpi.persona.dir;
@@ -212,6 +192,12 @@ in
     description = "Store path to the internal pi wrapper binary. Internal use only.";
   };
 
+  options.nixpi.assistantUser = lib.mkOption {
+    type = lib.types.str;
+    default = "nixpi-agent";
+    description = "System user that owns Nixpi services and data.";
+  };
+
   options.nixpi.persona.dir = lib.mkOption {
     type = lib.types.path;
     default = ../../persona;
@@ -222,27 +208,26 @@ in
     '';
   };
 
-  options.nixpi.desktopProfile = lib.mkOption {
-    type = lib.types.enum [ "gnome" "preserve" ];
-    default = "gnome";
-    example = "preserve";
-    description = ''
-      Desktop profile behavior.
-      - "gnome": manage a local default desktop stack (GDM + GNOME).
-      - "preserve": keep desktop options defined by the host configuration.
-    '';
-  };
-
   imports = [
     ./modules/objects.nix
     ./modules/heartbeat.nix
     ./modules/matrix.nix
+    ./modules/tailscale.nix
+    ./modules/ttyd.nix
+    ./modules/syncthing.nix
+    ./modules/password-policy.nix
+    ./modules/desktop.nix
   ];
 
   config = {
     nixpi._internal.npmEnvSetup = npmEnvSetup;
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
     nixpi.objects.enable = lib.mkDefault true;
+    nixpi.tailscale.enable = lib.mkDefault true;
+    nixpi.ttyd.enable = lib.mkDefault true;
+    nixpi.syncthing.enable = lib.mkDefault true;
+    nixpi.passwordPolicy.enable = lib.mkDefault true;
+    nixpi.desktop.enable = lib.mkDefault true;
 
     assertions = [
       {
@@ -282,17 +267,6 @@ in
   # nftables syntax via extraInputRules (see below).
   networking.nftables.enable = true;
 
-  # Local desktop policy for HDMI-first setup (display + Wi-Fi onboarding).
-  # Default behavior mirrors standard GNOME installs. Hosts can opt into
-  # preserve mode by setting:
-  #   nixpi.desktopProfile = "preserve";
-  services.xserver.enable = config.nixpi.desktopProfile == "gnome";
-  services.displayManager.gdm.enable = config.nixpi.desktopProfile == "gnome";
-  services.desktopManager.gnome.enable = config.nixpi.desktopProfile == "gnome";
-  services.xserver.xkb = {
-    layout = "us";
-  };
-
   # Timezone and locale
   time.timeZone = config.nixpi.timeZone;
   i18n.defaultLocale = "en_US.UTF-8";
@@ -311,42 +285,8 @@ in
     };
   };
 
-  # Web terminal interface (ttyd) that reuses localhost OpenSSH login.
-  services.ttyd = {
-    enable = true;
-    port = 7681;
-    user = primaryUser;
-    writeable = true;
-    checkOrigin = true;
-    entrypoint = [
-      "${pkgs.openssh}/bin/ssh"
-      "-o"
-      "StrictHostKeyChecking=accept-new"
-      "${primaryUser}@127.0.0.1"
-    ];
-  };
-
-  # Password complexity policy for local account password changes.
-  # Requirement: minimum 16 chars, at least one number, and at least one
-  # special character.
-  security.pam.services.passwd.rules.password.passwordPolicy = {
-    order = config.security.pam.services.passwd.rules.password.unix.order - 20;
-    control = "requisite";
-    modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
-    args = [ "expose_authtok" "${passwordPolicyCheck}" ];
-  };
-
-  # Apply the same explicit checks to non-interactive password updates
-  # (e.g. chpasswd).
-  security.pam.services.chpasswd.rules.password.passwordPolicy = {
-    order = config.security.pam.services.chpasswd.rules.password.unix.order - 20;
-    control = "requisite";
-    modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
-    args = [ "expose_authtok" "${passwordPolicyCheck}" ];
-  };
-
-  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap), while
-  # ttyd and Syncthing are Tailscale-only.
+  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap).
+  # Service-specific rules live in their modules (syncthing, ttyd, etc.).
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
   # input chain.
   networking.firewall = {
@@ -359,82 +299,31 @@ in
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
-
-      # Allow ttyd web terminal (port 7681) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 7681 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 7681 accept
-      tcp dport 7681 drop
-
-      # Allow Syncthing GUI (port 8384) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 8384 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 8384 accept
-      tcp dport 8384 drop
-
-      # Allow Syncthing sync (port 22000) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 22000 accept
-      ip saddr 100.0.0.0/8 udp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 udp dport 22000 accept
-      tcp dport 22000 drop
-      udp dport 22000 drop
     '';
-  };
-
-  # Tailscale VPN
-  services.tailscale = {
-    enable = true;
-    # Keep Tailscale SSH disabled so OpenSSH remains the single SSH control plane.
-    extraSetFlags = [ "--ssh=false" ];
-  };
-  # Note: we intentionally do NOT set trustedInterfaces = [ "tailscale0" ] here.
-  # Instead, Tailscale traffic is controlled by the explicit IP-based rules above
-  # (100.0.0.0/8 + fd7a:115c:a1e0::/48 for SSH), giving us per-service
-  # granularity over what Tailscale peers can access rather than blanket-trusting
-  # all traffic on the interface.
-  # Tailscale needs UDP 41641 for direct WireGuard connections between nodes.
-  networking.firewall.allowedUDPPorts = [ 41641 ];
-
-  # Syncthing for file synchronization
-  services.syncthing = {
-    enable = true;
-    user = primaryUser;
-    dataDir = "${userHome}/.local/share/syncthing";
-    configDir = "${userHome}/.config/syncthing";
-    # Keep overrides disabled so users can still add folders/devices in UI.
-    # ~/Shared is declared by default so it can be synced across devices.
-    overrideFolders = false;
-    overrideDevices = false;
-    settings = {
-      folders.home = {
-        id = "shared";
-        label = "Shared";
-        path = "${userHome}/Shared";
-        devices = builtins.attrNames config.services.syncthing.settings.devices;
-      };
-      gui = {
-        enabled = true;
-        address = "0.0.0.0:8384";
-      };
-      options = {
-        relaysEnabled = true;  # Allow relay servers for connectivity
-      };
-    };
   };
 
   # Keep existing account passwords mutable so first-install users retain
   # credentials configured in the NixOS installer.
   users.mutableUsers = true;
 
+  # Nixpi assistant system user — owns services and agent state.
+  users.groups.nixpi = {};
+
+  users.users.${config.nixpi.assistantUser} = {
+    isSystemUser = true;
+    group = "nixpi";
+    home = "/var/lib/nixpi";
+    createHome = true;
+    description = "Nixpi AI assistant";
+  };
+
   # User configuration
   users.users.${primaryUser} = {
     isNormalUser = true;
     home = userHome;
     description = userDisplayName;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" "nixpi" ];
   };
-
-  # Browser (CDP-compatible, for AI agent automation)
-  programs.chromium.enable = true;
 
   # System packages
   # `with pkgs;` brings all pkgs attributes into scope so we can write `git`
@@ -447,7 +336,6 @@ in
     vim
     neovim
     nano
-    vscode
 
     # Language servers and linters
     nixd                          # Nix LSP
@@ -458,11 +346,6 @@ in
     # Network tools
     curl
     wget
-    tailscale
-
-    # Desktop helpers (local HDMI + Wi-Fi setup)
-    networkmanagerapplet
-    xorg.xrandr
 
     # Search and utility tools
     jq
@@ -494,14 +377,13 @@ in
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     PI_DIR="${piDir}"
 
-    install -d -o ${primaryUser} -g users "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
-    install -d -o ${primaryUser} -g users "${userHome}/Shared"
+    install -d -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
 
     # Keep SYSTEM.md in sync with declarative policy/prompt content.
     cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
-    chown ${primaryUser}:users "$PI_DIR/SYSTEM.md"
+    chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/SYSTEM.md"
 
     # Seed settings if absent.
     # Single instance preloads Nixpi skills plus declarative extension sources.
@@ -511,8 +393,13 @@ ${settingsSeedJson}
 JSONEOF
     fi
     if [ -f "$PI_DIR/settings.json" ]; then
-      chown ${primaryUser}:users "$PI_DIR/settings.json"
+      chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
     fi
+  '';
+
+  # Secrets directory — root-owned, not world-readable.
+  system.activationScripts.nixpiSecrets = lib.stringAfter [ "users" ] ''
+    install -d -m 0700 -o root -g root /etc/nixpi/secrets
   '';
 
   # Keep login-manager display name aligned with configured primary user
@@ -532,6 +419,15 @@ JSONEOF
     dates = "weekly";
     options = "--delete-older-than 30d";
   };
+
+    # First-run setup hint for new installations.
+    environment.etc."profile.d/nixpi-first-run.sh".text = ''
+      if [ ! -f /etc/nixpi/.setup-complete ] && command -v nixpi >/dev/null 2>&1; then
+        echo ""
+        echo "  Welcome to Nixpi! Run 'nixpi setup' to configure your server."
+        echo ""
+      fi
+    '';
 
   # stateVersion tells NixOS which version's defaults to use for stateful data
   # (databases, state directories). It does NOT control package versions.

@@ -6,7 +6,7 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 
 | Component | Description |
 |-----------|-------------|
-| **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, ttyd, Tailscale, Syncthing, packages |
+| **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, networking, nixpi-agent user, packages. Toggleable service modules in `infra/nixos/modules/` |
 | **@nixpi/core** | Shared TypeScript domain library: ObjectStore, JsYamlFrontmatterParser, typed interfaces (`packages/nixpi-core/`) |
 | **Object Store** | Flat-file markdown with YAML frontmatter in `data/objects/` (Syncthing-synced); shell + TS implementations |
 | **Matrix Bridge** | matrix-bot-sdk adapter (`services/matrix-bridge/`); receives messages, processes through Pi |
@@ -24,20 +24,18 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 
 ## Services Reference
 
-| Service | Config location | Notes |
-|---------|----------------|-------|
-| SSH | `base.nix` — `services.openssh` | Hardened; reachable from Tailscale + LAN (bootstrap path) |
-| Heartbeat | `modules/heartbeat.nix` — systemd timer | Periodic agent observation cycle; configurable interval |
-| Matrix Bridge | `modules/matrix.nix` — systemd service | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
-| GNOME Desktop (default) | `base.nix` — `services.xserver.*` | Local HDMI-first onboarding path (GDM + GNOME + Wi-Fi tray tooling) |
-| Desktop reuse mode | `base.nix` + `scripts/add-host.sh` | If existing desktop options are detected, host file sets `nixpi.desktopProfile = "preserve"` and keeps current UI |
-| ttyd | `base.nix` — `services.ttyd` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
-| Tailscale | `base.nix` — `services.tailscale` | VPN for secure remote access |
-| Syncthing | `base.nix` — `services.syncthing` | File sync; GUI + sync ports are Tailscale-only |
-| Chromium | `base.nix` — `programs.chromium` | CDP-compatible browser for AI agent automation |
-| VS Code | `base.nix` — `environment.systemPackages` | Desktop code editor (`vscode`) |
-| nixpi | `base.nix` — `nixpiCli` + `environment.systemPackages` | Primary CLI wrapper (`nixpi`) |
-| claude | `base.nix` — `environment.systemPackages` (`pkgsUnstable."claude-code-bin"`) | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
+| Service | Config location | Enable flag | Notes |
+|---------|----------------|-------------|-------|
+| SSH | `base.nix` — `services.openssh` | always on | Hardened; reachable from Tailscale + LAN (bootstrap path) |
+| Heartbeat | `modules/heartbeat.nix` — systemd timer | `nixpi.heartbeat.enable` | Periodic agent observation cycle; configurable interval |
+| Matrix Bridge | `modules/matrix.nix` — systemd service | `nixpi.matrix.enable` | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
+| Desktop | `modules/desktop.nix` | `nixpi.desktop.enable` | GNOME/GDM + Wi-Fi tray tooling, VS Code, Chromium; preserves existing desktop if detected |
+| ttyd | `modules/ttyd.nix` | `nixpi.ttyd.enable` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
+| Tailscale | `modules/tailscale.nix` | `nixpi.tailscale.enable` | VPN for secure remote access |
+| Syncthing | `modules/syncthing.nix` | `nixpi.syncthing.enable` | File sync; GUI + sync ports are Tailscale-only |
+| Password Policy | `modules/password-policy.nix` | `nixpi.passwordPolicy.enable` | Enforces password policy for the primary user |
+| nixpi | `base.nix` — `nixpiCli` | always on | Primary CLI wrapper (`nixpi`); sources secrets from `/etc/nixpi/secrets/` |
+| claude | `base.nix` — `environment.systemPackages` | always on | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
 
 ## Access Methods
 
@@ -85,12 +83,17 @@ Nixpi/
     matrix-bridge/             # Matrix → Pi bridge via matrix-bot-sdk (imports @nixpi/core)
   infra/
     nixos/
-      base.nix                 # Base config + GNOME desktop + web terminal + nixpi wrapper + profile seeding
+      base.nix                 # Core config: SSH, networking, nixpi-agent user, nixpi CLI, secrets
       lib/mk-nixpi-service.nix # Factory for systemd services with shared boilerplate
       modules/
         objects.nix            # Object store data directory provisioning
         heartbeat.nix          # Heartbeat timer (periodic agent observation cycle)
         matrix.nix             # Matrix bridge systemd service + Conduit homeserver
+        tailscale.nix          # Tailscale VPN (nixpi.tailscale.enable)
+        ttyd.nix               # Web terminal (nixpi.ttyd.enable)
+        syncthing.nix          # File sync (nixpi.syncthing.enable)
+        desktop.nix            # GNOME desktop + VS Code + Chromium (nixpi.desktop.enable)
+        password-policy.nix    # Password policy (nixpi.passwordPolicy.enable)
       hosts/
         nixpi.nix              # Physical machine hardware (boot, disk, CPU)
         nixos.nix              # NixOS host configuration
@@ -115,11 +118,30 @@ Nixpi/
 - The canonical flake entrypoint is kept at repository root: `./flake.nix` and `./flake.lock`.
 - This keeps `nix flake check`, `nix develop`, and `nixos-rebuild --flake .` standard and predictable.
 - If subflakes are introduced later, root flake remains the primary pre-release interface.
+- The flake exports `nixosModules` for individual consumption: `.default`, `.base`, `.tailscale`, `.syncthing`, `.ttyd`, `.matrix`, `.heartbeat`, `.objects`, `.passwordPolicy`, `.desktop`.
+- A flake template is available via `nix flake init -t github:alexradunet/nixpi`.
 
 ## Getting Started
 
-For a full reinstall on a fresh NixOS install, use:
-- [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md)
+### Flake template (recommended)
+
+Scaffold a new Nixpi configuration from the flake template:
+
+```bash
+nix flake init -t github:alexradunet/nixpi
+```
+
+Then run the interactive setup wizard to configure hostname, username, AI provider, and module selection:
+
+```bash
+nixpi setup
+```
+
+First-run detection uses `/etc/nixpi/.setup-complete` to determine if the wizard has been run.
+
+### Bootstrap (fresh NixOS)
+
+For a full reinstall on a fresh NixOS install, see [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md).
 
 Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
 
@@ -127,15 +149,7 @@ Fresh-install one-shot (assumes `git` is absent and flakes are disabled by defau
 nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
 ```
 
-Step-by-step equivalent:
-
-```bash
-nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
-cd ~/Nixpi
-./scripts/bootstrap-fresh-nixos.sh
-```
-
-`bootstrap-fresh-nixos.sh` refreshes `infra/nixos/hosts/$(hostname).nix` from local hardware, maps Nixpi to your current installer user, then launches Pi with the `install-nixpi` skill for guided review + first rebuild.
+The bootstrap script runs as root, clones to `/tmp/nixpi-bootstrap`, and launches the setup wizard. It refreshes `infra/nixos/hosts/$(hostname).nix` from local hardware, then runs `nixpi setup` for guided module selection and first rebuild.
 
 For unattended installs, you can run:
 
@@ -215,7 +229,9 @@ nixpi rollback [--yes]
 
 `nixpi evolve` runs `sudo nixos-rebuild switch --flake .`, then executes `./scripts/verify-nixpi.sh`; if validation fails, it automatically runs rollback. Use `--yes` to skip the interactive confirmation prompt (for unattended operations).
 
-Single Nixpi instance: `~/Nixpi/.pi/agent/`
+Services run as the `nixpi-agent` system user. Agent state is stored at `/var/lib/nixpi/agent/`. The primary user gets read access via the `nixpi` group.
+
+Secrets are managed in `/etc/nixpi/secrets/` (root:root 0700). The `piWrapper` sources `ai-provider.env` for API key injection.
 
 Optional host override (if you need a different layout):
 
@@ -224,7 +240,6 @@ Optional host override (if you need a different layout):
 { config, ... }:
 {
   nixpi.repoRoot = "/home/<user>/Nixpi";
-  nixpi.piDir = "${config.nixpi.repoRoot}/.pi/agent";
   nixpi.primaryUserDisplayName = "Alex";
 }
 ```

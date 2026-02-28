@@ -88,6 +88,29 @@
         }
       );
 
+      # NixOS modules for external consumers.
+      # Use nixosModules.default for the full Nixpi stack.
+      # Use individual modules for selective imports.
+      nixosModules = {
+        default = ./infra/nixos/base.nix;
+        base = ./infra/nixos/base.nix;
+        tailscale = ./infra/nixos/modules/tailscale.nix;
+        syncthing = ./infra/nixos/modules/syncthing.nix;
+        ttyd = ./infra/nixos/modules/ttyd.nix;
+        matrix = ./infra/nixos/modules/matrix.nix;
+        heartbeat = ./infra/nixos/modules/heartbeat.nix;
+        objects = ./infra/nixos/modules/objects.nix;
+        passwordPolicy = ./infra/nixos/modules/password-policy.nix;
+        desktop = ./infra/nixos/modules/desktop.nix;
+      };
+
+      # Flake template for new Nixpi installations.
+      # Usage: nix flake init -t github:alexradunet/nixpi
+      templates.default = {
+        path = ./templates/default;
+        description = "Nixpi server configuration scaffold";
+      };
+
       # genAttrs turns a list of names into an attribute set by applying a
       # function to each name. This produces { nixpi = mkHost "nixpi"; ... }
       # for every host discovered above.
@@ -98,6 +121,7 @@
       # Run one:  nix build .#checks.x86_64-linux.vm-user-and-groups --no-link -L
       # Run all:  nix flake check -L
       checks.x86_64-linux = {
+        vm-assistant-user     = mkVmTest ./tests/vm/assistant-user.nix;
         vm-user-and-groups    = mkVmTest ./tests/vm/user-and-groups.nix;
         vm-ssh-hardening      = mkVmTest ./tests/vm/ssh-hardening.nix;
         vm-firewall-rules     = mkVmTest ./tests/vm/firewall-rules.nix;
@@ -108,6 +132,14 @@
         vm-persona-injection  = mkVmTest ./tests/vm/persona-injection.nix;
         vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
         vm-matrix-bridge      = mkVmTest ./tests/vm/matrix-bridge.nix;
+        vm-tailscale-toggle   = mkVmTest ./tests/vm/tailscale-toggle.nix;
+        vm-ttyd-toggle        = mkVmTest ./tests/vm/ttyd-toggle.nix;
+        vm-syncthing-toggle   = mkVmTest ./tests/vm/syncthing-toggle.nix;
+        vm-password-policy-toggle = mkVmTest ./tests/vm/password-policy-toggle.nix;
+        vm-desktop-toggle     = mkVmTest ./tests/vm/desktop-toggle.nix;
+        vm-minimal-config     = mkVmTest ./tests/vm/minimal-config.nix;
+        vm-full-stack         = mkVmTest ./tests/vm/full-stack.nix;
+        vm-secrets-directory  = mkVmTest ./tests/vm/secrets-directory.nix;
       };
     };
 }

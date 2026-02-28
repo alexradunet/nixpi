@@ -15,7 +15,7 @@
   # Lightweight test identity — no real host, no GNOME.
   nixpi.primaryUser = "testuser";
   nixpi.repoRoot = "/home/testuser/Nixpi";
-  nixpi.desktopProfile = "preserve";
+  nixpi.desktop.enable = false;
 
   networking.hostName = "testvm";
 

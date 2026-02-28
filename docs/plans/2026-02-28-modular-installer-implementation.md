@@ -1,5 +1,7 @@
 # Nixpi Modular Installation System — Implementation Plan
 
+> **Status: COMPLETE.** All 14 tasks have been implemented on the `feature/modular-installer` branch.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Extract hardcoded services from base.nix into toggleable NixOS modules, export them as flake outputs, build a dialog TUI setup wizard, add a nixpi-agent system user, and create a one-command bootstrap flow.

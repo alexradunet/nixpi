@@ -13,9 +13,9 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 ### Does the user need to run `pi install`?
 No for core Nixpi.
 
-`nixpi` and `claude` are installed declaratively via NixOS (`base.nix`; Claude uses nixpkgs `claude-code-bin`).
+`nixpi` and `claude` are installed declaratively via NixOS (`base.nix` for core config; individual services live in toggleable modules under `infra/nixos/modules/` -- e.g. `tailscale.nix`, `ttyd.nix`, `syncthing.nix`, `desktop.nix`, `password-policy.nix`). Claude uses nixpkgs `claude-code-bin`.
 For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
-The bootstrap flow launches Nixpi with the `install-nixpi` skill so host disks/user settings are reviewed before the first rebuild.
+The bootstrap script runs as root and launches the `nixpi setup` wizard (dialog TUI) for guided first-run configuration.
 After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow
@@ -30,9 +30,10 @@ After the first rebuild, both commands are available (`nixpi` and `claude`).
 - The single profile preloads shared Nixpi skills (see [Agent Skills Index](../agents/SKILLS.md)).
 
 ### Configuration source of truth
-- Declarative profile defaults are seeded from `infra/nixos/base.nix`.
+- Declarative profile defaults are seeded from `infra/nixos/base.nix`; services are configured via toggleable modules in `infra/nixos/modules/`.
 - Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
-- Effective profile files are under: `~/Nixpi/.pi/agent/`.
+- Pi agent state is stored at `/var/lib/nixpi/agent/`, owned by the `nixpi-agent` system user.
+- Secrets (API keys, tokens) are stored under `/etc/nixpi/secrets/` (root:root, mode 0700). The Pi wrapper sources `/etc/nixpi/secrets/ai-provider.env` for provider credentials.
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 
 ### Optional path overrides (per host)
@@ -74,10 +75,13 @@ During heartbeat cycles, Hermes checks for active evolutions not modified in >24
 - Emoji are always paired with explicit plain text for precision/accessibility.
 
 ## Autonomous Life Agent Services
-- **Object store**: flat-file markdown with YAML frontmatter in `data/objects/`. Shell CRUD (`scripts/nixpi-object.sh`) and TypeScript ObjectStore (`@nixpi/core`) produce format-compatible files. Syncthing-synced across devices.
-- **Matrix bridge**: matrix-bot-sdk adapter in `services/matrix-bridge/` receives messages, processes through Pi, and sends responses. Managed as a systemd service via `infra/nixos/modules/matrix.nix`. Local Conduit homeserver provisioned by default. Setup guide: [Matrix Setup](./MATRIX_SETUP.md), interactive skill: `nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md`.
+All services below are implemented as toggleable NixOS modules in `infra/nixos/modules/`. Services run under the `nixpi-agent` system user with state at `/var/lib/nixpi/agent/`.
+
+- **Object store**: flat-file markdown with YAML frontmatter in `data/objects/`. Shell CRUD (`scripts/nixpi-object.sh`) and TypeScript ObjectStore (`@nixpi/core`) produce format-compatible files. Syncthing-synced across devices. Module: `objects.nix`.
+- **Matrix bridge**: matrix-bot-sdk adapter in `services/matrix-bridge/` receives messages, processes through Pi, and sends responses. Managed as a systemd service via `infra/nixos/modules/matrix.nix` (`nixpi.channels.matrix.enable = true`). Local Conduit homeserver provisioned by default. Setup guide: [Matrix Setup](./MATRIX_SETUP.md), interactive skill: `nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md`.
 - **Heartbeat timer**: periodic agent observation cycle via `infra/nixos/modules/heartbeat.nix`. Scans objects, checks overdue tasks, detects patterns, and can send nudges or file evolution requests.
 - **OpenPersona**: 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/`. Injected into the Pi agent profile by NixOS activation scripts.
+- **Additional modules**: `tailscale.nix`, `ttyd.nix`, `syncthing.nix`, `desktop.nix`, `password-policy.nix` -- each independently toggleable.
 
 ## Ecosystem Direction
 - Matrix is the primary external communication channel (via matrix-bot-sdk bridge with local Conduit homeserver).

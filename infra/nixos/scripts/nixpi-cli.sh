@@ -158,6 +158,7 @@ Usage:
   nixpi rollback [--yes]                     Roll back to the previous NixOS generation
   nixpi npm install <package@x.y.z...>       Install pinned extension(s) and track them in-repo
   nixpi npm sync                             Rebuild profile extension state from manifest
+  nixpi setup [target-dir]                   Run the setup wizard (first-time or reconfigure)
   nixpi help                                 Show this help
 
 Notes:
@@ -241,6 +242,10 @@ EOF
         exit 2
         ;;
     esac
+    ;;
+  setup)
+    shift || true
+    exec bash "$REPO_ROOT/scripts/nixpi-setup.sh" "$@"
     ;;
   *)
     export PI_CODING_AGENT_DIR="$PI_DIR"

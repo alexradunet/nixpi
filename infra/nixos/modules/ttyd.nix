@@ -1,0 +1,44 @@
+# ttyd module — web terminal interface over SSH.
+#
+# When enabled, provisions ttyd on a configurable port, authenticating
+# via localhost OpenSSH login. Firewall restricts access to Tailscale only.
+{ config, pkgs, lib, ... }:
+
+let
+  cfg = config.nixpi.ttyd;
+  primaryUser = config.nixpi.primaryUser;
+in
+{
+  options.nixpi.ttyd = {
+    enable = lib.mkEnableOption "ttyd web terminal (SSH-based)";
+
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 7681;
+      description = "Port for the ttyd web terminal.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    services.ttyd = {
+      enable = true;
+      port = cfg.port;
+      user = primaryUser;
+      writeable = true;
+      checkOrigin = true;
+      entrypoint = [
+        "${pkgs.openssh}/bin/ssh"
+        "-o"
+        "StrictHostKeyChecking=accept-new"
+        "${primaryUser}@127.0.0.1"
+      ];
+    };
+
+    networking.firewall.extraInputRules = ''
+      # Allow ttyd (port ${toString cfg.port}) from Tailscale only
+      ip saddr 100.0.0.0/8 tcp dport ${toString cfg.port} accept
+      ip6 saddr fd7a:115c:a1e0::/48 tcp dport ${toString cfg.port} accept
+      tcp dport ${toString cfg.port} drop
+    '';
+  };
+}
