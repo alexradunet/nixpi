@@ -140,6 +140,10 @@
         vm-minimal-config     = mkVmTest ./tests/vm/minimal-config.nix;
         vm-full-stack         = mkVmTest ./tests/vm/full-stack.nix;
         vm-secrets-directory  = mkVmTest ./tests/vm/secrets-directory.nix;
+        vm-service-hardening  = mkVmTest ./tests/vm/service-hardening.nix;
+        vm-heartbeat-oncalendar = mkVmTest ./tests/vm/heartbeat-oncalendar.nix;
+        vm-objects-custom-types = mkVmTest ./tests/vm/objects-custom-types.nix;
+        vm-password-policy-boundary = mkVmTest ./tests/vm/password-policy-boundary.nix;
       };
     };
 }

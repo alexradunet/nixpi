@@ -4,19 +4,32 @@
 # buildNpmPackage, so the service runs without any runtime npm install.
 { pkgs }:
 
+let
+  # The @matrix-org/matrix-sdk-crypto-nodejs package downloads its native
+  # binary via a postinstall script, which doesn't run in the nix sandbox.
+  # Fetch it separately and inject it during the build.
+  cryptoNativeLib = pkgs.fetchurl {
+    url = "https://github.com/matrix-org/matrix-rust-sdk-crypto-nodejs/releases/download/v0.4.0/matrix-sdk-crypto.linux-x64-gnu.node";
+    hash = "sha256-cHjU3ZhxKPea/RksT2IfZK3s435D8qh1bx0KnwNN5xg=";
+  };
+in
 pkgs.buildNpmPackage {
   pname = "nixpi-matrix-bridge";
   version = "0.1.0";
 
   src = ../../../.;
 
-  npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  npmDepsHash = "sha256-WyxfnJ+tY5Txd/GN5tONbHyz29WNoUUnCutUKPRuD6w=";
 
   makeCacheWritable = true;
 
   # The workspace root has no build script; build both packages explicitly.
   buildPhase = ''
     runHook preBuild
+
+    # Inject the native crypto binary that the postinstall script would download
+    cp ${cryptoNativeLib} node_modules/@matrix-org/matrix-sdk-crypto-nodejs/matrix-sdk-crypto.linux-x64-gnu.node
+
     npm run --workspace=packages/nixpi-core build
     npm run --workspace=services/matrix-bridge build
     runHook postBuild

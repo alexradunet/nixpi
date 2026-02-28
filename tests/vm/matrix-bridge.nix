@@ -42,10 +42,14 @@
       # Disable auto-start so we control the lifecycle
       systemd.services.nixpi-matrix-bridge.wantedBy = lib.mkForce [];
 
-      # Create required directories via activation script
+      # Create required directories and make them traversable by nixpi-agent.
+      # In production repoRoot is under the assistant user's home; in tests
+      # it lives under testuser's home, so we open traversal for the service.
       system.activationScripts.testDirs = lib.stringAfter [ "users" ] ''
         install -d -o testuser -g users /home/testuser/Nixpi/.pi/agent
         install -d -o testuser -g users /home/testuser/Nixpi/data/objects
+        chmod o+x /home/testuser /home/testuser/Nixpi /home/testuser/Nixpi/.pi /home/testuser/Nixpi/.pi/agent
+        chmod o+x /home/testuser/Nixpi/data /home/testuser/Nixpi/data/objects
       '';
 
       # Tools for API calls in the test script
@@ -71,10 +75,11 @@
 
     def register_user(username, password):
         """Register a Matrix user via the CS API (UIA flow)."""
-        # Step 1: initiate to get UIA session
+        # Step 1: initiate to get UIA session.
+        # Use -s (not -sf) because UIA returns 401 which curl -f treats as error.
         write_json("/tmp/reg.json", {"username": username, "password": password})
         init = machine.succeed(
-            "curl -sf -X POST "
+            "curl -s -X POST "
             + HOMESERVER
             + "/_matrix/client/v3/register "
             + "-H 'Content-Type: application/json' "
@@ -104,7 +109,7 @@
     def matrix_api(method, path, token, data=None):
         """Call the Matrix CS API."""
         cmd = (
-            f"curl -sf -X {method} {HOMESERVER}{path} "
+            f"curl -sf -X {method} '{HOMESERVER}{path}' "
             f"-H 'Authorization: Bearer {token}' "
             f"-H 'Content-Type: application/json'"
         )

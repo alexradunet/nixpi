@@ -29,5 +29,11 @@
     assert "8384" in ruleset, "Missing Syncthing GUI port"
     assert "22000" in ruleset, "Missing Syncthing sync port"
     assert "41641" in ruleset, "Missing Tailscale WireGuard port"
+
+    # Verify restricted ports have drop fallback rules (Tailscale-only semantics)
+    assert "tcp dport 8384 drop" in ruleset, "Missing Syncthing GUI drop rule"
+    assert "tcp dport 22000 drop" in ruleset, "Missing Syncthing sync drop rule"
+    assert "tcp dport 7681 drop" in ruleset, "Missing ttyd drop rule"
+    assert "tcp dport 22 drop" in ruleset, "Missing SSH drop rule"
   '';
 }
