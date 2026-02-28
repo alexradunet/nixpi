@@ -3,6 +3,8 @@ set -euo pipefail
 source "$(dirname "$0")/helpers.sh"
 
 BASE="infra/nixos/base.nix"
+TTYD="infra/nixos/modules/ttyd.nix"
+SYNCTHING="infra/nixos/modules/syncthing.nix"
 README="README.md"
 AGENTS="AGENTS.md"
 
@@ -14,9 +16,9 @@ AGENTS_CONTENT="$(<"$AGENTS")"
 assert_file_contains "$BASE" 'options.nixpi.primaryUser = lib.mkOption {'
 assert_file_contains "$BASE" 'default = "nixpi";'
 assert_file_contains "$BASE" 'users.users.${primaryUser} = {'
-assert_file_contains "$BASE" 'user = primaryUser;'
-assert_file_contains "$BASE" 'folders.home = {'
-assert_file_contains "$BASE" 'path = "${userHome}/Shared";'
+assert_file_contains "$TTYD" 'user = primaryUser;'
+assert_file_contains "$SYNCTHING" 'folders.home = {'
+assert_file_contains "$SYNCTHING" 'default = "${userHome}/Shared";'
 
 # Failure path: reject invalid usernames and remove hardcoded nixpi homedir wiring.
 assert_file_contains "$BASE" 'assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;'
