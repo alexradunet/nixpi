@@ -8,11 +8,13 @@
 
   nodes.enabled = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
+    networking.hostName = "enabled";
     nixpi.passwordPolicy.enable = true;
   };
 
   nodes.disabled = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
+    networking.hostName = "disabled";
     nixpi.passwordPolicy.enable = false;
   };
 

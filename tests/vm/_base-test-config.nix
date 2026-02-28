@@ -17,7 +17,7 @@
   nixpi.repoRoot = "/home/testuser/Nixpi";
   nixpi.desktop.enable = false;
 
-  networking.hostName = "testvm";
+  networking.hostName = lib.mkDefault "testvm";
 
   # Known initial password for SSH and PAM tests.
   # Must satisfy the password policy (>=16 chars, digit, special).
