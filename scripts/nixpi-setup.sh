@@ -38,6 +38,13 @@ generate_nixpi_config() {
 { config, lib, ... }:
 
 {
+  # --- Bootloader (UEFI / systemd-boot) ---
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  # BIOS fallback (uncomment and adjust disk if needed):
+  # boot.loader.grub.enable = true;
+  # boot.loader.grub.devices = [ "/dev/sda" ];
+
   # --- Identity ---
   networking.hostName = "$hostname";
   nixpi.primaryUser = "$username";
