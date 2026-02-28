@@ -239,6 +239,7 @@ in
     ./modules/matrix.nix
     ./modules/tailscale.nix
     ./modules/ttyd.nix
+    ./modules/syncthing.nix
   ];
 
   config = {
@@ -247,6 +248,7 @@ in
     nixpi.objects.enable = lib.mkDefault true;
     nixpi.tailscale.enable = lib.mkDefault true;
     nixpi.ttyd.enable = lib.mkDefault true;
+    nixpi.syncthing.enable = lib.mkDefault true;
 
     assertions = [
       {
@@ -334,8 +336,8 @@ in
     args = [ "expose_authtok" "${passwordPolicyCheck}" ];
   };
 
-  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap), while
-  # Syncthing is Tailscale-only. ttyd rules live in modules/ttyd.nix.
+  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap).
+  # Service-specific rules live in their modules (syncthing, ttyd, etc.).
   # extraInputRules accepts raw nftables syntax that NixOS injects into the
   # input chain.
   networking.firewall = {
@@ -348,47 +350,7 @@ in
       ip saddr 192.168.0.0/16 tcp dport 22 accept
       ip saddr 10.0.0.0/8 tcp dport 22 accept
       tcp dport 22 drop
-
-      # Allow Syncthing GUI (port 8384) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 8384 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 8384 accept
-      tcp dport 8384 drop
-
-      # Allow Syncthing sync (port 22000) from Tailscale only
-      ip saddr 100.0.0.0/8 tcp dport 22000 accept
-      ip saddr 100.0.0.0/8 udp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 tcp dport 22000 accept
-      ip6 saddr fd7a:115c:a1e0::/48 udp dport 22000 accept
-      tcp dport 22000 drop
-      udp dport 22000 drop
     '';
-  };
-
-  # Syncthing for file synchronization
-  services.syncthing = {
-    enable = true;
-    user = primaryUser;
-    dataDir = "${userHome}/.local/share/syncthing";
-    configDir = "${userHome}/.config/syncthing";
-    # Keep overrides disabled so users can still add folders/devices in UI.
-    # ~/Shared is declared by default so it can be synced across devices.
-    overrideFolders = false;
-    overrideDevices = false;
-    settings = {
-      folders.home = {
-        id = "shared";
-        label = "Shared";
-        path = "${userHome}/Shared";
-        devices = builtins.attrNames config.services.syncthing.settings.devices;
-      };
-      gui = {
-        enabled = true;
-        address = "0.0.0.0:8384";
-      };
-      options = {
-        relaysEnabled = true;  # Allow relay servers for connectivity
-      };
-    };
   };
 
   # Keep existing account passwords mutable so first-install users retain
@@ -464,7 +426,6 @@ in
     PI_DIR="${piDir}"
 
     install -d -o ${primaryUser} -g users "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
-    install -d -o ${primaryUser} -g users "${userHome}/Shared"
 
     # Keep SYSTEM.md in sync with declarative policy/prompt content.
     cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'

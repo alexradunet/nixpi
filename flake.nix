@@ -109,6 +109,7 @@
         vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
         vm-tailscale-toggle   = mkVmTest ./tests/vm/tailscale-toggle.nix;
         vm-ttyd-toggle        = mkVmTest ./tests/vm/ttyd-toggle.nix;
+        vm-syncthing-toggle   = mkVmTest ./tests/vm/syncthing-toggle.nix;
       };
     };
 }
