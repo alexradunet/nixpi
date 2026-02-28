@@ -57,7 +57,7 @@ assert_file_contains "$BASE" 'ip saddr 10.0.0.0/8 tcp dport 22 accept'
 # Docs regression: README reflects access-scope split.
 assert_file_contains "$README" 'ttyd'
 assert_file_contains "$README" 'SSH remains available from local network and Tailscale'
-assert_file_contains "$README" 'ttyd and Syncthing are Tailscale-only'
+assert_file_contains "$README" 'Tailscale-only'
 assert_not_contains "$README_CONTENT" 'OliveTin'
 assert_not_contains "$README_CONTENT" 'Cockpit'
 

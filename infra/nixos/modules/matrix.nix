@@ -6,6 +6,13 @@
 #
 # Optionally provisions a local Conduit homeserver (lightweight Rust Matrix
 # server) for fully self-hosted operation.
+#
+# Setup flow:
+#   1. Enable with conduit.allowRegistration = true
+#   2. nixos-rebuild switch
+#   3. Run: scripts/matrix-setup.sh
+#   4. Set conduit.allowRegistration = false
+#   5. nixos-rebuild switch
 { config, pkgs, lib, ... }:
 
 let
@@ -65,20 +72,42 @@ in
 
     accessTokenFile = lib.mkOption {
       type = lib.types.path;
+      default = "/run/secrets/nixpi-matrix-token";
       example = "/run/secrets/nixpi-matrix-token";
       description = ''
         Path to an EnvironmentFile containing NIXPI_MATRIX_ACCESS_TOKEN.
-        This keeps the secret out of the Nix store.
+        This keeps the secret out of the Nix store. Created by scripts/matrix-setup.sh.
+      '';
+    };
+
+    humanUser = lib.mkOption {
+      type = lib.types.str;
+      default = "human";
+      example = "alex";
+      description = ''
+        Matrix localpart for the human user account. The full Matrix ID
+        will be @<humanUser>:<serverName>. Change this to your preferred
+        username before running scripts/matrix-setup.sh.
+      '';
+    };
+
+    botUser = lib.mkOption {
+      type = lib.types.str;
+      default = "nixpi";
+      example = "assistant";
+      description = ''
+        Matrix localpart for the bot account. The full Matrix ID will be
+        @<botUser>:<serverName>. The bridge authenticates as this user.
       '';
     };
 
     allowedUsers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
+      default = [ "@${cfg.humanUser}:${cfg.serverName}" ];
       example = [ "@alex:nixpi.local" ];
       description = ''
         Matrix user IDs allowed to message the agent (format: @localpart:domain).
-        Empty list means all users are allowed (not recommended for production).
+        Defaults to the configured humanUser on the configured serverName.
       '';
     };
 
@@ -89,6 +118,16 @@ in
         description = ''
           Whether to provision a local Conduit Matrix homeserver.
           Disable if using an external homeserver.
+        '';
+      };
+
+      allowRegistration = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Temporarily enable Matrix account registration on Conduit.
+          Set to true before running scripts/matrix-setup.sh, then set
+          back to false and rebuild.
         '';
       };
     };
@@ -116,7 +155,7 @@ in
           database_backend = "rocksdb";
           port = 6167;
           address = "127.0.0.1";
-          allow_registration = false;
+          allow_registration = cfg.conduit.allowRegistration;
           allow_federation = false;
         };
       };

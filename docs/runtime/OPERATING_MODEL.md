@@ -75,7 +75,7 @@ During heartbeat cycles, Hermes checks for active evolutions not modified in >24
 
 ## Autonomous Life Agent Services
 - **Object store**: flat-file markdown with YAML frontmatter in `data/objects/`. Shell CRUD (`scripts/nixpi-object.sh`) and TypeScript ObjectStore (`@nixpi/core`) produce format-compatible files. Syncthing-synced across devices.
-- **Matrix bridge**: matrix-bot-sdk adapter in `services/matrix-bridge/` receives messages, processes through Pi, and sends responses. Managed as a systemd service via `infra/nixos/modules/matrix.nix`. Local Conduit homeserver provisioned by default.
+- **Matrix bridge**: matrix-bot-sdk adapter in `services/matrix-bridge/` receives messages, processes through Pi, and sends responses. Managed as a systemd service via `infra/nixos/modules/matrix.nix`. Local Conduit homeserver provisioned by default. Setup guide: [Matrix Setup](./MATRIX_SETUP.md), interactive skill: `nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md`.
 - **Heartbeat timer**: periodic agent observation cycle via `infra/nixos/modules/heartbeat.nix`. Scans objects, checks overdue tasks, detects patterns, and can send nudges or file evolution requests.
 - **OpenPersona**: 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/`. Injected into the Pi agent profile by NixOS activation scripts.
 

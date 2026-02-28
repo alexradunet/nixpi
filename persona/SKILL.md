@@ -15,8 +15,10 @@ This layer defines Nixpi's current competency inventory — what it can do today
 
 ### Communication Channels
 - Matrix bridge via matrix-bot-sdk — receives messages, processes through Pi, sends responses.
+- Self-hosted Conduit homeserver — local, private, no federation.
 - Allowed-user whitelist for access control (Matrix user IDs).
 - Message queue for sequential processing (avoids Pi session conflicts).
+- Interactive setup skill: can guide users through Matrix channel provisioning.
 
 ### Proactive Behavior
 - Heartbeat timer (systemd) — periodic wake cycle for observation and nudges.

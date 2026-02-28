@@ -29,13 +29,34 @@ assert_file_contains "$MODULE" "NIXPI_MATRIX_ALLOWED_USERS"
 assert_file_contains "$MODULE" "accessTokenFile"
 assert_file_contains "$MODULE" "EnvironmentFile"
 
+# Happy path: module defines humanUser and botUser options with defaults.
+assert_file_contains "$MODULE" "humanUser"
+assert_file_contains "$MODULE" "botUser"
+assert_file_contains "$MODULE" '"human"'
+assert_file_contains "$MODULE" '"nixpi"'
+
+# Happy path: allowedUsers defaults to humanUser on serverName.
+assert_file_contains "$MODULE" 'cfg.humanUser'
+assert_file_contains "$MODULE" 'cfg.serverName'
+
 # Happy path: module supports Conduit homeserver.
 assert_file_contains "$MODULE" "matrix-conduit"
+
+# Happy path: Conduit allowRegistration toggle exists.
+assert_file_contains "$MODULE" "allowRegistration"
+assert_file_contains "$MODULE" "cfg.conduit.allowRegistration"
 
 # Happy path: base.nix imports the matrix module.
 assert_file_contains "$BASE" "matrix.nix"
 
 # Happy path: service restarts on failure.
 assert_file_contains "$MODULE" "on-failure"
+
+# Happy path: setup script exists and is executable.
+SETUP="scripts/matrix-setup.sh"
+[ -f "$SETUP" ] || fail "expected matrix-setup.sh to exist"
+[ -x "$SETUP" ] || fail "expected matrix-setup.sh to be executable"
+assert_file_contains "$SETUP" "register_user"
+assert_file_contains "$SETUP" "NIXPI_MATRIX_ACCESS_TOKEN"
 
 echo "PASS: Matrix NixOS module is properly configured"

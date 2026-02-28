@@ -29,6 +29,8 @@ Concise map of Nixpi agent skills used by `nixpi`.
   [`infra/pi/skills/tdd/SKILL.md`](../../infra/pi/skills/tdd/SKILL.md)
 - **Install bootstrap guidance** — first-time Nixpi install flow
   [`infra/pi/skills/install-nixpi/SKILL.md`](../../infra/pi/skills/install-nixpi/SKILL.md)
+- **Matrix channel setup** — interactive Conduit + bridge setup with account provisioning
+  [`infra/pi/skills/matrix-setup/SKILL.md`](../../infra/pi/skills/matrix-setup/SKILL.md)
 - **Claude consult (optional)** — second-opinion workflow via Claude CLI
   [`infra/pi/skills/claude-consult/SKILL.md`](../../infra/pi/skills/claude-consult/SKILL.md)
 - **Heartbeat** — periodic observation cycle (overdue tasks, patterns, evolution opportunities)

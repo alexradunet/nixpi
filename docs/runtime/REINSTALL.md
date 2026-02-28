@@ -105,7 +105,17 @@ nixpi --help
 
 Authenticate if needed (provider setup through `nixpi`).
 
-## 4) Rollback (safety)
+## 4) Set up Matrix channel (optional)
+
+Run the interactive Matrix setup skill to provision Conduit, create accounts, and configure the bridge:
+
+```bash
+nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md
+```
+
+Or follow the manual guide: [Matrix Setup](./MATRIX_SETUP.md).
+
+## 5) Rollback (safety)
 
 ```bash
 sudo nixos-rebuild switch --rollback

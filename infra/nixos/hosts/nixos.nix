@@ -36,8 +36,6 @@
 
   nixpi.channels.matrix = {
     enable = true;
-    serverName = "nixpi.local";
-    allowedUsers = [ "@alex:nixpi.local" ];
-    accessTokenFile = "/run/secrets/nixpi-matrix-token";
+    humanUser = "alex";  # @alex:nixpi.local — default is "human"
   };      
 }

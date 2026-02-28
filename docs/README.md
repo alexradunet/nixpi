@@ -6,11 +6,12 @@ This folder is organized as a modular knowledge base.
 
 ### Runtime & Architecture
 - 🗺️ [Operating Model](./runtime/OPERATING_MODEL.md) — multi-agent runtime/evolution workflow, autonomous services
+- 📝 [Matrix Channel Setup](./runtime/MATRIX_SETUP.md) — Conduit homeserver + bridge setup guide (interactive skill or manual)
 - 📝 [Reinstall on Fresh NixOS](./runtime/REINSTALL.md) — copy-paste recovery/reinstall checklist (includes automated clone + first rebuild)
 
 ### Agents & Skills
 - 📋 [Agents Overview](./agents/README.md) — role contracts and responsibilities
-- 📋 [Agent Skills Index](./agents/SKILLS.md) — concise map of all agent skill contracts (13 skills)
+- 📋 [Agent Skills Index](./agents/SKILLS.md) — concise map of all agent skill contracts (14 skills)
 - 📋 [Agent Handoff Templates](./agents/HANDOFF_TEMPLATES.md) — standard inter-agent artifacts
 
 ### Identity

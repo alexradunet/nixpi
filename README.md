@@ -48,7 +48,18 @@ Tailscale only            → ttyd      (port 7681) → Browser terminal (SSH to
 Tailscale only            → Syncthing (port 8384) → Web GUI
 ```
 
-Firewall scope is split by service: SSH remains available from local network and Tailscale; ttyd and Syncthing are Tailscale-only.
+Firewall scope is split by service: SSH remains available from local network and Tailscale; ttyd, Syncthing, and Conduit (Matrix) are Tailscale-only.
+
+## Matrix Channel Setup
+
+Nixpi includes a self-hosted Matrix messaging channel powered by Conduit (lightweight Rust homeserver) and matrix-bot-sdk. Message the bot from Element or any Matrix client over Tailscale.
+
+Interactive setup (recommended):
+```bash
+nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md
+```
+
+Manual setup: see [Matrix Setup Guide](./docs/runtime/MATRIX_SETUP.md).
 
 ## Project Structure
 
@@ -64,6 +75,7 @@ Nixpi/
   docs/
     README.md                  # Docs hub
     runtime/OPERATING_MODEL.md # Runtime/evolution operating model
+    runtime/MATRIX_SETUP.md    # Matrix channel setup guide
     agents/                    # Agent role contracts + handoff templates
     ux/EMOJI_DICTIONARY.md     # Visual communication dictionary
     meta/                      # Docs style + source-of-truth map
@@ -85,6 +97,7 @@ Nixpi/
     pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
     nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
+    matrix-setup.sh            # One-shot Matrix account provisioning
     bootstrap-fresh-nixos.sh   # Clone + guided Pi install workflow for fresh NixOS installs
     add-host.sh                # Generate a new host config from hardware
     test.sh                    # Run repository shell test suite
