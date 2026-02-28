@@ -31,7 +31,7 @@ assert_file_contains "$CLI_SCRIPT" 'exec "$PI_BIN" "$@"'
 # Docs: single command/single instance model.
 assert_file_contains "$README" '`nixpi` command'
 assert_not_contains "$README_CONTENT" '`pi` remains available as SDK'
-assert_file_contains "$README" 'Single Nixpi instance: `~/Nixpi/.pi/agent/`'
+assert_file_contains "$README" 'Agent state is stored at `/var/lib/nixpi/agent/`'
 assert_not_contains "$README_CONTENT" 'nixpi dev'
 assert_not_contains "$README_CONTENT" 'Developer mode: `~/Nixpi/.pi/agent-dev/`'
 assert_file_contains "$OPERATING" '`nixpi` → single Nixpi instance (primary path).'

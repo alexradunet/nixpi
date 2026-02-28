@@ -51,7 +51,7 @@ assert_file_contains "$SKILL" 'description:'
 # Docs regression: reinstall flow points to clone + bootstrap + Pi install skill guidance.
 assert_file_contains "$DOC" './scripts/bootstrap-fresh-nixos.sh'
 assert_file_contains "$DOC" 'install-nixpi'
-assert_file_contains "$README" 'install-nixpi'
+assert_file_contains "$README" 'nixpi setup'
 assert_file_contains "$DOCS_HOME" 'Reinstall on Fresh NixOS'
 assert_file_contains "$OPERATING" 'REINSTALL.md'
 
