@@ -184,6 +184,12 @@ in
     description = "Store path to the internal pi wrapper binary. Internal use only.";
   };
 
+  options.nixpi.assistantUser = lib.mkOption {
+    type = lib.types.str;
+    default = "nixpi-agent";
+    description = "System user that owns Nixpi services and data.";
+  };
+
   options.nixpi.persona.dir = lib.mkOption {
     type = lib.types.path;
     default = ../../persona;
@@ -292,12 +298,23 @@ in
   # credentials configured in the NixOS installer.
   users.mutableUsers = true;
 
+  # Nixpi assistant system user — owns services and agent state.
+  users.groups.nixpi = {};
+
+  users.users.${config.nixpi.assistantUser} = {
+    isSystemUser = true;
+    group = "nixpi";
+    home = "/var/lib/nixpi";
+    createHome = true;
+    description = "Nixpi AI assistant";
+  };
+
   # User configuration
   users.users.${primaryUser} = {
     isNormalUser = true;
     home = userHome;
     description = userDisplayName;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" "nixpi" ];
   };
 
   # System packages
@@ -352,13 +369,13 @@ in
   system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
     PI_DIR="${piDir}"
 
-    install -d -o ${primaryUser} -g users "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+    install -d -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
 
     # Keep SYSTEM.md in sync with declarative policy/prompt content.
     cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
 ${piSystemPrompt}
 SYSEOF
-    chown ${primaryUser}:users "$PI_DIR/SYSTEM.md"
+    chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/SYSTEM.md"
 
     # Seed settings if absent.
     # Single instance preloads Nixpi skills plus declarative extension sources.
@@ -368,7 +385,7 @@ ${settingsSeedJson}
 JSONEOF
     fi
     if [ -f "$PI_DIR/settings.json" ]; then
-      chown ${primaryUser}:users "$PI_DIR/settings.json"
+      chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
     fi
   '';
 

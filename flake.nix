@@ -98,6 +98,7 @@
       # Run one:  nix build .#checks.x86_64-linux.vm-user-and-groups --no-link -L
       # Run all:  nix flake check -L
       checks.x86_64-linux = {
+        vm-assistant-user     = mkVmTest ./tests/vm/assistant-user.nix;
         vm-user-and-groups    = mkVmTest ./tests/vm/user-and-groups.nix;
         vm-ssh-hardening      = mkVmTest ./tests/vm/ssh-hardening.nix;
         vm-firewall-rules     = mkVmTest ./tests/vm/firewall-rules.nix;
