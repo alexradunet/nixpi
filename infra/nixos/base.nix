@@ -253,6 +253,21 @@ in
 
     assertions = [
       {
+        assertion = let grub = config.boot.loader.grub; in
+          !grub.enable || grub.devices != [ ] || grub.mirroredBoots != [ ];
+        message = ''
+          Nixpi: GRUB is enabled but no boot devices are configured.
+
+          Fix one of:
+            (a) UEFI → disable GRUB and enable systemd-boot:
+                  boot.loader.grub.enable = false;
+                  boot.loader.systemd-boot.enable = true;
+                  boot.loader.efi.canTouchEfiVariables = true;
+            (b) BIOS → set GRUB devices:
+                  boot.loader.grub.devices = [ "/dev/sda" ];
+        '';
+      }
+      {
         assertion = builtins.match "^[a-z_][a-z0-9_-]*$" primaryUser != null;
         message = "nixpi.primaryUser must be a valid Linux username (lowercase letters, digits, _, -, and starting with a lowercase letter or _).";
       }

@@ -144,6 +144,7 @@
         vm-heartbeat-oncalendar = mkVmTest ./tests/vm/heartbeat-oncalendar.nix;
         vm-objects-custom-types = mkVmTest ./tests/vm/objects-custom-types.nix;
         vm-password-policy-boundary = mkVmTest ./tests/vm/password-policy-boundary.nix;
+        vm-grub-disabled-by-default = mkVmTest ./tests/vm/grub-disabled-by-default.nix;
       };
     };
 }

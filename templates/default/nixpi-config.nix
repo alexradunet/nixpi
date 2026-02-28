@@ -8,6 +8,15 @@
   nixpi.primaryUser = "nixpi";    # Change to your Linux username
   nixpi.timeZone = "UTC";         # Change to your timezone
 
+  # --- Boot loader ---
+  # UEFI (most modern machines): systemd-boot + disable GRUB.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = false;
+  # BIOS / legacy boot: uncomment the next two lines and comment out the three above.
+  # boot.loader.grub.enable = true;
+  # boot.loader.grub.devices = [ "/dev/sda" ];  # adjust to your disk
+
   # --- Modules (toggle on/off) ---
   nixpi.tailscale.enable = true;
   nixpi.syncthing.enable = true;
