@@ -34,14 +34,21 @@ export interface MatrixBridgeConfig extends AgentConfig {
 
 const DEFAULT_CONFIG: MatrixBridgeConfig = {
   piCommand: process.env.NIXPI_PI_COMMAND || "pi",
-  piDir: process.env.PI_CODING_AGENT_DIR || `${process.env.HOME}/Nixpi/.pi/agent`,
+  piDir:
+    process.env.PI_CODING_AGENT_DIR || `${process.env.HOME}/Nixpi/.pi/agent`,
   repoRoot: process.env.NIXPI_REPO_ROOT || `${process.env.HOME}/Nixpi`,
-  objectsDir: process.env.NIXPI_OBJECTS_DIR || `${process.env.HOME}/Nixpi/data/objects`,
-  skillsDir: process.env.NIXPI_SKILLS_DIR || `${process.env.HOME}/Nixpi/infra/pi/skills`,
+  objectsDir:
+    process.env.NIXPI_OBJECTS_DIR || `${process.env.HOME}/Nixpi/data/objects`,
+  skillsDir:
+    process.env.NIXPI_SKILLS_DIR || `${process.env.HOME}/Nixpi/infra/pi/skills`,
   homeserverUrl: process.env.NIXPI_MATRIX_HOMESERVER || "http://localhost:6167",
   accessToken: process.env.NIXPI_MATRIX_ACCESS_TOKEN || "",
-  allowedUsers: (process.env.NIXPI_MATRIX_ALLOWED_USERS || "").split(",").filter(Boolean),
-  storageDir: process.env.NIXPI_MATRIX_STORAGE_DIR || `${process.env.HOME}/Nixpi/.pi/agent/matrix-storage`,
+  allowedUsers: (process.env.NIXPI_MATRIX_ALLOWED_USERS || "")
+    .split(",")
+    .filter(Boolean),
+  storageDir:
+    process.env.NIXPI_MATRIX_STORAGE_DIR ||
+    `${process.env.HOME}/Nixpi/.pi/agent/matrix-storage`,
   timeoutMs: Number(process.env.NIXPI_MATRIX_TIMEOUT_MS) || 120_000,
 };
 
@@ -55,30 +62,29 @@ let processingQueue: Promise<void> = Promise.resolve();
 
 function enqueue(fn: () => Promise<void>): Promise<void> {
   processingQueue = processingQueue.then(fn).catch((err) => {
-    console.error("Queue processing error:", err instanceof Error ? err.message : String(err));
+    console.error(
+      "Queue processing error:",
+      err instanceof Error ? err.message : String(err),
+    );
   });
   return processingQueue;
 }
 
 export async function processMessage(
   text: string,
-  config: MatrixBridgeConfig = DEFAULT_CONFIG
+  config: MatrixBridgeConfig = DEFAULT_CONFIG,
 ): Promise<string> {
   try {
-    const { stdout } = await execFileAsync(
-      config.piCommand,
-      ["-p", text],
-      {
-        cwd: config.repoRoot,
-        env: {
-          ...process.env,
-          PI_CODING_AGENT_DIR: config.piDir,
-          NIXPI_OBJECTS_DIR: config.objectsDir,
-        },
-        timeout: config.timeoutMs,
-        maxBuffer: 1024 * 1024, // 1MB
-      }
-    );
+    const { stdout } = await execFileAsync(config.piCommand, ["-p", text], {
+      cwd: config.repoRoot,
+      env: {
+        ...process.env,
+        PI_CODING_AGENT_DIR: config.piDir,
+        NIXPI_OBJECTS_DIR: config.objectsDir,
+      },
+      timeout: config.timeoutMs,
+      maxBuffer: 1024 * 1024, // 1MB
+    });
     return stdout.trim() || "(no response)";
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -125,13 +131,13 @@ export class MatrixBotChannel implements MessageChannel {
     fs.mkdirSync(this.config.storageDir, { recursive: true });
 
     const storage = new SimpleFsStorageProvider(
-      `${this.config.storageDir}/bot.json`
+      `${this.config.storageDir}/bot.json`,
     );
 
     const client = new MatrixClient(
       this.config.homeserverUrl,
       this.config.accessToken,
-      storage
+      storage,
     );
 
     AutojoinRoomsMixin.setupOnClient(client);
@@ -142,44 +148,48 @@ export class MatrixBotChannel implements MessageChannel {
     const botUserId = await client.getUserId();
     console.log(`Bot user ID: ${botUserId}`);
 
-    client.on("room.message", async (roomId: string, event: Record<string, unknown>) => {
-      // Skip own messages
-      if (event.sender === botUserId) return;
+    client.on(
+      "room.message",
+      async (roomId: string, event: Record<string, unknown>) => {
+        // Skip own messages
+        if (event.sender === botUserId) return;
 
-      // Only handle text messages
-      const content = event.content as Record<string, unknown> | undefined;
-      if (!content || content.msgtype !== "m.text") return;
+        // Only handle text messages
+        const content = event.content as Record<string, unknown> | undefined;
+        if (!content || content.msgtype !== "m.text") return;
 
-      const text = content.body as string;
-      if (!text) return;
+        const text = content.body as string;
+        if (!text) return;
 
-      const from = event.sender as string;
+        const from = event.sender as string;
 
-      if (!isAllowed(from, self.config)) {
-        console.log(`Blocked message from unauthorized user: ${from}`);
-        return;
-      }
-
-      console.log(`Message from ${from}: ${text.substring(0, 50)}...`);
-
-      enqueue(async () => {
-        const incoming: IncomingMessage = {
-          from,
-          text,
-          timestamp: Date.now(),
-          channel: "matrix",
-        };
-
-        const response = await handleMessage(incoming);
-
-        try {
-          await self.sendMessage(roomId, response);
-        } catch (sendErr: unknown) {
-          const errMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
-          console.error(`Failed to send response: ${errMsg}`);
+        if (!isAllowed(from, self.config)) {
+          console.log(`Blocked message from unauthorized user: ${from}`);
+          return;
         }
-      });
-    });
+
+        console.log(`Message from ${from}: ${text.substring(0, 50)}...`);
+
+        enqueue(async () => {
+          const incoming: IncomingMessage = {
+            from,
+            text,
+            timestamp: Date.now(),
+            channel: "matrix",
+          };
+
+          const response = await handleMessage(incoming);
+
+          try {
+            await self.sendMessage(roomId, response);
+          } catch (sendErr: unknown) {
+            const errMsg =
+              sendErr instanceof Error ? sendErr.message : String(sendErr);
+            console.error(`Failed to send response: ${errMsg}`);
+          }
+        });
+      },
+    );
 
     await client.start();
     console.log("Connected to Matrix homeserver.");
@@ -203,7 +213,9 @@ async function main(): Promise<void> {
   // Validate allowed users format
   for (const userId of config.allowedUsers) {
     if (!validateMatrixUserId(userId)) {
-      throw new Error(`Invalid Matrix user ID format in NIXPI_MATRIX_ALLOWED_USERS: '${userId}' (expected @localpart:domain)`);
+      throw new Error(
+        `Invalid Matrix user ID format in NIXPI_MATRIX_ALLOWED_USERS: '${userId}' (expected @localpart:domain)`,
+      );
     }
   }
 
@@ -217,7 +229,9 @@ async function main(): Promise<void> {
   console.log(`  Pi command: ${config.piCommand}`);
   console.log(`  Pi dir: ${config.piDir}`);
   console.log(`  Objects dir: ${config.objectsDir}`);
-  console.log(`  Allowed users: ${config.allowedUsers.length === 0 ? "all" : config.allowedUsers.join(", ")}`);
+  console.log(
+    `  Allowed users: ${config.allowedUsers.length === 0 ? "all" : config.allowedUsers.join(", ")}`,
+  );
 
   const channel = new MatrixBotChannel(config);
   channel.onMessage(async (msg) => processMessage(msg.text, config));
@@ -225,7 +239,9 @@ async function main(): Promise<void> {
 }
 
 // Only run main when executed directly (not when imported for tests).
-const isDirectExecution = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/.*\//, ""));
+const isDirectExecution =
+  process.argv[1] &&
+  import.meta.url.endsWith(process.argv[1].replace(/.*\//, ""));
 if (isDirectExecution) {
   main().catch((err) => {
     console.error("Fatal error:", err);

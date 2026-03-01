@@ -36,7 +36,8 @@ export const NOTE_SCENARIO: PiScenario = {
 export const ERROR_SCENARIO: PiScenario = {
   name: "error",
   match: /\berror\b/i,
-  response: "Sorry, I encountered an error processing your message. Please try again.",
+  response:
+    "Sorry, I encountered an error processing your message. Please try again.",
 };
 
 /** All built-in scenarios in priority order. */

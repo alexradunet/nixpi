@@ -5,6 +5,7 @@ This layer defines Nixpi's current competency inventory — what it can do today
 ## Current Capabilities
 
 ### Object Management
+
 - Create, read, update, list, search, and link flat-file objects.
 - Supported object types: journal, task, note, evolution.
 - Full-text search across all objects. TypeScript implementation uses in-memory matching; shell CRUD uses grep.
@@ -14,6 +15,7 @@ This layer defines Nixpi's current competency inventory — what it can do today
 - Shell CRUD tool (`nixpi-object`) and TypeScript ObjectStore produce format-compatible files.
 
 ### Communication Channels
+
 - Matrix bridge via matrix-bot-sdk — receives messages, processes through Pi, sends responses.
 - Self-hosted Conduit homeserver — local, private, no federation.
 - Allowed-user whitelist for access control (Matrix user IDs).
@@ -21,16 +23,19 @@ This layer defines Nixpi's current competency inventory — what it can do today
 - Interactive setup skill: can guide users through Matrix channel provisioning.
 
 ### Proactive Behavior
+
 - Heartbeat timer (systemd) — periodic wake cycle for observation and nudges.
 - Scans recent objects, checks overdue tasks, detects neglected life areas.
 - Can send Matrix reminders and create system journal entries.
 
 ### System Operations
+
 - Apply NixOS configuration changes via `nixpi evolve`.
 - Roll back to previous NixOS generation via `nixpi rollback`.
 - Manage Pi extensions via `nixpi npm install` and `nixpi npm sync`.
 
 ### Self-Evolution
+
 - Detect improvement opportunities during operation.
 - File structured evolution requests through the Hermes -> Athena pipeline.
 - Orchestrate sub-agents via `pi -p --skill` for each pipeline stage.

@@ -10,6 +10,7 @@ Use this skill when the user wants to capture, organize, or retrieve knowledge a
 ## Object Schema
 
 Note objects use frontmatter fields:
+
 - `type: note` (automatic)
 - `slug`: kebab-case identifier (e.g. `nixos-gpu-passthrough`)
 - `title`: human-readable note title
@@ -23,27 +24,33 @@ Note objects use frontmatter fields:
 ## Commands
 
 ### Create a note
+
 ```bash
 nixpi-object create note "nixos-gpu-passthrough" --title="NixOS GPU Passthrough" --area=tech --tags=nixos,gpu,virtualization
 ```
+
 Then append body content by editing the file directly.
 
 ### Read a note
+
 ```bash
 nixpi-object read note nixos-gpu-passthrough
 ```
 
 ### Search notes
+
 ```bash
 nixpi-object search "GPU passthrough"
 ```
 
 ### List notes by area
+
 ```bash
 nixpi-object list note --area=tech
 ```
 
 ### Link notes to other objects
+
 ```bash
 nixpi-object link note/nixos-gpu-passthrough task/setup-vm
 ```

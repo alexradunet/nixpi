@@ -4,7 +4,12 @@
 #   imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
 { pkgsUnstableForTests }:
 
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   # Inject the stubbed unstable package set so base.nix sees it as pkgsUnstable.

@@ -21,7 +21,7 @@ assert_file_contains "$CLI_SCRIPT" 'nixpi extension manifest contains unpinned s
 assert_file_contains "$CLI_SCRIPT" 'Unknown nixpi npm subcommand:'
 
 # Edge case: manifest entries are validated declaratively before activation.
-assert_file_contains "$BASE" 'isPinnedNpmSource = source:'
+assert_file_contains "$BASE" 'isPinnedNpmSource ='
 assert_file_contains "$BASE" 'extensionPackagesArePinned = builtins.all isPinnedNpmSource extensionPackages;'
 assert_file_contains "$BASE" 'All infra/pi/extensions/packages.json entries must be pinned npm sources'
 

@@ -4,7 +4,12 @@
 # a Pi non-interactive session with the heartbeat skill. The agent observes
 # recent objects, checks overdue tasks, writes reflections, and detects
 # evolution opportunities.
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.heartbeat;
@@ -39,7 +44,10 @@ let
     timeoutStartSec = "5min";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
-    readWritePaths = [ repoRoot config.nixpi.piDir ];
+    readWritePaths = [
+      repoRoot
+      config.nixpi.piDir
+    ];
   };
 in
 {
@@ -66,27 +74,28 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    serviceConfig
-    {
-      assertions = [
-        {
-          assertion = cfg.intervalMinutes > 0;
-          message = "nixpi.heartbeat.intervalMinutes must be positive.";
-        }
-      ];
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      serviceConfig
+      {
+        assertions = [
+          {
+            assertion = cfg.intervalMinutes > 0;
+            message = "nixpi.heartbeat.intervalMinutes must be positive.";
+          }
+        ];
 
-      systemd.timers.nixpi-heartbeat = {
-        description = "Timer for Nixpi heartbeat cycle";
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnCalendar = if cfg.onCalendar != null
-            then cfg.onCalendar
-            else "*:0/${toString cfg.intervalMinutes}";
-          Persistent = true;
-          RandomizedDelaySec = "2min";
+        systemd.timers.nixpi-heartbeat = {
+          description = "Timer for Nixpi heartbeat cycle";
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnCalendar =
+              if cfg.onCalendar != null then cfg.onCalendar else "*:0/${toString cfg.intervalMinutes}";
+            Persistent = true;
+            RandomizedDelaySec = "2min";
+          };
         };
-      };
-    }
-  ]);
+      }
+    ]
+  );
 }

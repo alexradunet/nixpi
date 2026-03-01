@@ -2,7 +2,12 @@
 #
 # When enabled, enforces minimum length, digit, and special character
 # requirements for local password changes (passwd and chpasswd).
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.passwordPolicy;
@@ -61,14 +66,20 @@ in
       order = config.security.pam.services.passwd.rules.password.unix.order - 20;
       control = "requisite";
       modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
-      args = [ "expose_authtok" "${passwordPolicyCheck}" ];
+      args = [
+        "expose_authtok"
+        "${passwordPolicyCheck}"
+      ];
     };
 
     security.pam.services.chpasswd.rules.password.passwordPolicy = {
       order = config.security.pam.services.chpasswd.rules.password.unix.order - 20;
       control = "requisite";
       modulePath = "${pkgs.pam}/lib/security/pam_exec.so";
-      args = [ "expose_authtok" "${passwordPolicyCheck}" ];
+      args = [
+        "expose_authtok"
+        "${passwordPolicyCheck}"
+      ];
     };
   };
 }

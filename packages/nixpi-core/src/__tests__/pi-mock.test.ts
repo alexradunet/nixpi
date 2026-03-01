@@ -87,7 +87,7 @@ describe("ScenarioBasedPiMock", () => {
       assert.equal(
         mock.calls[0].matchedScenario,
         expected,
-        `Expected "${input}" to match "${expected}"`
+        `Expected "${input}" to match "${expected}"`,
       );
     }
   });

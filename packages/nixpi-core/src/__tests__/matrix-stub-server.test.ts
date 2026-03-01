@@ -14,7 +14,10 @@ describe("MatrixStubServer", () => {
     await server.stop();
   });
 
-  async function fetchJson(path: string, options?: RequestInit): Promise<unknown> {
+  async function fetchJson(
+    path: string,
+    options?: RequestInit,
+  ): Promise<unknown> {
     const res = await fetch(`${server.url}${path}`, {
       headers: { "Content-Type": "application/json" },
       ...options,
@@ -23,7 +26,9 @@ describe("MatrixStubServer", () => {
   }
 
   it("returns versions", async () => {
-    const data = (await fetchJson("/_matrix/client/versions")) as { versions: string[] };
+    const data = (await fetchJson("/_matrix/client/versions")) as {
+      versions: string[];
+    };
     assert.ok(Array.isArray(data.versions));
     assert.ok(data.versions.includes("v1.1"));
   });
@@ -31,19 +36,27 @@ describe("MatrixStubServer", () => {
   it("handles login", async () => {
     const data = (await fetchJson("/_matrix/client/v3/login", {
       method: "POST",
-      body: JSON.stringify({ type: "m.login.password", user: "bot", password: "pass" }),
+      body: JSON.stringify({
+        type: "m.login.password",
+        user: "bot",
+        password: "pass",
+      }),
     })) as { user_id: string; access_token: string };
     assert.equal(data.user_id, "@bot:test");
     assert.ok(data.access_token);
   });
 
   it("returns whoami", async () => {
-    const data = (await fetchJson("/_matrix/client/v3/account/whoami")) as { user_id: string };
+    const data = (await fetchJson("/_matrix/client/v3/account/whoami")) as {
+      user_id: string;
+    };
     assert.equal(data.user_id, "@bot:test");
   });
 
   it("returns joined rooms", async () => {
-    const data = (await fetchJson("/_matrix/client/v3/joined_rooms")) as { joined_rooms: string[] };
+    const data = (await fetchJson("/_matrix/client/v3/joined_rooms")) as {
+      joined_rooms: string[];
+    };
     assert.ok(Array.isArray(data.joined_rooms));
     assert.ok(data.joined_rooms.includes("!default:test"));
   });
@@ -53,10 +66,13 @@ describe("MatrixStubServer", () => {
     const type = "m.room.message";
     const txnId = "txn_001";
 
-    await fetchJson(`/_matrix/client/v3/rooms/${roomId}/send/${type}/${txnId}`, {
-      method: "PUT",
-      body: JSON.stringify({ msgtype: "m.text", body: "hello" }),
-    });
+    await fetchJson(
+      `/_matrix/client/v3/rooms/${roomId}/send/${type}/${txnId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ msgtype: "m.text", body: "hello" }),
+      },
+    );
 
     assert.equal(server.sentEvents.length, 1);
     assert.equal(server.sentEvents[0].roomId, "!room:test");
@@ -68,7 +84,9 @@ describe("MatrixStubServer", () => {
     const roomId = encodeURIComponent("!new:test");
     await fetchJson(`/_matrix/client/v3/join/${roomId}`, { method: "POST" });
 
-    const rooms = (await fetchJson("/_matrix/client/v3/joined_rooms")) as { joined_rooms: string[] };
+    const rooms = (await fetchJson("/_matrix/client/v3/joined_rooms")) as {
+      joined_rooms: string[];
+    };
     assert.ok(rooms.joined_rooms.includes("!new:test"));
   });
 
@@ -86,7 +104,10 @@ describe("MatrixStubServer", () => {
 
     const data = (await fetchJson("/_matrix/client/v3/sync?timeout=0")) as {
       rooms: {
-        join: Record<string, { timeline: { events: Array<{ content: { body: string } }> } }>;
+        join: Record<
+          string,
+          { timeline: { events: Array<{ content: { body: string } }> } }
+        >;
       };
     };
 
@@ -106,7 +127,10 @@ describe("MatrixStubServer", () => {
 
     const data = (await syncPromise) as {
       rooms: {
-        join: Record<string, { timeline: { events: Array<{ content: { body: string } }> } }>;
+        join: Record<
+          string,
+          { timeline: { events: Array<{ content: { body: string } }> } }
+        >;
       };
     };
 
@@ -118,23 +142,25 @@ describe("MatrixStubServer", () => {
   it("waitForSentEvent resolves when matching event arrives", async () => {
     // Send event first
     const roomId = encodeURIComponent("!room:test");
-    await fetchJson(`/_matrix/client/v3/rooms/${roomId}/send/m.room.message/txn1`, {
-      method: "PUT",
-      body: JSON.stringify({ msgtype: "m.text", body: "response" }),
-    });
+    await fetchJson(
+      `/_matrix/client/v3/rooms/${roomId}/send/m.room.message/txn1`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ msgtype: "m.text", body: "response" }),
+      },
+    );
 
     const event = await server.waitForSentEvent(
       (e) => e.content.body === "response",
-      1000
+      1000,
     );
     assert.equal(event.content.body, "response");
   });
 
   it("waitForSentEvent times out if no match", async () => {
-    await assert.rejects(
-      () => server.waitForSentEvent(() => false, 200),
-      { message: /No matching sent event within 200ms/ }
-    );
+    await assert.rejects(() => server.waitForSentEvent(() => false, 200), {
+      message: /No matching sent event within 200ms/,
+    });
   });
 
   it("handles filter creation", async () => {
@@ -148,10 +174,13 @@ describe("MatrixStubServer", () => {
   it("reset clears all state", async () => {
     server.injectRoomMessage("!room:test", "@alice:test", "msg");
     const roomId = encodeURIComponent("!room:test");
-    await fetchJson(`/_matrix/client/v3/rooms/${roomId}/send/m.room.message/txn1`, {
-      method: "PUT",
-      body: JSON.stringify({ body: "sent" }),
-    });
+    await fetchJson(
+      `/_matrix/client/v3/rooms/${roomId}/send/m.room.message/txn1`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ body: "sent" }),
+      },
+    );
 
     server.reset();
 
@@ -168,7 +197,10 @@ describe("MatrixStubServer", () => {
 
     const data = (await fetchJson("/_matrix/client/v3/sync?timeout=0")) as {
       rooms: {
-        invite: Record<string, { invite_state: { events: Array<{ type: string }> } }>;
+        invite: Record<
+          string,
+          { invite_state: { events: Array<{ type: string }> } }
+        >;
       };
     };
 

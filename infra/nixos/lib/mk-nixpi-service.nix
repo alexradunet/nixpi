@@ -19,30 +19,35 @@
 #     wantedBy = [ "multi-user.target" ];  # optional, for long-running services
 #     hardening ? true;               # optional, enable security hardening (default: true)
 #   }
-{ config, pkgs, lib }:
+{
+  config,
+  pkgs,
+  lib,
+}:
 
 # Parameters:
 #   stateDirectory — systemd-managed dir under /var/lib/, created and owned by
 #                    the service user, lifecycle tied to the service.
 #   readWritePaths — pre-existing paths (e.g. repoRoot, piDir) that need write
 #                    access within ProtectSystem=strict. Not created by systemd.
-{ name
-, description
-, serviceType
-, execStart
-, workingDirectory ? config.nixpi.repoRoot
-, extraEnv ? []
-, execStartPre ? null
-, restart ? null
-, restartSec ? null
-, timeoutStartSec ? null
-, after ? []
-, wants ? []
-, wantedBy ? []
-, hardening ? true
-, stateDirectory ? null
-, stateDirectoryMode ? "0700"
-, readWritePaths ? []
+{
+  name,
+  description,
+  serviceType,
+  execStart,
+  workingDirectory ? config.nixpi.repoRoot,
+  extraEnv ? [ ],
+  execStartPre ? null,
+  restart ? null,
+  restartSec ? null,
+  timeoutStartSec ? null,
+  after ? [ ],
+  wants ? [ ],
+  wantedBy ? [ ],
+  hardening ? true,
+  stateDirectory ? null,
+  stateDirectoryMode ? "0700",
+  readWritePaths ? [ ],
 }:
 
 let
@@ -70,20 +75,27 @@ in
       ExecStart = execStart;
       StandardOutput = "journal";
       StandardError = "journal";
-    } // lib.optionalAttrs (execStartPre != null) {
+    }
+    // lib.optionalAttrs (execStartPre != null) {
       ExecStartPre = execStartPre;
-    } // lib.optionalAttrs (restart != null) {
+    }
+    // lib.optionalAttrs (restart != null) {
       Restart = restart;
-    } // lib.optionalAttrs (restartSec != null) {
+    }
+    // lib.optionalAttrs (restartSec != null) {
       RestartSec = restartSec;
-    } // lib.optionalAttrs (timeoutStartSec != null) {
+    }
+    // lib.optionalAttrs (timeoutStartSec != null) {
       TimeoutStartSec = timeoutStartSec;
-    } // lib.optionalAttrs (stateDirectory != null) {
+    }
+    // lib.optionalAttrs (stateDirectory != null) {
       StateDirectory = stateDirectory;
       StateDirectoryMode = stateDirectoryMode;
-    } // lib.optionalAttrs (readWritePaths != []) {
+    }
+    // lib.optionalAttrs (readWritePaths != [ ]) {
       ReadWritePaths = readWritePaths;
-    } // lib.optionalAttrs hardening {
+    }
+    // lib.optionalAttrs hardening {
       # Security hardening defaults
       ProtectSystem = "strict";
       ProtectHome = "read-only";

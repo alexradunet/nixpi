@@ -15,7 +15,8 @@ describe("JsYamlFrontmatterParser", () => {
     });
 
     it("parses arrays in frontmatter", () => {
-      const raw = "---\ntags:\n  - nix\n  - devops\nlinks:\n  - task/foo\n---\nbody\n";
+      const raw =
+        "---\ntags:\n  - nix\n  - devops\nlinks:\n  - task/foo\n---\nbody\n";
       const result = parser.parse(raw);
       assert.deepEqual(result.data.tags, ["nix", "devops"]);
       assert.deepEqual(result.data.links, ["task/foo"]);
@@ -44,14 +45,16 @@ describe("JsYamlFrontmatterParser", () => {
     });
 
     it("does not match --- inside body content (H5)", () => {
-      const raw = "---\ntitle: Test\n---\nSome text\n---\nMore text after dashes\n";
+      const raw =
+        "---\ntitle: Test\n---\nSome text\n---\nMore text after dashes\n";
       const result = parser.parse(raw);
       assert.equal(result.data.title, "Test");
       assert.equal(result.content, "Some text\n---\nMore text after dashes\n");
     });
 
     it("keeps ISO timestamp strings as strings, not Date objects (H6)", () => {
-      const raw = "---\ncreated: '2026-01-15T10:30:00Z'\nmodified: '2026-02-20T08:00:00Z'\n---\n";
+      const raw =
+        "---\ncreated: '2026-01-15T10:30:00Z'\nmodified: '2026-02-20T08:00:00Z'\n---\n";
       const result = parser.parse(raw);
       assert.equal(typeof result.data.created, "string");
       assert.equal(result.data.created, "2026-01-15T10:30:00Z");

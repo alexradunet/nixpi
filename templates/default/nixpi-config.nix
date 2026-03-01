@@ -4,9 +4,9 @@
 
 {
   # --- Identity ---
-  networking.hostName = "nixpi";  # Change to your hostname
-  nixpi.primaryUser = "nixpi";    # Change to your Linux username
-  nixpi.timeZone = "UTC";         # Change to your timezone
+  networking.hostName = "nixpi"; # Change to your hostname
+  nixpi.primaryUser = "nixpi"; # Change to your Linux username
+  nixpi.timeZone = "UTC"; # Change to your timezone
 
   # --- Boot loader ---
   # UEFI (most modern machines): systemd-boot + disable GRUB.

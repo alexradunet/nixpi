@@ -2,7 +2,12 @@
 #
 # When enabled, provisions Syncthing with a default ~/Shared folder,
 # GUI on 127.0.0.1:8384, and firewall restricted to Tailscale.
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.syncthing;
@@ -49,12 +54,22 @@ in
       install -d -o ${primaryUser} -g users "${cfg.sharedFolder}"
     '';
 
-    networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
-      # Allow Syncthing GUI (port 8384) from Tailscale only
-      ${mkRules { port = 8384; }}
+    networking.firewall.extraInputRules =
+      let
+        mkRules = config.nixpi._internal.mkTailscaleFirewallRules;
+      in
+      ''
+        # Allow Syncthing GUI (port 8384) from Tailscale only
+        ${mkRules { port = 8384; }}
 
-      # Allow Syncthing sync (port 22000) from Tailscale only
-      ${mkRules { port = 22000; protocols = ["tcp" "udp"]; }}
-    '';
+        # Allow Syncthing sync (port 22000) from Tailscale only
+        ${mkRules {
+          port = 22000;
+          protocols = [
+            "tcp"
+            "udp"
+          ];
+        }}
+      '';
   };
 }

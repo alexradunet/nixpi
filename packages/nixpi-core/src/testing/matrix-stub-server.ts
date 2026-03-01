@@ -119,7 +119,7 @@ export class MatrixStubServer {
    */
   async waitForSentEvent(
     predicate: (e: SentEvent) => boolean,
-    timeoutMs = 5000
+    timeoutMs = 5000,
   ): Promise<SentEvent> {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -156,7 +156,10 @@ export class MatrixStubServer {
 
   // --- Request routing ---
 
-  private handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
+  private handleRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+  ): void {
     const url = new URL(req.url || "/", `http://127.0.0.1:${this.port}`);
     const path = url.pathname;
     const method = req.method || "GET";
@@ -189,7 +192,7 @@ export class MatrixStubServer {
 
         // PUT /_matrix/client/v3/rooms/:roomId/send/:type/:txnId
         const sendMatch = path.match(
-          /^\/_matrix\/client\/v3\/rooms\/([^/]+)\/send\/([^/]+)\/([^/]+)$/
+          /^\/_matrix\/client\/v3\/rooms\/([^/]+)\/send\/([^/]+)\/([^/]+)$/,
         );
         if (sendMatch && method === "PUT") {
           const [, roomId, type, txnId] = sendMatch;
@@ -214,7 +217,7 @@ export class MatrixStubServer {
 
         // POST /_matrix/client/v3/user/:userId/filter
         const filterMatch = path.match(
-          /^\/_matrix\/client\/v3\/user\/[^/]+\/filter$/
+          /^\/_matrix\/client\/v3\/user\/[^/]+\/filter$/,
         );
         if (filterMatch && method === "POST") {
           return this.json(res, { filter_id: String(++this.filterCounter) });
@@ -222,7 +225,7 @@ export class MatrixStubServer {
 
         // GET /_matrix/client/v3/user/:userId/filter/:filterId
         const filterGetMatch = path.match(
-          /^\/_matrix\/client\/v3\/user\/[^/]+\/filter\/[^/]+$/
+          /^\/_matrix\/client\/v3\/user\/[^/]+\/filter\/[^/]+$/,
         );
         if (filterGetMatch && method === "GET") {
           return this.json(res, {});
@@ -230,14 +233,18 @@ export class MatrixStubServer {
 
         // PUT /_matrix/client/v3/rooms/:roomId/state/:type/:stateKey?
         const stateMatch = path.match(
-          /^\/_matrix\/client\/v3\/rooms\/[^/]+\/state\//
+          /^\/_matrix\/client\/v3\/rooms\/[^/]+\/state\//,
         );
         if (stateMatch && method === "PUT") {
           return this.json(res, { event_id: `$state_${++this.eventCounter}` });
         }
 
         // Catch-all for unknown endpoints
-        this.json(res, { errcode: "M_UNRECOGNIZED", error: `Unknown: ${method} ${path}` }, 404);
+        this.json(
+          res,
+          { errcode: "M_UNRECOGNIZED", error: `Unknown: ${method} ${path}` },
+          404,
+        );
       } catch (err) {
         console.error("MatrixStubServer error:", err);
         this.json(res, { errcode: "M_UNKNOWN", error: String(err) }, 500);
@@ -260,12 +267,15 @@ export class MatrixStubServer {
     }
 
     // Long-poll: wait for events or timeout
-    const timer = setTimeout(() => {
-      // Remove from waiters
-      const idx = this.syncWaiters.indexOf(waiter);
-      if (idx !== -1) this.syncWaiters.splice(idx, 1);
-      this.syncResponse(res, []);
-    }, Math.min(timeout, 5000)); // Cap at 5s to prevent test hangs
+    const timer = setTimeout(
+      () => {
+        // Remove from waiters
+        const idx = this.syncWaiters.indexOf(waiter);
+        if (idx !== -1) this.syncWaiters.splice(idx, 1);
+        this.syncResponse(res, []);
+      },
+      Math.min(timeout, 5000),
+    ); // Cap at 5s to prevent test hangs
 
     const waiter = (events: StubEvent[]) => {
       clearTimeout(timer);
@@ -292,10 +302,16 @@ export class MatrixStubServer {
 
     for (const [roomId, data] of Object.entries(rooms)) {
       const inviteEvents = data.timeline.events.filter(
-        (e) => e.type === "m.room.member" && (e.content as Record<string, unknown>).membership === "invite"
+        (e) =>
+          e.type === "m.room.member" &&
+          (e.content as Record<string, unknown>).membership === "invite",
       );
       const otherEvents = data.timeline.events.filter(
-        (e) => !(e.type === "m.room.member" && (e.content as Record<string, unknown>).membership === "invite")
+        (e) =>
+          !(
+            e.type === "m.room.member" &&
+            (e.content as Record<string, unknown>).membership === "invite"
+          ),
       );
 
       if (inviteEvents.length > 0) {

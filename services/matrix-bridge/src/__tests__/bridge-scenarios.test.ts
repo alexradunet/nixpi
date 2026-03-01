@@ -14,7 +14,9 @@ import {
 import { isAllowed } from "../index.js";
 import type { MatrixBridgeConfig } from "../index.js";
 
-function makeConfig(overrides: Partial<MatrixBridgeConfig> = {}): MatrixBridgeConfig {
+function makeConfig(
+  overrides: Partial<MatrixBridgeConfig> = {},
+): MatrixBridgeConfig {
   return {
     piCommand: "unused",
     piDir: "/tmp",
@@ -52,7 +54,10 @@ describe("Bridge scenarios (TestMessageChannel + ScenarioBasedPiMock)", () => {
 
   it("task creation message flow", async () => {
     await channel.connect();
-    const response = await channel.simulateMessage("@alice:test", "create a new task for groceries");
+    const response = await channel.simulateMessage(
+      "@alice:test",
+      "create a new task for groceries",
+    );
     assert.ok(response.includes("created task/my-task"));
     assert.equal(piMock.calls.length, 1);
     assert.equal(piMock.calls[0].matchedScenario, "task-create");
@@ -60,28 +65,40 @@ describe("Bridge scenarios (TestMessageChannel + ScenarioBasedPiMock)", () => {
 
   it("heartbeat message flow", async () => {
     await channel.connect();
-    const response = await channel.simulateMessage("@alice:test", "run heartbeat");
+    const response = await channel.simulateMessage(
+      "@alice:test",
+      "run heartbeat",
+    );
     assert.ok(response.includes("heartbeat logged"));
     assert.equal(piMock.calls[0].matchedScenario, "heartbeat");
   });
 
   it("unknown input returns default response", async () => {
     await channel.connect();
-    const response = await channel.simulateMessage("@alice:test", "tell me a joke");
+    const response = await channel.simulateMessage(
+      "@alice:test",
+      "tell me a joke",
+    );
     assert.equal(response, "(no response)");
     assert.equal(piMock.calls[0].matchedScenario, null);
   });
 
   it("error input triggers error scenario", async () => {
     await channel.connect();
-    const response = await channel.simulateMessage("@alice:test", "trigger an error please");
+    const response = await channel.simulateMessage(
+      "@alice:test",
+      "trigger an error please",
+    );
     assert.ok(response.includes("Sorry, I encountered an error"));
     assert.equal(piMock.calls[0].matchedScenario, "error");
   });
 
   it("blocked user gets empty response (no Pi invocation)", async () => {
     await channel.connect();
-    const response = await channel.simulateMessage("@eve:test", "create task hacking");
+    const response = await channel.simulateMessage(
+      "@eve:test",
+      "create task hacking",
+    );
     assert.equal(response, "");
     assert.equal(piMock.calls.length, 0); // Pi was never called
   });
@@ -100,14 +117,10 @@ describe("Bridge scenarios (TestMessageChannel + ScenarioBasedPiMock)", () => {
 
   it("multiple rapid messages processed sequentially", async () => {
     await channel.connect();
-    const messages = [
-      "create task one",
-      "heartbeat",
-      "list all tasks",
-    ];
+    const messages = ["create task one", "heartbeat", "list all tasks"];
 
     const responses = await Promise.all(
-      messages.map((text) => channel.simulateMessage("@alice:test", text))
+      messages.map((text) => channel.simulateMessage("@alice:test", text)),
     );
 
     // All 3 should have gotten through

@@ -8,12 +8,19 @@
 {
   name = "vm-heartbeat-oncalendar";
 
-  nodes.machine = { config, pkgs, lib, ... }: {
-    imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
+  nodes.machine =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
+    {
+      imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
 
-    nixpi.heartbeat.enable = true;
-    nixpi.heartbeat.onCalendar = "*-*-* 08:00:00";
-  };
+      nixpi.heartbeat.enable = true;
+      nixpi.heartbeat.onCalendar = "*-*-* 08:00:00";
+    };
 
   testScript = ''
     machine.wait_for_unit("multi-user.target")

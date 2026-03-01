@@ -14,7 +14,8 @@ function makeTmpDir(): string {
 // Handles arrays by serializing as YAML lists and parsing them back.
 class MockParser implements IFrontmatterParser {
   parseCalls: string[] = [];
-  stringifyCalls: Array<{ data: Record<string, unknown>; content: string }> = [];
+  stringifyCalls: Array<{ data: Record<string, unknown>; content: string }> =
+    [];
 
   parse(raw: string): ObjectData {
     this.parseCalls.push(raw);
@@ -216,9 +217,19 @@ describe("ObjectStore integration (real parser)", () => {
 
   it("update rejects protected fields (type, slug, created)", () => {
     store.create("task", "protected");
-    assert.throws(() => store.update("task", "protected", { type: "note" }), /protected field: type/);
-    assert.throws(() => store.update("task", "protected", { slug: "changed" }), /protected field: slug/);
-    assert.throws(() => store.update("task", "protected", { created: "2020-01-01T00:00:00Z" }), /protected field: created/);
+    assert.throws(
+      () => store.update("task", "protected", { type: "note" }),
+      /protected field: type/,
+    );
+    assert.throws(
+      () => store.update("task", "protected", { slug: "changed" }),
+      /protected field: slug/,
+    );
+    assert.throws(
+      () =>
+        store.update("task", "protected", { created: "2020-01-01T00:00:00Z" }),
+      /protected field: created/,
+    );
     // Non-protected fields still work
     store.update("task", "protected", { status: "done" });
     const result = store.read("task", "protected");
@@ -253,34 +264,40 @@ describe("ObjectStore integration (real parser)", () => {
 
   it("concurrent create of same slug fails for one caller", async () => {
     const results = await Promise.allSettled(
-      Array.from({ length: 5 }, (_, i) =>
-        new Promise<string>((resolve, reject) => {
-          try {
-            resolve(store.create("task", "race", { title: `Writer ${i}` }));
-          } catch (err) {
-            reject(err);
-          }
-        })
-      )
+      Array.from(
+        { length: 5 },
+        (_, i) =>
+          new Promise<string>((resolve, reject) => {
+            try {
+              resolve(store.create("task", "race", { title: `Writer ${i}` }));
+            } catch (err) {
+              reject(err);
+            }
+          }),
+      ),
     );
     const fulfilled = results.filter((r) => r.status === "fulfilled");
     const rejected = results.filter((r) => r.status === "rejected");
     assert.equal(fulfilled.length, 1, "exactly one create should succeed");
     assert.equal(rejected.length, 4, "remaining creates should fail");
     for (const r of rejected) {
-      assert.ok((r as PromiseRejectedResult).reason.message.includes("already exists"));
+      assert.ok(
+        (r as PromiseRejectedResult).reason.message.includes("already exists"),
+      );
     }
   });
 
   it("concurrent updates do not corrupt file", async () => {
     store.create("task", "cu", { title: "Concurrent", status: "active" });
     await Promise.all(
-      Array.from({ length: 10 }, (_, i) =>
-        new Promise<void>((resolve) => {
-          store.update("task", "cu", { status: `status-${i}` });
-          resolve();
-        })
-      )
+      Array.from(
+        { length: 10 },
+        (_, i) =>
+          new Promise<void>((resolve) => {
+            store.update("task", "cu", { status: `status-${i}` });
+            resolve();
+          }),
+      ),
     );
     const result = store.read("task", "cu");
     // File should still be valid and readable
@@ -292,15 +309,21 @@ describe("ObjectStore integration (real parser)", () => {
     store.create("task", "lt");
     store.create("note", "ln");
     await Promise.all(
-      Array.from({ length: 5 }, () =>
-        new Promise<void>((resolve) => {
-          store.link("task/lt", "note/ln");
-          resolve();
-        })
-      )
+      Array.from(
+        { length: 5 },
+        () =>
+          new Promise<void>((resolve) => {
+            store.link("task/lt", "note/ln");
+            resolve();
+          }),
+      ),
     );
     const t = store.read("task", "lt");
     const links = t.data.links as string[];
-    assert.equal(links.filter((l) => l === "note/ln").length, 1, "link should not be duplicated");
+    assert.equal(
+      links.filter((l) => l === "note/ln").length,
+      1,
+      "link should not be duplicated",
+    );
   });
 });

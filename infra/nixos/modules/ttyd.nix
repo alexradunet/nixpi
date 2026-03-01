@@ -2,7 +2,12 @@
 #
 # When enabled, provisions ttyd on a configurable port, authenticating
 # via localhost OpenSSH login. Firewall restricts access to Tailscale only.
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.ttyd;
@@ -34,9 +39,13 @@ in
       ];
     };
 
-    networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
-      # Allow ttyd from Tailscale only
-      ${mkRules { port = cfg.port; }}
-    '';
+    networking.firewall.extraInputRules =
+      let
+        mkRules = config.nixpi._internal.mkTailscaleFirewallRules;
+      in
+      ''
+        # Allow ttyd from Tailscale only
+        ${mkRules { port = cfg.port; }}
+      '';
   };
 }

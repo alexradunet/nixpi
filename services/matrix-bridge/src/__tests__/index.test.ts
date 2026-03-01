@@ -8,7 +8,9 @@ import {
 } from "../index.js";
 import type { MatrixBridgeConfig } from "../index.js";
 
-function makeConfig(overrides: Partial<MatrixBridgeConfig> = {}): MatrixBridgeConfig {
+function makeConfig(
+  overrides: Partial<MatrixBridgeConfig> = {},
+): MatrixBridgeConfig {
   return {
     piCommand: "echo",
     piDir: "/tmp",
@@ -59,7 +61,9 @@ describe("validateMatrixUserId", () => {
 
 describe("isAllowed", () => {
   it("allows user in allowedUsers list", () => {
-    const config = makeConfig({ allowedUsers: ["@alice:example.com", "@bob:example.com"] });
+    const config = makeConfig({
+      allowedUsers: ["@alice:example.com", "@bob:example.com"],
+    });
     assert.equal(isAllowed("@alice:example.com", config), true);
   });
 

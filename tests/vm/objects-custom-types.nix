@@ -10,7 +10,13 @@
   nodes.machine = {
     imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
 
-    nixpi.objects.types = [ "journal" "task" "note" "person" "health-metric" ];
+    nixpi.objects.types = [
+      "journal"
+      "task"
+      "note"
+      "person"
+      "health-metric"
+    ];
   };
 
   testScript = ''

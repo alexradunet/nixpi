@@ -3,7 +3,12 @@
 # When enabled, provisions the Tailscale daemon with SSH disabled
 # (OpenSSH remains the single SSH control plane) and opens UDP 41641
 # for direct WireGuard connections.
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.tailscale;

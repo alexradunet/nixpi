@@ -80,6 +80,7 @@ assert_not_contains "$OPERATING_CONTENT" 'bootstrap script'
 assert_not_contains "$OPERATING_CONTENT" 'ai-provider'
 
 # --- System default: flakes + nix-command enabled ---
-assert_file_contains "$BASE" 'nix.settings.experimental-features = [ "nix-command" "flakes" ];'
+assert_file_contains "$BASE" '"nix-command"'
+assert_file_contains "$BASE" '"flakes"'
 
 echo "PASS: setup skill + stale reference checks"

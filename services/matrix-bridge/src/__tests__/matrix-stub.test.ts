@@ -92,8 +92,10 @@ describe("MatrixBotChannel + MatrixStubServer", () => {
 
     // Wait for the bot to process and respond
     const sent = await server.waitForSentEvent(
-      (e) => typeof e.content.body === "string" && e.content.body.includes("echo: hello bot"),
-      10000
+      (e) =>
+        typeof e.content.body === "string" &&
+        e.content.body.includes("echo: hello bot"),
+      10000,
     );
 
     assert.ok(sent);
@@ -120,7 +122,7 @@ describe("MatrixBotChannel + MatrixStubServer", () => {
 
     const sent = await server.waitForSentEvent(
       (e) => e.content.body === "processed: test message",
-      10000
+      10000,
     );
 
     assert.equal(received.length, 1);

@@ -49,9 +49,11 @@ Persona layers (SOUL.md, BODY.md, FACULTY.md, SKILL.md) define how Nixpi behaves
 **Evidence**: [description of pattern or feedback]
 
 ### Proposed Change
+
 [Specific text to add/modify/remove]
 
 ### Acceptance Criteria
+
 - [ ] Persona layer updated
 - [ ] No contradiction with other layers
 - [ ] Tests pass (`./scripts/test.sh`)

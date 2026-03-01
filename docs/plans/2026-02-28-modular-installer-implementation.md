@@ -17,6 +17,7 @@
 ## Task 1: Extract Tailscale Module
 
 **Files:**
+
 - Create: `infra/nixos/modules/tailscale.nix`
 - Modify: `infra/nixos/base.nix:383-395,352-381,460-461`
 - Create: `tests/vm/tailscale-toggle.nix`
@@ -105,6 +106,7 @@ Create `tests/vm/tailscale-toggle.nix`:
 In `infra/nixos/base.nix`:
 
 a) Add import (line ~238):
+
 ```nix
   imports = [
     ./modules/objects.nix
@@ -115,11 +117,13 @@ a) Add import (line ~238):
 ```
 
 b) Add mkDefault enable (in config block, near line ~245):
+
 ```nix
     nixpi.tailscale.enable = lib.mkDefault true;
 ```
 
 c) Remove from base.nix (lines 383-395):
+
 ```nix
   # DELETE: services.tailscale block
   # DELETE: networking.firewall.allowedUDPPorts line
@@ -127,6 +131,7 @@ c) Remove from base.nix (lines 383-395):
 ```
 
 d) Remove `tailscale` from systemPackages (line ~461):
+
 ```nix
     # Network tools
     curl
@@ -163,6 +168,7 @@ backward compat. Includes VM test for enabled/disabled states."
 ## Task 2: Extract ttyd Module
 
 **Files:**
+
 - Create: `infra/nixos/modules/ttyd.nix`
 - Modify: `infra/nixos/base.nix:314-327,363-366`
 - Create: `tests/vm/ttyd-toggle.nix`
@@ -283,6 +289,7 @@ git commit -m "feat: extract ttyd into toggleable module"
 ## Task 3: Extract Syncthing Module
 
 **Files:**
+
 - Create: `infra/nixos/modules/syncthing.nix`
 - Modify: `infra/nixos/base.nix:397-422,367-379`
 - Create: `tests/vm/syncthing-toggle.nix`
@@ -436,6 +443,7 @@ git commit -m "feat: extract Syncthing into toggleable module"
 ## Task 4: Extract Password Policy Module
 
 **Files:**
+
 - Create: `infra/nixos/modules/password-policy.nix`
 - Modify: `infra/nixos/base.nix:102-128,330-346`
 - Create: `tests/vm/password-policy-toggle.nix`
@@ -596,6 +604,7 @@ git commit -m "feat: extract password policy into toggleable module"
 ## Task 5: Extract Desktop Module
 
 **Files:**
+
 - Create: `infra/nixos/modules/desktop.nix`
 - Modify: `infra/nixos/base.nix:225-234,285-294,463-465`
 - Create: `tests/vm/desktop-toggle.nix`
@@ -679,7 +688,7 @@ f) Remove desktop packages from systemPackages: `networkmanagerapplet`, `xorg.xr
 
 Note: The `desktopProfile` option can be removed since `nixpi.desktop.enable` replaces it. Existing hosts that set `desktopProfile = "gnome"` should switch to `nixpi.desktop.enable = true`. Hosts with `desktopProfile = "preserve"` should set `nixpi.desktop.enable = false`. Update `_base-test-config.nix` to remove `nixpi.desktopProfile = "preserve"` and instead set `nixpi.desktop.enable = false`.
 
-**Step 4: Update _base-test-config.nix**
+**Step 4: Update \_base-test-config.nix**
 
 Replace `nixpi.desktopProfile = "preserve";` with `nixpi.desktop.enable = false;`
 
@@ -711,6 +720,7 @@ GNOME, GDM, Chromium, and desktop packages move to desktop.nix."
 After Tasks 1-5, base.nix's `extraInputRules` should contain ONLY SSH rules. The ttyd, Syncthing, and Tailscale rules have been moved to their modules.
 
 **Files:**
+
 - Modify: `infra/nixos/base.nix` (verify firewall block is clean)
 - Modify: `tests/vm/service-ensemble.nix`
 - Modify: `tests/vm/firewall-rules.nix`
@@ -849,6 +859,7 @@ Register all new toggle tests in flake.nix."
 ## Task 7: Write Multi-Module Combo Tests
 
 **Files:**
+
 - Create: `tests/vm/minimal-config.nix`
 - Create: `tests/vm/full-stack.nix`
 - Modify: `flake.nix`
@@ -986,6 +997,7 @@ git commit -m "test: add minimal and full-stack multi-module VM tests"
 ## Task 8: Add nixpi-agent System User
 
 **Files:**
+
 - Create: `tests/vm/assistant-user.nix`
 - Modify: `infra/nixos/base.nix`
 - Modify: `infra/nixos/lib/mk-nixpi-service.nix`
@@ -1164,6 +1176,7 @@ read access via nixpi group membership."
 ## Task 9: Add Secrets Management
 
 **Files:**
+
 - Create: `tests/vm/secrets-directory.nix`
 - Modify: `infra/nixos/base.nix`
 - Modify: `flake.nix`
@@ -1262,6 +1275,7 @@ piWrapper sources ai-provider.env for API key injection."
 ## Task 10: Export nixosModules from Flake
 
 **Files:**
+
 - Modify: `flake.nix`
 
 **Step 1: Add nixosModules outputs**
@@ -1305,6 +1319,7 @@ git commit -m "feat: export nixosModules from flake for external consumers"
 ## Task 11: Create Flake Template
 
 **Files:**
+
 - Create: `templates/default/flake.nix`
 - Create: `templates/default/nixpi-config.nix`
 - Modify: `flake.nix`
@@ -1412,6 +1427,7 @@ Users can scaffold a config with:
 ## Task 12: Build Setup Wizard
 
 **Files:**
+
 - Create: `scripts/nixpi-setup.sh`
 - Modify: `infra/nixos/scripts/nixpi-cli.sh`
 - Modify: `infra/nixos/base.nix` (add dialog to systemPackages + nixpiCli runtimeInputs)
@@ -1800,6 +1816,7 @@ Nixpi server. Configures AI provider, module selection, and secrets."
 ## Task 13: Update Bootstrap Script
 
 **Files:**
+
 - Modify: `scripts/bootstrap-fresh-nixos.sh`
 
 **Step 1: Rewrite bootstrap to integrate wizard**

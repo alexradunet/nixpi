@@ -13,7 +13,12 @@
 #   3. Run: scripts/matrix-setup.sh
 #   4. Set conduit.allowRegistration = false
 #   5. nixos-rebuild switch
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.channels.matrix;
@@ -135,38 +140,44 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    serviceConfig
-    {
-      # Inject access token via EnvironmentFile (keeps secret out of Nix store)
-      systemd.services.nixpi-matrix-bridge.serviceConfig.EnvironmentFile = cfg.accessTokenFile;
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      serviceConfig
+      {
+        # Inject access token via EnvironmentFile (keeps secret out of Nix store)
+        systemd.services.nixpi-matrix-bridge.serviceConfig.EnvironmentFile = cfg.accessTokenFile;
 
-      assertions = [
-        {
-          assertion = cfg.allowedUsers != [];
-          message = "nixpi.channels.matrix.allowedUsers must not be empty when the Matrix channel is enabled. Specify at least one allowed Matrix user ID.";
-        }
-      ];
-    }
-    # Optional local Conduit homeserver
-    (lib.mkIf cfg.conduit.enable {
-      services.matrix-conduit = {
-        enable = true;
-        settings.global = {
-          server_name = cfg.serverName;
-          database_backend = "rocksdb";
-          port = 6167;
-          address = "127.0.0.1";
-          allow_registration = cfg.conduit.allowRegistration;
-          allow_federation = false;
+        assertions = [
+          {
+            assertion = cfg.allowedUsers != [ ];
+            message = "nixpi.channels.matrix.allowedUsers must not be empty when the Matrix channel is enabled. Specify at least one allowed Matrix user ID.";
+          }
+        ];
+      }
+      # Optional local Conduit homeserver
+      (lib.mkIf cfg.conduit.enable {
+        services.matrix-conduit = {
+          enable = true;
+          settings.global = {
+            server_name = cfg.serverName;
+            database_backend = "rocksdb";
+            port = 6167;
+            address = "127.0.0.1";
+            allow_registration = cfg.conduit.allowRegistration;
+            allow_federation = false;
+          };
         };
-      };
 
-      # Conduit port accessible from Tailscale only
-      networking.firewall.extraInputRules = let mkRules = config.nixpi._internal.mkTailscaleFirewallRules; in ''
-        # Allow Conduit (port 6167) from Tailscale only
-        ${mkRules { port = 6167; }}
-      '';
-    })
-  ]);
+        # Conduit port accessible from Tailscale only
+        networking.firewall.extraInputRules =
+          let
+            mkRules = config.nixpi._internal.mkTailscaleFirewallRules;
+          in
+          ''
+            # Allow Conduit (port 6167) from Tailscale only
+            ${mkRules { port = 6167; }}
+          '';
+      })
+    ]
+  );
 }

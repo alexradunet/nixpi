@@ -4,37 +4,37 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 
 ## What's Included
 
-| Component | Description |
-|-----------|-------------|
-| **NixOS Base** | Declarative system config (`infra/nixos/base.nix`): SSH, networking, nixpi-agent user, packages. Toggleable service modules in `infra/nixos/modules/` |
-| **@nixpi/core** | Shared TypeScript domain library: ObjectStore, JsYamlFrontmatterParser, typed interfaces (`packages/nixpi-core/`) |
-| **Object Store** | Flat-file markdown with YAML frontmatter in `data/objects/` (Syncthing-synced); shell + TS implementations |
-| **Matrix Bridge** | matrix-bot-sdk adapter (`services/matrix-bridge/`); receives messages, processes through Pi |
-| **Heartbeat Timer** | Systemd timer for periodic agent observation cycles (`infra/nixos/modules/heartbeat.nix`) |
-| **OpenPersona** | 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/` |
-| **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration; disable with `nixpi.desktop.enable = false` |
-| **VS Code** | Installed system-wide as `vscode` for GUI editing on the desktop |
-| **`nixpi` command** | Primary Nixpi CLI wrapper (single instance) |
-| **`claude` command** | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS |
-| **SSH** | OpenSSH with hardened settings, restricted to local network and Tailscale |
-| **ttyd** | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables |
-| **Tailscale** | VPN for secure remote access |
-| **Syncthing** | File synchronization (GUI on `127.0.0.1:8384`, restricted to Tailscale via nftables) |
+| Component                   | Description                                                                                                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NixOS Base**              | Declarative system config (`infra/nixos/base.nix`): SSH, networking, nixpi-agent user, packages. Toggleable service modules in `infra/nixos/modules/` |
+| **@nixpi/core**             | Shared TypeScript domain library: ObjectStore, JsYamlFrontmatterParser, typed interfaces (`packages/nixpi-core/`)                                     |
+| **Object Store**            | Flat-file markdown with YAML frontmatter in `data/objects/` (Syncthing-synced); shell + TS implementations                                            |
+| **Matrix Bridge**           | matrix-bot-sdk adapter (`services/matrix-bridge/`); receives messages, processes through Pi                                                           |
+| **Heartbeat Timer**         | Systemd timer for periodic agent observation cycles (`infra/nixos/modules/heartbeat.nix`)                                                             |
+| **OpenPersona**             | 4-layer identity model (SOUL, BODY, FACULTY, SKILL) in `persona/`                                                                                     |
+| **GNOME Desktop (default)** | local HDMI monitor setup path (GDM + GNOME) for first-boot Wi-Fi/display configuration; disable with `nixpi.desktop.enable = false`                   |
+| **VS Code**                 | Installed system-wide as `vscode` for GUI editing on the desktop                                                                                      |
+| **`nixpi` command**         | Primary Nixpi CLI wrapper (single instance)                                                                                                           |
+| **`claude` command**        | Claude Code CLI from nixpkgs unstable (`claude-code-bin`), patched for NixOS                                                                          |
+| **SSH**                     | OpenSSH with hardened settings, restricted to local network and Tailscale                                                                             |
+| **ttyd**                    | Web terminal interface (`http://<tailscale-ip>:7681`), restricted to Tailscale via nftables                                                           |
+| **Tailscale**               | VPN for secure remote access                                                                                                                          |
+| **Syncthing**               | File synchronization (GUI on `127.0.0.1:8384`, restricted to Tailscale via nftables)                                                                  |
 
 ## Services Reference
 
-| Service | Config location | Enable flag | Notes |
-|---------|----------------|-------------|-------|
-| SSH | `base.nix` — `services.openssh` | always on | Hardened; reachable from Tailscale + LAN (bootstrap path) |
-| Heartbeat | `modules/heartbeat.nix` — systemd timer | `nixpi.heartbeat.enable` | Periodic agent observation cycle; configurable interval |
-| Matrix Bridge | `modules/matrix.nix` — systemd service | `nixpi.channels.matrix.enable` | matrix-bot-sdk adapter; processes messages through Pi; user allowlist |
-| Desktop | `modules/desktop.nix` | `nixpi.desktop.enable` | GNOME/GDM + Wi-Fi tray tooling, VS Code, Chromium |
-| ttyd | `modules/ttyd.nix` | `nixpi.ttyd.enable` | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
-| Tailscale | `modules/tailscale.nix` | `nixpi.tailscale.enable` | VPN for secure remote access |
-| Syncthing | `modules/syncthing.nix` | `nixpi.syncthing.enable` | File sync; GUI + sync ports are Tailscale-only |
-| Password Policy | `modules/password-policy.nix` | `nixpi.passwordPolicy.enable` | Enforces password policy for the primary user |
-| nixpi | `base.nix` — `nixpiCli` | always on | Primary CLI wrapper (`nixpi`) |
-| claude | `base.nix` — `environment.systemPackages` | always on | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
+| Service         | Config location                           | Enable flag                    | Notes                                                                       |
+| --------------- | ----------------------------------------- | ------------------------------ | --------------------------------------------------------------------------- |
+| SSH             | `base.nix` — `services.openssh`           | always on                      | Hardened; reachable from Tailscale + LAN (bootstrap path)                   |
+| Heartbeat       | `modules/heartbeat.nix` — systemd timer   | `nixpi.heartbeat.enable`       | Periodic agent observation cycle; configurable interval                     |
+| Matrix Bridge   | `modules/matrix.nix` — systemd service    | `nixpi.channels.matrix.enable` | matrix-bot-sdk adapter; processes messages through Pi; user allowlist       |
+| Desktop         | `modules/desktop.nix`                     | `nixpi.desktop.enable`         | GNOME/GDM + Wi-Fi tray tooling, VS Code, Chromium                           |
+| ttyd            | `modules/ttyd.nix`                        | `nixpi.ttyd.enable`            | Web terminal on port 7681; Tailscale-only; delegates login to localhost SSH |
+| Tailscale       | `modules/tailscale.nix`                   | `nixpi.tailscale.enable`       | VPN for secure remote access                                                |
+| Syncthing       | `modules/syncthing.nix`                   | `nixpi.syncthing.enable`       | File sync; GUI + sync ports are Tailscale-only                              |
+| Password Policy | `modules/password-policy.nix`             | `nixpi.passwordPolicy.enable`  | Enforces password policy for the primary user                               |
+| nixpi           | `base.nix` — `nixpiCli`                   | always on                      | Primary CLI wrapper (`nixpi`)                                               |
+| claude          | `base.nix` — `environment.systemPackages` | always on                      | Claude Code CLI (`claude`) from nixpkgs unstable binary package             |
 
 ## Access Methods
 
@@ -52,6 +52,7 @@ Firewall scope is split by service: SSH remains available from local network and
 Nixpi includes a self-hosted Matrix messaging channel powered by Conduit (lightweight Rust homeserver) and matrix-bot-sdk. Message the bot from Element or any Matrix client over Tailscale.
 
 Interactive setup (recommended):
+
 ```bash
 nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md
 ```
@@ -212,6 +213,7 @@ nixpi.primaryUserDisplayName = "Alex";
 ```
 
 ### Is Nixpi preinstalled?
+
 Yes. After `nixos-rebuild switch --flake .`, `nixpi` and `claude` are installed automatically as part of the system configuration. No separate install step is required.
 
 ## Dev Shell

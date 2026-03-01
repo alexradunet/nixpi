@@ -2,7 +2,12 @@
 #
 # When enabled, provisions a full GNOME desktop with GDM login manager.
 # Includes desktop helper packages (networkmanagerapplet, xrandr).
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.desktop;

@@ -7,7 +7,13 @@
 #   pkgsUnstable— optional newer package set for selected tools
 #   lib         — helper functions (merging, filtering, etc.)
 #   ...         — catches any extra args so the module stays forward-compatible
-{ config, pkgs, lib, pkgsUnstable ? pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  pkgsUnstable ? pkgs,
+  ...
+}:
 
 # `let ... in` binds local variables. Everything between `let` and `in`
 # is only visible within this file.
@@ -55,8 +61,10 @@ let
 
   extensionManifest = builtins.fromJSON (builtins.readFile ../pi/extensions/packages.json);
   extensionPackages = extensionManifest.packages or [ ];
-  isPinnedNpmSource = source:
-    builtins.match "^npm:(@[^/]+/[^@]+|[^@/][^@]*)@[0-9]+\\.[0-9]+\\.[0-9]+([-.+][0-9A-Za-z.-]+)*$" source != null;
+  isPinnedNpmSource =
+    source:
+    builtins.match "^npm:(@[^/]+/[^@]+|[^@/][^@]*)@[0-9]+\\.[0-9]+\\.[0-9]+([-.+][0-9A-Za-z.-]+)*$" source
+    != null;
   extensionPackagesArePinned = builtins.all isPinnedNpmSource extensionPackages;
   settingsSeedJson = builtins.toJSON {
     skills = [ "${repoRoot}/infra/pi/skills" ];
@@ -90,22 +98,37 @@ let
 
   nixpiCli = pkgs.writeShellApplication {
     name = "nixpi";
-    runtimeInputs = [ pkgs.jq pkgs.nodejs_22 piWrapper ];
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.nodejs_22
+      piWrapper
+    ];
     text = ''
       PI_BIN="${piWrapper}/bin/pi"
       PI_DIR="${piDir}"
       REPO_ROOT="${repoRoot}"
       EXTENSIONS_MANIFEST="$REPO_ROOT/infra/pi/extensions/packages.json"
-    '' + builtins.readFile ./scripts/nixpi-cli.sh;
+    ''
+    + builtins.readFile ./scripts/nixpi-cli.sh;
   };
 
   # Read OpenPersona 4-layer files if persona dir exists.
   personaDir = config.nixpi.persona.dir;
-  readPersonaLayer = name:
-    let path = personaDir + "/${name}";
-    in if builtins.pathExists path then builtins.readFile path else "";
+  readPersonaLayer =
+    name:
+    let
+      path = personaDir + "/${name}";
+    in
+    if builtins.pathExists path then builtins.readFile path else "";
   personaContent = builtins.concatStringsSep "\n" (
-    builtins.filter (s: s != "") (map readPersonaLayer [ "SOUL.md" "BODY.md" "FACULTY.md" "SKILL.md" ])
+    builtins.filter (s: s != "") (
+      map readPersonaLayer [
+        "SOUL.md"
+        "BODY.md"
+        "FACULTY.md"
+        "SKILL.md"
+      ]
+    )
   );
 
   primaryUser = config.nixpi.primaryUser;
@@ -226,8 +249,13 @@ in
   config = {
     nixpi._internal.npmEnvSetup = npmEnvSetup;
     nixpi._internal.piWrapperBin = "${piWrapper}/bin/pi";
-    nixpi._internal.tailscaleSubnets = { ipv4 = "100.0.0.0/8"; ipv6 = "fd7a:115c:a1e0::/48"; };
-    nixpi._internal.mkTailscaleFirewallRules = import ./lib/mk-tailscale-firewall-rules.nix { inherit config; };
+    nixpi._internal.tailscaleSubnets = {
+      ipv4 = "100.0.0.0/8";
+      ipv6 = "fd7a:115c:a1e0::/48";
+    };
+    nixpi._internal.mkTailscaleFirewallRules = import ./lib/mk-tailscale-firewall-rules.nix {
+      inherit config;
+    };
     nixpi.objects.enable = lib.mkDefault true;
     nixpi.heartbeat.enable = lib.mkDefault true;
     nixpi.tailscale.enable = lib.mkDefault true;
@@ -245,7 +273,10 @@ in
 
     assertions = [
       {
-        assertion = let grub = config.boot.loader.grub; in
+        assertion =
+          let
+            grub = config.boot.loader.grub;
+          in
           !grub.enable || grub.devices != [ ] || grub.mirroredBoots != [ ];
         message = ''
           Nixpi: GRUB is enabled but no boot devices are configured.
@@ -277,177 +308,188 @@ in
       }
     ];
 
-  # Enable flakes and nix-command
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+    # Enable flakes and nix-command
+    nix.settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
 
-  # Allow unfree packages. mkDefault on the whole attrset so the VM test
-  # framework's read-only nixpkgs.config (types.unique) takes precedence.
-  nixpkgs.config = lib.mkDefault { allowUnfree = true; };
+    # Allow unfree packages. mkDefault on the whole attrset so the VM test
+    # framework's read-only nixpkgs.config (types.unique) takes precedence.
+    nixpkgs.config = lib.mkDefault { allowUnfree = true; };
 
-  # nix-ld provides a dynamic linker shim so pre-compiled binaries (e.g. VS Code
-  # remote server, downloaded tools) can run on NixOS, which normally lacks the
-  # standard /lib/ld-linux path that most Linux binaries expect.
-  programs.nix-ld.enable = true;
+    # nix-ld provides a dynamic linker shim so pre-compiled binaries (e.g. VS Code
+    # remote server, downloaded tools) can run on NixOS, which normally lacks the
+    # standard /lib/ld-linux path that most Linux binaries expect.
+    programs.nix-ld.enable = true;
 
-  # Networking
-  networking.networkmanager.enable = true;
-  # nftables is the modern Linux firewall (successor to iptables).
-  # NixOS can generate rules from its firewall options and also accept raw
-  # nftables syntax via extraInputRules (see below).
-  networking.nftables.enable = true;
+    # Networking
+    networking.networkmanager.enable = true;
+    # nftables is the modern Linux firewall (successor to iptables).
+    # NixOS can generate rules from its firewall options and also accept raw
+    # nftables syntax via extraInputRules (see below).
+    networking.nftables.enable = true;
 
-  # Timezone and locale
-  time.timeZone = config.nixpi.timeZone;
-  i18n.defaultLocale = "en_US.UTF-8";
+    # Timezone and locale
+    time.timeZone = config.nixpi.timeZone;
+    i18n.defaultLocale = "en_US.UTF-8";
 
-  # SSH with security hardening
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = true;
-      KbdInteractiveAuthentication = true;
-      X11Forwarding = false;
-      MaxAuthTries = 3;
-      ClientAliveInterval = 300;
-      ClientAliveCountMax = 2;
+    # SSH with security hardening
+    services.openssh = {
+      enable = true;
+      settings = {
+        PermitRootLogin = "no";
+        PasswordAuthentication = true;
+        KbdInteractiveAuthentication = true;
+        X11Forwarding = false;
+        MaxAuthTries = 3;
+        ClientAliveInterval = 300;
+        ClientAliveCountMax = 2;
+      };
     };
-  };
 
-  # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap).
-  # Service-specific rules live in their modules (syncthing, ttyd, etc.).
-  # extraInputRules accepts raw nftables syntax that NixOS injects into the
-  # input chain.
-  networking.firewall = {
-    enable = true;
+    # Firewall policy: SSH is reachable from Tailscale + LAN (bootstrap).
+    # Service-specific rules live in their modules (syncthing, ttyd, etc.).
+    # extraInputRules accepts raw nftables syntax that NixOS injects into the
+    # input chain.
+    networking.firewall = {
+      enable = true;
 
-    extraInputRules = let ts = config.nixpi._internal.tailscaleSubnets; in ''
-      # Allow SSH from Tailscale and local network
-      ip saddr ${ts.ipv4} tcp dport 22 accept
-      ip6 saddr ${ts.ipv6} tcp dport 22 accept
-      ip saddr 192.168.0.0/16 tcp dport 22 accept
-      ip saddr 10.0.0.0/8 tcp dport 22 accept
-      tcp dport 22 drop
+      extraInputRules =
+        let
+          ts = config.nixpi._internal.tailscaleSubnets;
+        in
+        ''
+          # Allow SSH from Tailscale and local network
+          ip saddr ${ts.ipv4} tcp dport 22 accept
+          ip6 saddr ${ts.ipv6} tcp dport 22 accept
+          ip saddr 192.168.0.0/16 tcp dport 22 accept
+          ip saddr 10.0.0.0/8 tcp dport 22 accept
+          tcp dport 22 drop
+        '';
+    };
+
+    # Keep existing account passwords mutable so first-install users retain
+    # credentials configured in the NixOS installer.
+    users.mutableUsers = true;
+
+    # Nixpi assistant system user — owns services and agent state.
+    users.groups.nixpi = { };
+
+    users.users.${config.nixpi.assistantUser} = {
+      isSystemUser = true;
+      group = "nixpi";
+      home = "/var/lib/nixpi";
+      createHome = true;
+      description = "Nixpi AI assistant";
+    };
+
+    # User configuration
+    users.users.${primaryUser} = {
+      isNormalUser = true;
+      home = userHome;
+      description = userDisplayName;
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "nixpi"
+      ];
+    };
+
+    # System packages
+    # `with pkgs;` brings all pkgs attributes into scope so we can write `git`
+    # instead of `pkgs.git` for every package in the list.
+    environment.systemPackages = with pkgs; [
+      # Development tools
+      git
+      gh
+      nodejs_22
+      vim
+      neovim
+      nano
+
+      # Language servers and linters
+      nixd # Nix LSP
+      bash-language-server # Bash LSP
+      shellcheck # Shell linter (used by bash-language-server)
+      typescript-language-server # TS/JS LSP
+
+      # Network tools
+      curl
+      wget
+
+      # Search and utility tools
+      jq
+      yq-go # YAML processor for object frontmatter
+      ripgrep
+      fd
+      tree
+      htop
+
+      # Terminal multiplexer
+      tmux
+
+      # AI coding tools
+      (pkgsUnstable."claude-code-bin") # Claude Code CLI (native binary, patched for NixOS)
+      nixpiCli # Primary Nixpi wrapper command
+    ];
+
+    # Ensure ~/.local/bin is in PATH
+    environment.localBinInPath = true;
+
+    # Activation scripts run as root during `nixos-rebuild switch`, after the
+    # system is built but before services start. They're used for one-time setup.
+    # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
+    #
+    # IMPORTANT:
+    # - SYSTEM.md is declaratively refreshed on each activation so policy/prompt
+    #   updates apply automatically.
+    # - settings.json is seeded write-once to avoid clobbering runtime/user state.
+    system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
+          PI_DIR="${piDir}"
+
+          install -d -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+
+          # Keep SYSTEM.md in sync with declarative policy/prompt content.
+          cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
+      ${piSystemPrompt}
+      SYSEOF
+          chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/SYSTEM.md"
+
+          # Seed settings if absent.
+          # Single instance preloads Nixpi skills plus declarative extension sources.
+          if [ ! -f "$PI_DIR/settings.json" ]; then
+            cat > "$PI_DIR/settings.json" <<'JSONEOF'
+      ${settingsSeedJson}
+      JSONEOF
+          fi
+          if [ -f "$PI_DIR/settings.json" ]; then
+            chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
+          fi
     '';
-  };
 
-  # Keep existing account passwords mutable so first-install users retain
-  # credentials configured in the NixOS installer.
-  users.mutableUsers = true;
+    # Secrets directory — root-owned, not world-readable.
+    system.activationScripts.nixpiSecrets = lib.stringAfter [ "users" ] ''
+      install -d -m 0700 -o root -g root /etc/nixpi/secrets
+    '';
 
-  # Nixpi assistant system user — owns services and agent state.
-  users.groups.nixpi = {};
-
-  users.users.${config.nixpi.assistantUser} = {
-    isSystemUser = true;
-    group = "nixpi";
-    home = "/var/lib/nixpi";
-    createHome = true;
-    description = "Nixpi AI assistant";
-  };
-
-  # User configuration
-  users.users.${primaryUser} = {
-    isNormalUser = true;
-    home = userHome;
-    description = userDisplayName;
-    extraGroups = [ "wheel" "networkmanager" "nixpi" ];
-  };
-
-  # System packages
-  # `with pkgs;` brings all pkgs attributes into scope so we can write `git`
-  # instead of `pkgs.git` for every package in the list.
-  environment.systemPackages = with pkgs; [
-    # Development tools
-    git
-    gh
-    nodejs_22
-    vim
-    neovim
-    nano
-
-    # Language servers and linters
-    nixd                          # Nix LSP
-    bash-language-server          # Bash LSP
-    shellcheck                    # Shell linter (used by bash-language-server)
-    typescript-language-server    # TS/JS LSP
-
-    # Network tools
-    curl
-    wget
-
-    # Search and utility tools
-    jq
-    yq-go        # YAML processor for object frontmatter
-    ripgrep
-    fd
-    tree
-    htop
-
-    # Terminal multiplexer
-    tmux
-
-    # AI coding tools
-    (pkgsUnstable."claude-code-bin") # Claude Code CLI (native binary, patched for NixOS)
-    nixpiCli                  # Primary Nixpi wrapper command
-  ];
-
-  # Ensure ~/.local/bin is in PATH
-  environment.localBinInPath = true;
-
-  # Activation scripts run as root during `nixos-rebuild switch`, after the
-  # system is built but before services start. They're used for one-time setup.
-  # `lib.stringAfter [ "users" ]` ensures this runs after user accounts exist.
-  #
-  # IMPORTANT:
-  # - SYSTEM.md is declaratively refreshed on each activation so policy/prompt
-  #   updates apply automatically.
-  # - settings.json is seeded write-once to avoid clobbering runtime/user state.
-  system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
-    PI_DIR="${piDir}"
-
-    install -d -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
-
-    # Keep SYSTEM.md in sync with declarative policy/prompt content.
-    cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
-${piSystemPrompt}
-SYSEOF
-    chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/SYSTEM.md"
-
-    # Seed settings if absent.
-    # Single instance preloads Nixpi skills plus declarative extension sources.
-    if [ ! -f "$PI_DIR/settings.json" ]; then
-      cat > "$PI_DIR/settings.json" <<'JSONEOF'
-${settingsSeedJson}
-JSONEOF
-    fi
-    if [ -f "$PI_DIR/settings.json" ]; then
-      chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
-    fi
-  '';
-
-  # Secrets directory — root-owned, not world-readable.
-  system.activationScripts.nixpiSecrets = lib.stringAfter [ "users" ] ''
-    install -d -m 0700 -o root -g root /etc/nixpi/secrets
-  '';
-
-  # Keep login-manager display name aligned with configured primary user
-  # display name, even when users.mutableUsers is enabled.
-  system.activationScripts.syncPrimaryUserDisplayName = lib.stringAfter [ "users" ] ''
-    if ${lib.getExe' pkgs.glibc.bin "getent"} passwd ${primaryUserShell} >/dev/null; then
-      currentGecos="$(${lib.getExe' pkgs.glibc.bin "getent"} passwd ${primaryUserShell} | ${lib.getExe' pkgs.gawk "awk"} -F: '{print $5}')"
-      if [ "$currentGecos" != ${userDisplayNameShell} ]; then
-        ${lib.getExe' pkgs.shadow "usermod"} -c ${userDisplayNameShell} ${primaryUserShell}
+    # Keep login-manager display name aligned with configured primary user
+    # display name, even when users.mutableUsers is enabled.
+    system.activationScripts.syncPrimaryUserDisplayName = lib.stringAfter [ "users" ] ''
+      if ${lib.getExe' pkgs.glibc.bin "getent"} passwd ${primaryUserShell} >/dev/null; then
+        currentGecos="$(${lib.getExe' pkgs.glibc.bin "getent"} passwd ${primaryUserShell} | ${lib.getExe' pkgs.gawk "awk"} -F: '{print $5}')"
+        if [ "$currentGecos" != ${userDisplayNameShell} ]; then
+          ${lib.getExe' pkgs.shadow "usermod"} -c ${userDisplayNameShell} ${primaryUserShell}
+        fi
       fi
-    fi
-  '';
+    '';
 
-  # Automatic garbage collection
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
+    # Automatic garbage collection
+    nix.gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
 
     # First-run setup hint for new installations.
     environment.etc."profile.d/nixpi-first-run.sh".text = ''
@@ -458,9 +500,9 @@ JSONEOF
       fi
     '';
 
-  # stateVersion tells NixOS which version's defaults to use for stateful data
-  # (databases, state directories). It does NOT control package versions.
-  # Never change this after install — it would break existing state assumptions.
-  system.stateVersion = "25.11";
+    # stateVersion tells NixOS which version's defaults to use for stateful data
+    # (databases, state directories). It does NOT control package versions.
+    # Never change this after install — it would break existing state assumptions.
+    system.stateVersion = "25.11";
   };
 }

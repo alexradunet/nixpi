@@ -5,6 +5,7 @@ Related: [Docs Home](../README.md) · [Operating Model](../runtime/OPERATING_MOD
 This document defines canonical sources when information conflicts.
 
 ## Priority Order
+
 1. **System behavior (canonical):**
    - Root flake entrypoint: `./flake.nix`, `./flake.lock`
    - `infra/nixos/*.nix`
@@ -20,6 +21,7 @@ This document defines canonical sources when information conflicts.
    - `docs/meta/DOCS_STYLE.md`
 
 ## Configuration Ownership
+
 - Core NixOS settings (SSH, nix, users, networking) are declared in `infra/nixos/base.nix`.
 - Each optional service module in `infra/nixos/modules/` is the canonical source for its service configuration (Tailscale, Syncthing, ttyd, desktop, password-policy, matrix, heartbeat, objects).
 - Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
@@ -28,9 +30,11 @@ This document defines canonical sources when information conflicts.
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 
 ## Generated Artifacts Policy
+
 - `docs/agents/handoffs/*.md` are operational artifacts generated during workflows.
 - They are **local by default** and not committed pre-release.
 - Keep only `docs/agents/handoffs/.gitkeep` in version control.
 
 ## Pre-Release Simplicity Reminder
+
 Before first stable release, avoid compatibility shims and legacy paths unless explicitly justified with a removal plan.

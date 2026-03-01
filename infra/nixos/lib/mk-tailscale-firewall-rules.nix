@@ -5,7 +5,10 @@
 #   mkRules { port = 22000; protocols = ["tcp" "udp"]; }
 { config }:
 
-{ port, protocols ? ["tcp"] }:
+{
+  port,
+  protocols ? [ "tcp" ],
+}:
 
 let
   ts = config.nixpi._internal.tailscaleSubnets;

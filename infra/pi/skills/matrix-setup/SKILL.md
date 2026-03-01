@@ -8,6 +8,7 @@ description: Interactive Matrix channel setup — provisions Conduit homeserver,
 Use this skill when the user wants to set up the Matrix messaging channel on their Nixpi instance. This skill will become part of a broader interactive Nixpi setup assistant that can enable/disable modules and configure the system declaratively.
 
 ## Goals
+
 1. Provision a local Conduit Matrix homeserver on the Nixpi machine.
 2. Create the human and bot Matrix accounts.
 3. Write the bot access token to the secrets file.
@@ -15,6 +16,7 @@ Use this skill when the user wants to set up the Matrix messaging channel on the
 5. Leave the system in a secure state (registration disabled).
 
 ## Prerequisites
+
 - Nixpi is installed and `nixos-rebuild switch --flake .` works.
 - The user has shell access (SSH, ttyd, or local terminal).
 - The user has `sudo` privileges.
@@ -175,21 +177,22 @@ Use this skill when the user wants to set up the Matrix messaging channel on the
 
 All options live under `nixpi.channels.matrix` in the host's Nix config:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `enable` | `false` | Enable the Matrix channel |
-| `serverName` | `"nixpi.local"` | Domain part of Matrix IDs |
-| `homeserverUrl` | `"http://localhost:6167"` | Conduit client-server URL |
-| `humanUser` | `"human"` | Human account localpart |
-| `botUser` | `"nixpi"` | Bot account localpart |
-| `allowedUsers` | `[ "@<humanUser>:<serverName>" ]` | Users allowed to message the bot |
-| `accessTokenFile` | `"/run/secrets/nixpi-matrix-token"` | Path to bot access token env file |
-| `conduit.enable` | `true` | Provision local Conduit homeserver |
-| `conduit.allowRegistration` | `false` | Temporarily allow account registration |
+| Option                      | Default                             | Description                            |
+| --------------------------- | ----------------------------------- | -------------------------------------- |
+| `enable`                    | `false`                             | Enable the Matrix channel              |
+| `serverName`                | `"nixpi.local"`                     | Domain part of Matrix IDs              |
+| `homeserverUrl`             | `"http://localhost:6167"`           | Conduit client-server URL              |
+| `humanUser`                 | `"human"`                           | Human account localpart                |
+| `botUser`                   | `"nixpi"`                           | Bot account localpart                  |
+| `allowedUsers`              | `[ "@<humanUser>:<serverName>" ]`   | Users allowed to message the bot       |
+| `accessTokenFile`           | `"/run/secrets/nixpi-matrix-token"` | Path to bot access token env file      |
+| `conduit.enable`            | `true`                              | Provision local Conduit homeserver     |
+| `conduit.allowRegistration` | `false`                             | Temporarily allow account registration |
 
 ## Troubleshooting
 
 ### Conduit won't start
+
 ```bash
 journalctl -u conduit --no-pager -n 50
 # Common: port 6167 already in use, RocksDB corruption
@@ -197,6 +200,7 @@ journalctl -u conduit --no-pager -n 50
 ```
 
 ### Bridge keeps restarting
+
 ```bash
 journalctl -u nixpi-matrix-bridge --no-pager -n 50
 # Common: invalid access token, Conduit not ready yet
@@ -204,11 +208,13 @@ journalctl -u nixpi-matrix-bridge --no-pager -n 50
 ```
 
 ### Bot doesn't respond to messages
+
 - Confirm the sending user is in `allowedUsers` (check with `grep NIXPI_MATRIX_ALLOWED_USERS`)
 - Confirm the bot has joined the room (check bridge logs for "room.message" events)
 - Confirm Pi is accessible: `pi -p "hello"` from the nixpi user
 
 ### Access token expired or lost
+
 ```bash
 # Re-run setup with registration temporarily enabled
 # Or login directly if you know the bot password:
@@ -219,6 +225,7 @@ curl -s -X POST http://localhost:6167/_matrix/client/v3/login \
 ```
 
 ## Safety Notes
+
 - Never commit access tokens or passwords to git.
 - The `accessTokenFile` uses EnvironmentFile loading to keep secrets out of the Nix store.
 - Registration is disabled by default — only enable temporarily during setup.
@@ -228,6 +235,7 @@ curl -s -X POST http://localhost:6167/_matrix/client/v3/login \
 ## Future: Module Setup Assistant
 
 This skill is the first step toward a broader **interactive Nixpi setup assistant** that can:
+
 - List all available Nixpi modules and their current state (enabled/disabled).
 - Guide the user through enabling/disabling modules interactively.
 - Validate configuration before applying.

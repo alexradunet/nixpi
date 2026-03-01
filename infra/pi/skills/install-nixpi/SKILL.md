@@ -10,9 +10,11 @@ Use this skill when the user is setting up Nixpi on a fresh NixOS machine or rec
 ## First-Run Detection
 
 Check whether setup has already been completed:
+
 ```bash
 [ -f /etc/nixpi/.setup-complete ] && echo "already configured" || echo "fresh install"
 ```
+
 If already configured, ask the user whether they want to reconfigure or exit.
 
 ## Distribution Model
@@ -28,6 +30,7 @@ Nixpi is consumed as a flake input via `nix flake init -t github:alexradunet/nix
 ```
 
 ## Goals
+
 1. Prevent disk UUID mismatch at boot.
 2. Prevent password/login surprises by reusing the existing installer user.
 3. Apply Nixpi only after explicit user confirmation.
@@ -52,6 +55,7 @@ pwd
 ```
 
 Determine:
+
 - **hostname** — current machine hostname
 - **username** — current user (or `$SUDO_USER` if running as root)
 - **boot mode** — UEFI or BIOS (drives bootloader config)
@@ -59,6 +63,7 @@ Determine:
 - **repo root** — current working directory (should contain `flake.nix` or be the target dir)
 
 Tell the user what you detected:
+
 > "I detected hostname **X**, user **Y**, boot mode **Z**, architecture **A**. I'll use these as defaults."
 
 ### Phase 2: Gather Configuration
@@ -66,44 +71,51 @@ Tell the user what you detected:
 Ask the user conversationally about each section. Use the detected values as defaults.
 
 #### Identity
+
 - **Hostname** — default: detected. "What hostname should this machine use?"
 - **Username** — default: detected. "What Linux username should be the primary user?"
 - **Timezone** — default: `UTC`. "What timezone? (e.g. Europe/London, America/New_York)"
 
 #### Boot Loader
+
 Auto-configure based on Phase 1 detection:
+
 - **UEFI**: systemd-boot + `canTouchEfiVariables = true` + `grub.enable = false`
 - **BIOS**: GRUB + ask for boot device (default `/dev/sda`)
 
 Tell the user what you'll configure and confirm.
 
 #### Modules
+
 Present the available modules with recommended defaults:
 
-| Module | Default | Description |
-|--------|---------|-------------|
-| `tailscale` | on | VPN for secure remote access |
-| `syncthing` | on | File synchronization |
-| `ttyd` | on | Web terminal (Tailscale-only) |
-| `desktop` | on | GNOME desktop + VS Code |
-| `passwordPolicy` | on | Password strength enforcement |
-| `objects` | on | Object store data directory |
-| `heartbeat` | off | Periodic agent observation cycle |
-| `matrix` | off | Matrix messaging channel |
+| Module           | Default | Description                      |
+| ---------------- | ------- | -------------------------------- |
+| `tailscale`      | on      | VPN for secure remote access     |
+| `syncthing`      | on      | File synchronization             |
+| `ttyd`           | on      | Web terminal (Tailscale-only)    |
+| `desktop`        | on      | GNOME desktop + VS Code          |
+| `passwordPolicy` | on      | Password strength enforcement    |
+| `objects`        | on      | Object store data directory      |
+| `heartbeat`      | off     | Periodic agent observation cycle |
+| `matrix`         | off     | Matrix messaging channel         |
 
 Ask: "Which modules would you like to change from these defaults?"
 
 ### Phase 3: Generate Hardware Config
 
 Run hardware detection:
+
 ```bash
 nixos-generate-config --show-hardware-config > hardware.nix
 ```
 
 Check for an existing desktop environment:
+
 ```bash
 systemctl is-active gdm sddm lightdm 2>/dev/null
 ```
+
 If a display manager is active, note it — the user may want `nixpi.desktop.enable = false` to preserve their existing desktop setup.
 
 Show the user a summary of the hardware config and confirm.
@@ -113,6 +125,7 @@ Show the user a summary of the hardware config and confirm.
 Using `templates/default/flake.nix` and `templates/default/nixpi-config.nix` as reference, generate two files with the user's values substituted.
 
 #### `flake.nix`
+
 ```nix
 {
   description = "My Nixpi server";
@@ -147,6 +160,7 @@ Using `templates/default/flake.nix` and `templates/default/nixpi-config.nix` as 
 Replace `<HOSTNAME>` with the user's chosen hostname and `<SYSTEM>` with the detected architecture.
 
 #### `nixpi-config.nix`
+
 ```nix
 { config, lib, ... }:
 
@@ -191,16 +205,19 @@ After user confirmation:
 ### Phase 6: Apply
 
 Run the NixOS rebuild:
+
 ```bash
 sudo nixos-rebuild switch --flake .
 ```
 
 If this is the very first flake rebuild (flakes not yet system-wide):
+
 ```bash
 sudo env NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#<HOSTNAME>"
 ```
 
 If the rebuild fails:
+
 - Show the error output.
 - Offer to rollback: `sudo nixos-rebuild switch --rollback`
 - Help the user diagnose and fix the issue.
@@ -235,6 +252,7 @@ If the rebuild fails:
 ## Module Configuration Reference
 
 All module enable flags live in `nixpi-config.nix`:
+
 ```nix
 nixpi.tailscale.enable = true;
 nixpi.syncthing.enable = true;
@@ -249,20 +267,26 @@ nixpi.channels.matrix.enable = false;
 ## Troubleshooting
 
 ### GRUB assertion error
+
 If you see "GRUB is enabled but no boot devices are configured":
+
 - UEFI machines: set `boot.loader.grub.enable = false;` and `boot.loader.systemd-boot.enable = true;`
 - BIOS machines: set `boot.loader.grub.devices = [ "/dev/sda" ];` (adjust to your disk)
 
 ### Rebuild fails with "path not found"
+
 Ensure all config files are staged: `git add -A`
 
 ### Flakes not enabled
+
 Add to your NixOS configuration and rebuild:
+
 ```nix
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 ```
 
 ## Safety Notes
+
 - Do not run destructive disk commands.
 - Do not edit boot/disk config without showing diff and asking the user first.
 - Keep changes minimal and declarative.

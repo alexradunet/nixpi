@@ -8,7 +8,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
       - run: npm ci
       - run: npm -w packages/nixpi-core test
       - run: nix-shell -p shellcheck --run "./scripts/lint.sh"

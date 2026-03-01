@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { IFrontmatterParser, IObjectStore, ObjectData, ObjectRef } from "./types.js";
+import type {
+  IFrontmatterParser,
+  IObjectStore,
+  ObjectData,
+  ObjectRef,
+} from "./types.js";
 import { JsYamlFrontmatterParser } from "./frontmatter.js";
 
 // Canonical runtime implementation: scripts/nixpi-object.sh (used by Pi skills).
@@ -10,7 +15,7 @@ export class ObjectStore implements IObjectStore {
 
   constructor(
     private readonly objectsDir: string,
-    parser?: IFrontmatterParser
+    parser?: IFrontmatterParser,
   ) {
     this.parser = parser ?? new JsYamlFrontmatterParser();
   }
@@ -26,7 +31,7 @@ export class ObjectStore implements IObjectStore {
   create(
     type: string,
     slug: string,
-    fields: Record<string, string> = {}
+    fields: Record<string, string> = {},
   ): string {
     const filepath = this.objectPath(type, slug);
 
@@ -35,7 +40,15 @@ export class ObjectStore implements IObjectStore {
     const now = this.nowIso();
 
     // Build data in priority order: type, slug, title, status, priority, project, area, ...rest, created, modified
-    const priorityKeys = ["type", "slug", "title", "status", "priority", "project", "area"];
+    const priorityKeys = [
+      "type",
+      "slug",
+      "title",
+      "status",
+      "priority",
+      "project",
+      "area",
+    ];
     const data: Record<string, unknown> = {};
 
     // Add priority keys first (if present)
@@ -55,10 +68,16 @@ export class ObjectStore implements IObjectStore {
 
     // Split comma-delimited tags/links with trim
     if (typeof data.tags === "string") {
-      data.tags = (data.tags as string).split(",").map((s) => s.trim()).filter(Boolean);
+      data.tags = (data.tags as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
     if (typeof data.links === "string") {
-      data.links = (data.links as string).split(",").map((s) => s.trim()).filter(Boolean);
+      data.links = (data.links as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
 
     // Timestamps last
@@ -71,7 +90,9 @@ export class ObjectStore implements IObjectStore {
     // Atomic exclusive-create: flag 'wx' fails if file already exists,
     // preventing race conditions between check and write.
     try {
-      fs.writeFileSync(filepath, this.parser.stringify(data, body), { flag: "wx" });
+      fs.writeFileSync(filepath, this.parser.stringify(data, body), {
+        flag: "wx",
+      });
     } catch (err: unknown) {
       if ((err as NodeJS.ErrnoException).code === "EEXIST") {
         throw new Error(`object already exists: ${type}/${slug}`);
@@ -96,10 +117,7 @@ export class ObjectStore implements IObjectStore {
     return this.parser.parse(raw);
   }
 
-  list(
-    type: string | null,
-    filters: Record<string, string> = {}
-  ): ObjectRef[] {
+  list(type: string | null, filters: Record<string, string> = {}): ObjectRef[] {
     const searchDirs: string[] = [];
 
     if (type === null) {
@@ -156,14 +174,16 @@ export class ObjectStore implements IObjectStore {
     return results;
   }
 
-  private static readonly PROTECTED_FIELDS = new Set(["type", "slug", "created"]);
+  private static readonly PROTECTED_FIELDS = new Set([
+    "type",
+    "slug",
+    "created",
+  ]);
 
-  update(
-    type: string,
-    slug: string,
-    fields: Record<string, string>
-  ): void {
-    const protectedKey = Object.keys(fields).find((k) => ObjectStore.PROTECTED_FIELDS.has(k));
+  update(type: string, slug: string, fields: Record<string, string>): void {
+    const protectedKey = Object.keys(fields).find((k) =>
+      ObjectStore.PROTECTED_FIELDS.has(k),
+    );
     if (protectedKey) {
       throw new Error(`cannot update protected field: ${protectedKey}`);
     }
@@ -183,7 +203,10 @@ export class ObjectStore implements IObjectStore {
 
     for (const [key, val] of Object.entries(fields)) {
       if (key === "tags" || key === "links") {
-        data[key] = val.split(",").map((s) => s.trim()).filter(Boolean);
+        data[key] = val
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
       } else {
         data[key] = val;
       }
@@ -201,7 +224,9 @@ export class ObjectStore implements IObjectStore {
     const results: ObjectRef[] = [];
     const seen = new Set<string>();
 
-    for (const entry of fs.readdirSync(this.objectsDir, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(this.objectsDir, {
+      withFileTypes: true,
+    })) {
       if (!entry.isDirectory()) continue;
       const typeDir = path.join(this.objectsDir, entry.name);
 
@@ -235,7 +260,7 @@ export class ObjectStore implements IObjectStore {
       const slash = ref.indexOf("/");
       if (slash === -1) {
         throw new Error(
-          `invalid reference format: '${ref}' (expected type/slug)`
+          `invalid reference format: '${ref}' (expected type/slug)`,
         );
       }
       return { type: ref.slice(0, slash), slug: ref.slice(slash + 1) };

@@ -10,6 +10,7 @@ Use this skill when creating, tracking, or transitioning evolution pipeline item
 ## Object Schema
 
 Evolution objects use frontmatter fields:
+
 - `type: evolution` (automatic)
 - `slug`: kebab-case identifier (e.g. `add-health-tracking`)
 - `title`: human-readable evolution name
@@ -26,6 +27,7 @@ Valid statuses:
 `proposed` | `planning` | `implementing` | `reviewing` | `conformance` | `approved` | `applied` | `rejected` | `stalled`
 
 Valid transitions (including rework loop):
+
 ```
 proposed -> planning -> implementing -> reviewing -> conformance -> approved -> applied
                         ^                |
@@ -46,6 +48,7 @@ Any -> rejected | stalled
 ## Commands
 
 ### Create an evolution
+
 ```bash
 nixpi-object create evolution "add-health-tracking" \
   --title="Add health tracking object type" \
@@ -53,27 +56,32 @@ nixpi-object create evolution "add-health-tracking" \
 ```
 
 ### Read an evolution
+
 ```bash
 nixpi-object read evolution "add-health-tracking"
 ```
 
 ### Update status and agent
+
 ```bash
 nixpi-object update evolution "add-health-tracking" --status=planning --agent=athena
 ```
 
 ### List evolutions by status
+
 ```bash
 nixpi-object list evolution --status=proposed
 nixpi-object list evolution --status=implementing
 ```
 
 ### List active evolutions (not terminal)
+
 ```bash
 nixpi-object list evolution | grep -v -E 'status: (applied|rejected)'
 ```
 
 ### Link evolution to related objects
+
 ```bash
 nixpi-object link evolution/add-health-tracking task/research-health-apis
 ```

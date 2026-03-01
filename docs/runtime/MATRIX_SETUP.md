@@ -30,6 +30,7 @@ Pi agent → stdout → Matrix response
 **Conduit** is a lightweight Matrix homeserver written in Rust (~15 MB RAM). It runs locally, stores data in RocksDB, and requires zero external infrastructure. No federation, no public exposure — just a private Matrix server on your Tailscale network.
 
 **Two accounts** are created during setup:
+
 - `@human:<serverName>` — your human account (you log in with this from Element)
 - `@nixpi:<serverName>` — the bot account (the bridge authenticates as this)
 
@@ -42,6 +43,7 @@ nixpi --skill ./infra/pi/skills/matrix-setup/SKILL.md
 ```
 
 This will:
+
 1. Review your current config and ask for customization.
 2. Enable registration, rebuild, create accounts.
 3. Disable registration, rebuild.
@@ -89,6 +91,7 @@ curl -sf http://localhost:6167/_matrix/client/versions
 Arguments: `<humanUser> <botUser> [tokenFilePath]`
 
 The script will:
+
 - Register both accounts with generated passwords.
 - Write the bot access token to `/run/secrets/nixpi-matrix-token`.
 - Print your human credentials — save these securely.
@@ -132,35 +135,40 @@ Look for: `Connected to Matrix homeserver.` and `Bot user ID: @nixpi:nixpi.local
 
 All options under `nixpi.channels.matrix`:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `enable` | `false` | Enable the Matrix channel |
-| `serverName` | `"nixpi.local"` | Domain part of Matrix user IDs |
-| `homeserverUrl` | `"http://localhost:6167"` | Conduit client-server API URL |
-| `humanUser` | `"human"` | Human account localpart |
-| `botUser` | `"nixpi"` | Bot account localpart |
-| `allowedUsers` | `[ "@<humanUser>:<serverName>" ]` | Users permitted to message the bot |
-| `accessTokenFile` | `"/run/secrets/nixpi-matrix-token"` | EnvironmentFile with `NIXPI_MATRIX_ACCESS_TOKEN` |
-| `conduit.enable` | `true` | Provision a local Conduit homeserver |
-| `conduit.allowRegistration` | `false` | Temporarily allow account registration |
+| Option                      | Default                             | Description                                      |
+| --------------------------- | ----------------------------------- | ------------------------------------------------ |
+| `enable`                    | `false`                             | Enable the Matrix channel                        |
+| `serverName`                | `"nixpi.local"`                     | Domain part of Matrix user IDs                   |
+| `homeserverUrl`             | `"http://localhost:6167"`           | Conduit client-server API URL                    |
+| `humanUser`                 | `"human"`                           | Human account localpart                          |
+| `botUser`                   | `"nixpi"`                           | Bot account localpart                            |
+| `allowedUsers`              | `[ "@<humanUser>:<serverName>" ]`   | Users permitted to message the bot               |
+| `accessTokenFile`           | `"/run/secrets/nixpi-matrix-token"` | EnvironmentFile with `NIXPI_MATRIX_ACCESS_TOKEN` |
+| `conduit.enable`            | `true`                              | Provision a local Conduit homeserver             |
+| `conduit.allowRegistration` | `false`                             | Temporarily allow account registration           |
 
 ## Troubleshooting
 
 ### Conduit won't start
+
 ```bash
 journalctl -u conduit --no-pager -n 50
 ```
+
 Common: port conflict on 6167, or RocksDB corruption after unclean shutdown.
 Fix: `sudo systemctl stop conduit && sudo rm -rf /var/lib/matrix-conduit/database && sudo systemctl start conduit`
 
 ### Bridge keeps restarting
+
 ```bash
 journalctl -u nixpi-matrix-bridge --no-pager -n 50
 ```
+
 Common: invalid or missing access token, Conduit not ready.
 Fix: re-run `./scripts/matrix-setup.sh` and `sudo systemctl restart nixpi-matrix-bridge`.
 
 ### Bot doesn't respond
+
 1. Confirm sender is in `allowedUsers`:
    ```bash
    systemctl show nixpi-matrix-bridge -p Environment | tr ' ' '\n' | grep ALLOWED
@@ -169,7 +177,9 @@ Fix: re-run `./scripts/matrix-setup.sh` and `sudo systemctl restart nixpi-matrix
 3. Confirm Pi works directly: `pi -p "hello"`
 
 ### Lost access token
+
 Re-enable registration temporarily, re-run the setup script, or login directly:
+
 ```bash
 curl -s -X POST http://localhost:6167/_matrix/client/v3/login \
   -H "Content-Type: application/json" \

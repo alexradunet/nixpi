@@ -5,17 +5,24 @@
 {
   name = "vm-full-stack";
 
-  nodes.machine = { config, pkgs, lib, ... }: {
-    imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
-    # Enable everything (except desktop — too heavy for VM)
-    nixpi.tailscale.enable = true;
-    nixpi.syncthing.enable = true;
-    nixpi.ttyd.enable = true;
-    nixpi.passwordPolicy.enable = true;
-    nixpi.objects.enable = true;
-    nixpi.heartbeat.enable = true;
-    nixpi.heartbeat.intervalMinutes = 60;
-  };
+  nodes.machine =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
+    {
+      imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
+      # Enable everything (except desktop — too heavy for VM)
+      nixpi.tailscale.enable = true;
+      nixpi.syncthing.enable = true;
+      nixpi.ttyd.enable = true;
+      nixpi.passwordPolicy.enable = true;
+      nixpi.objects.enable = true;
+      nixpi.heartbeat.enable = true;
+      nixpi.heartbeat.intervalMinutes = 60;
+    };
 
   testScript = ''
     machine.wait_for_unit("multi-user.target")

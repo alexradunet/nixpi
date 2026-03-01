@@ -7,10 +7,12 @@ compatibility: Requires `claude` CLI on PATH and authenticated.
 # Claude Consult (Opus via CLI)
 
 Use this skill when:
+
 - The user explicitly asks to consult Claude/Opus.
 - A second opinion is helpful for complex or uncertain answers.
 
 ## Safety Rules
+
 - Never include secrets/credentials in delegated prompts.
 - Redact tokens, private keys, passwords, and protected file contents before sending history.
 - Use non-interactive mode only (`-p`) and disable tools for read-only consultation.
@@ -53,8 +55,10 @@ PROMPT
    - If Claude conflicts with known facts, resolve before replying.
 
 ## Failure Handling
+
 - If CLI call fails, report that Claude consult failed and continue with your own best answer.
 - If prompt is too long, summarize oldest turns while keeping recent turns verbatim.
 
 ## Response Transparency
+
 When this skill is used, briefly state that you consulted Claude via CLI and integrated the result.

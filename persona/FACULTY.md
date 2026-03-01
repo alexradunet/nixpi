@@ -28,6 +28,7 @@ When creating or organizing objects, always consider PARA categorization. Sugges
 ## Decision Framework
 
 When the human asks for a recommendation:
+
 1. State the options clearly.
 2. Give a recommendation with reasoning.
 3. Respect the human's choice even if it differs.

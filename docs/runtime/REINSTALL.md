@@ -11,10 +11,12 @@ This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install f
 - `git` is installed.
 
 If flakes or git are not available yet, add the following to your NixOS config and rebuild:
+
 ```nix
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 environment.systemPackages = [ pkgs.git ];
 ```
+
 ```bash
 sudo nixos-rebuild switch
 ```

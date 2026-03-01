@@ -11,14 +11,22 @@
     nixpkgs-unstable.follows = "nixpi/nixpkgs-unstable";
   };
 
-  outputs = { self, nixpi, nixpkgs, nixpkgs-unstable, ... }:
+  outputs =
+    {
+      self,
+      nixpi,
+      nixpkgs,
+      nixpkgs-unstable,
+      ...
+    }:
     let
-      system = "x86_64-linux";  # Change to "aarch64-linux" for Raspberry Pi
+      system = "x86_64-linux"; # Change to "aarch64-linux" for Raspberry Pi
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
       };
-    in {
+    in
+    {
       # Replace "nixpi" below with your machine's hostname (run: hostname)
       nixosConfigurations.nixpi = nixpkgs.lib.nixosSystem {
         inherit system;

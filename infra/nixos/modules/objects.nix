@@ -2,7 +2,12 @@
 #
 # Objects are YAML-frontmatter Markdown files organized by type (journal, task, note, etc.).
 # This module ensures the directory tree exists with correct ownership.
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.nixpi.objects;
@@ -24,8 +29,20 @@ in
 
     types = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "journal" "task" "note" "evolution" ];
-      example = [ "journal" "task" "note" "person" "event" "health" ];
+      default = [
+        "journal"
+        "task"
+        "note"
+        "evolution"
+      ];
+      example = [
+        "journal"
+        "task"
+        "note"
+        "person"
+        "event"
+        "health"
+      ];
       description = ''
         Object types to create subdirectories for.
       '';

@@ -8,12 +8,19 @@
 {
   name = "vm-heartbeat-timer";
 
-  nodes.machine = { config, pkgs, lib, ... }: {
-    imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
+  nodes.machine =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
+    {
+      imports = [ (import ./_base-test-config.nix { inherit pkgsUnstableForTests; }) ];
 
-    nixpi.heartbeat.enable = true;
-    nixpi.heartbeat.intervalMinutes = 15;
-  };
+      nixpi.heartbeat.enable = true;
+      nixpi.heartbeat.intervalMinutes = 15;
+    };
 
   testScript = ''
     machine.wait_for_unit("multi-user.target")

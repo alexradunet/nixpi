@@ -10,6 +10,7 @@ Use this skill when the user wants to track, organize, or complete tasks.
 ## Object Schema
 
 Task objects use frontmatter fields:
+
 - `type: task` (automatic)
 - `slug`: kebab-case identifier (e.g. `fix-bike-tire`)
 - `title`: human-readable task name
@@ -24,34 +25,41 @@ Task objects use frontmatter fields:
 ## Commands
 
 ### Add a task
+
 ```bash
 nixpi-object create task "fix-bike-tire" --title="Fix bike tire" --status=active --priority=high --area=household
 ```
 
 ### Complete a task
+
 ```bash
 nixpi-object update task "fix-bike-tire" --status=done
 ```
 
 ### List active tasks
+
 ```bash
 nixpi-object list task --status=active
 ```
 
 ### List tasks by area
+
 ```bash
 nixpi-object list task --area=household
 ```
 
 ### List tasks by project
+
 ```bash
 nixpi-object list task --project=home-renovation
 ```
 
 ### Check overdue tasks
+
 List all active tasks and compare `due` dates to today.
 
 ### Link task to person or event
+
 ```bash
 nixpi-object link task/fix-bike-tire person/alice
 ```
