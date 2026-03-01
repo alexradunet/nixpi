@@ -19,7 +19,7 @@ pkgs.buildNpmPackage {
 
   src = ../../../.;
 
-  npmDepsHash = "sha256-WyxfnJ+tY5Txd/GN5tONbHyz29WNoUUnCutUKPRuD6w=";
+  npmDepsHash = "sha256-JFzz64SrRnV1xloGH+ymnaN7mJ6fPg3v2lJtXENsrhI=";
 
   makeCacheWritable = true;
 

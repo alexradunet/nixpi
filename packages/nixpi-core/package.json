@@ -6,6 +6,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./testing": "./dist/testing/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": ["dist/testing/index.d.ts"]
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

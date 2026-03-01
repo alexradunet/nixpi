@@ -132,6 +132,8 @@
         vm-persona-injection  = mkVmTest ./tests/vm/persona-injection.nix;
         vm-heartbeat-timer    = mkVmTest ./tests/vm/heartbeat-timer.nix;
         vm-matrix-bridge      = mkVmTest ./tests/vm/matrix-bridge.nix;
+        vm-matrix-bridge-errors = mkVmTest ./tests/vm/matrix-bridge-errors.nix;
+        vm-matrix-bridge-queue  = mkVmTest ./tests/vm/matrix-bridge-queue.nix;
         vm-tailscale-toggle   = mkVmTest ./tests/vm/tailscale-toggle.nix;
         vm-ttyd-toggle        = mkVmTest ./tests/vm/ttyd-toggle.nix;
         vm-syncthing-toggle   = mkVmTest ./tests/vm/syncthing-toggle.nix;
