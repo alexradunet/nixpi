@@ -15,7 +15,7 @@ No for core Nixpi.
 
 `nixpi` and `claude` are installed declaratively via NixOS (`base.nix` for core config; individual services live in toggleable modules under `infra/nixos/modules/` -- e.g. `tailscale.nix`, `ttyd.nix`, `syncthing.nix`, `desktop.nix`, `password-policy.nix`). Claude uses nixpkgs `claude-code-bin`.
 For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
-The bootstrap script runs as root and launches the `nixpi setup` wizard (dialog TUI) for guided first-run configuration.
+The bootstrap script runs as root and launches Pi with the install-nixpi skill for conversational first-run configuration.
 After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow

@@ -39,6 +39,6 @@ assert_file_contains "$FLAKE" 'nixpkgs-unstable.url'
 assert_contains "$LOCK_CONTENT" 'nixpkgs-unstable'
 assert_not_contains "$README_CONTENT" '`pi` command'
 assert_file_contains "$README" '`claude` command'
-assert_file_contains "$REINSTALL" 'nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1'
+assert_file_contains "$REINSTALL" 'nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3'
 
 echo "PASS: minimal pi packaging without llm-agents input"

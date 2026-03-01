@@ -158,7 +158,7 @@ Usage:
   nixpi rollback [--yes]                     Roll back to the previous NixOS generation
   nixpi npm install <package@x.y.z...>       Install pinned extension(s) and track them in-repo
   nixpi npm sync                             Rebuild profile extension state from manifest
-  nixpi setup [target-dir]                   Run the setup wizard (first-time or reconfigure)
+  nixpi setup                                 Run conversational setup (first-time or reconfigure)
   nixpi help                                 Show this help
 
 Notes:
@@ -245,7 +245,8 @@ EOF
     ;;
   setup)
     shift || true
-    exec bash "$REPO_ROOT/scripts/nixpi-setup.sh" "$@"
+    export PI_CODING_AGENT_DIR="$PI_DIR"
+    exec "$PI_BIN" --skill "$REPO_ROOT/infra/pi/skills/install-nixpi/SKILL.md" "$@"
     ;;
   *)
     export PI_CODING_AGENT_DIR="$PI_DIR"

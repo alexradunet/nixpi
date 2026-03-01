@@ -100,8 +100,7 @@ Nixpi/
   scripts/
     nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
     matrix-setup.sh            # One-shot Matrix account provisioning
-    bootstrap-fresh-nixos.sh   # Clone + guided Pi install workflow for fresh NixOS installs
-    add-host.sh                # Generate a new host config from hardware
+    bootstrap.sh               # Enable flakes + clone + launch Pi setup skill
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
     verify-nixpi.sh            # Post-rebuild nixpi wrapper smoke test
@@ -130,13 +129,13 @@ Scaffold a new Nixpi configuration from the flake template:
 nix flake init -t github:alexradunet/nixpi
 ```
 
-Then run the interactive setup wizard to configure hostname, username, AI provider, and module selection:
+Then run the conversational setup to configure hostname, username, AI provider, and module selection:
 
 ```bash
 nixpi setup
 ```
 
-First-run detection uses `/etc/nixpi/.setup-complete` to determine if the wizard has been run.
+First-run detection uses `/etc/nixpi/.setup-complete` to determine if setup has been completed.
 
 ### Bootstrap (fresh NixOS)
 
@@ -145,24 +144,10 @@ For a full reinstall on a fresh NixOS install, see [`docs/runtime/REINSTALL.md`]
 Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
 
 ```bash
-nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && sudo ./scripts/bootstrap.sh
 ```
 
-The bootstrap script runs as root, clones to `/tmp/nixpi-bootstrap`, and launches the setup wizard. It refreshes `infra/nixos/hosts/$(hostname).nix` from local hardware, then runs `nixpi setup` for guided module selection and first rebuild.
-
-For unattended installs, you can run:
-
-```bash
-./scripts/bootstrap-fresh-nixos.sh --non-interactive
-```
-
-For preview-only planning (no changes applied):
-
-```bash
-./scripts/bootstrap-fresh-nixos.sh --dry-run
-```
-
-When `add-host.sh` runs on a machine that already has a desktop UI configured, it sets `nixpi.desktop.enable = false` and preserves the existing desktop options instead of replacing them with the GNOME default.
+The bootstrap script enables flakes, clones the repo, then launches Pi with the `install-nixpi` skill for conversational first-time setup. Pi handles hardware detection, config generation, and the first rebuild.
 
 ### Rebuild NixOS after config changes
 
@@ -306,18 +291,11 @@ See the full runtime and evolution workflow in the [Operating Model](./docs/runt
 
 ## Adding a New Machine
 
-The flake auto-discovers hosts from `infra/nixos/hosts/`. Just add a file and rebuild:
+The flake auto-discovers hosts from `infra/nixos/hosts/`. Run `nixpi setup` on the new machine — Pi handles hardware detection, config generation, and the first rebuild:
 
-1. Install NixOS, clone this repo, then run:
-   ```bash
-   ./scripts/add-host.sh            # uses current hostname
-   ./scripts/add-host.sh myhost     # or specify one
-   ```
-2. Review the generated file, then:
-   ```bash
-   git add infra/nixos/hosts/<hostname>.nix
-   sudo nixos-rebuild switch --flake .
-   ```
+```bash
+nixpi setup
+```
 
 On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
 

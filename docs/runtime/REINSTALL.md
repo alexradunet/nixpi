@@ -2,8 +2,6 @@
 
 This is a copy-paste checklist for reinstalling Nixpi on a fresh NixOS install from the interactive installer.
 
-Nixpi now defaults to a GNOME desktop profile (closer to standard NixOS GNOME setups). On machines with an existing desktop, `add-host.sh` sets `nixpi.desktop.enable = false` and preserves the detected options.
-
 ## 0) Assumptions (fresh install defaults)
 
 - `git` is **not** installed yet.
@@ -28,7 +26,7 @@ Then edit `flake.nix` / host config and run `sudo nixos-rebuild switch --flake .
 Single-command one-liner:
 
 ```bash
-nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && ./scripts/bootstrap-fresh-nixos.sh
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && sudo ./scripts/bootstrap.sh
 ```
 
 Step-by-step equivalent:
@@ -37,31 +35,15 @@ Step-by-step equivalent:
 cd ~
 nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi
 cd ~/Nixpi
-./scripts/bootstrap-fresh-nixos.sh
+sudo ./scripts/bootstrap.sh
 ```
 
-Optional unattended mode (skips guided install and applies directly):
-
-```bash
-./scripts/bootstrap-fresh-nixos.sh --non-interactive
-```
-
-Optional preview mode (shows planned actions without changing anything):
-
-```bash
-./scripts/bootstrap-fresh-nixos.sh --dry-run
-```
-
-What `bootstrap-fresh-nixos.sh` does:
+What `bootstrap.sh` does:
 1. Runs as root (elevates via `sudo` if needed).
-2. Validates clone target path.
-3. Clones with one-time `nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone ...` when needed.
-4. Regenerates the host file for the current machine:
-   - `./scripts/add-host.sh --force "$(hostname)"`
-5. Default mode: launches the `nixpi setup` wizard (dialog-based TUI) for guided module selection and first rebuild.
-6. `--non-interactive` mode: runs first rebuild directly with defaults.
-7. `--dry-run` mode: prints the plan and exits without mutating the system.
-8. On completion, writes `/etc/nixpi/.setup-complete` to mark the system as configured. Subsequent boots skip the first-run wizard.
+2. Enables flakes and git via a temporary NixOS config overlay.
+3. Clones the Nixpi repo (skips if already present).
+4. Launches Pi with the `install-nixpi` skill for conversational setup — Pi handles hardware detection, module selection, config generation, and the first rebuild.
+5. On completion, writes `/etc/nixpi/.setup-complete` to mark the system as configured.
 
 ## 2) Manual path (same assumptions)
 
@@ -73,35 +55,21 @@ nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git 
 cd ~/Nixpi
 ```
 
-### Regenerate host file for this machine
-
-```bash
-./scripts/add-host.sh --force "$(hostname)"
-```
-
-This refresh avoids stale disk UUIDs and maps `nixpi.primaryUser` / `nixpi.repoRoot` to your current installer user.
-
 ### Guided install session (recommended)
 
-The preferred guided path is the setup wizard:
+Run the conversational setup:
 
 ```bash
 sudo nixpi setup
 ```
 
-This launches a dialog-based TUI that walks through module selection (Tailscale, ttyd, Syncthing, desktop, etc.), provider/auth configuration, and triggers the first rebuild. The wizard writes `/etc/nixpi/.setup-complete` on success.
-
-If `nixpi` is already installed and you want the skill-based flow instead:
-
-```bash
-nixpi --skill ./infra/pi/skills/install-nixpi/SKILL.md
-```
+This launches Pi with the install-nixpi skill for conversational setup — hardware detection, module selection, AI provider configuration, config generation, and the first rebuild.
 
 If `nixpi` is not installed yet (fresh system):
 
 ```bash
-nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.1 --skill ./infra/pi/skills/install-nixpi/SKILL.md
-# NOTE: The version above (0.55.1) should match `nixpi.piAgentVersion` in infra/nixos/base.nix.
+nix --extra-experimental-features "nix-command flakes" shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill ./infra/pi/skills/install-nixpi/SKILL.md
+# NOTE: The version above (0.55.3) should match `nixpi.piAgentVersion` in infra/nixos/base.nix.
 # Check the current value there before running this command.
 ```
 

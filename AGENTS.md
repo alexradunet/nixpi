@@ -79,7 +79,7 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 ## NixOS Module System
 - Services are extracted into toggleable modules in `infra/nixos/modules/` with `nixpi.<service>.enable` flags.
 - Available modules: `tailscale`, `ttyd`, `syncthing`, `desktop`, `passwordPolicy`, `heartbeat`, `matrix`, `objects`.
-- `nixpi setup` runs a dialog TUI for hostname, username, AI provider, and module selection.
+- `nixpi setup` launches the install-nixpi skill for conversational hostname, username, AI provider, and module configuration.
 - The flake exports individual `nixosModules` (`.default`, `.base`, `.tailscale`, etc.) for external consumption.
 
 ## Agent Behavior in This Repo
