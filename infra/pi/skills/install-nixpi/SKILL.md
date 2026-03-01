@@ -32,7 +32,10 @@ Nixpi is consumed as a flake input via `nix flake init -t github:alexradunet/nix
 2. Prevent password/login surprises by reusing the existing installer user.
 3. Apply Nixpi only after explicit user confirmation.
 4. Configure optional modules via `nixpi-config.nix` enable flags.
-5. Store API keys in `/etc/nixpi/secrets/` (root:root, mode 0700).
+
+## Prerequisites
+
+- NixOS with flakes enabled (`nix.settings.experimental-features = [ "nix-command" "flakes" ];`)
 
 ## Guided Flow
 
@@ -44,6 +47,7 @@ Gather system facts automatically — do not ask the user for these:
 hostname
 whoami
 [ -d /sys/firmware/efi ] && echo "UEFI" || echo "BIOS"
+uname -m   # x86_64 or aarch64
 pwd
 ```
 
@@ -51,10 +55,11 @@ Determine:
 - **hostname** — current machine hostname
 - **username** — current user (or `$SUDO_USER` if running as root)
 - **boot mode** — UEFI or BIOS (drives bootloader config)
+- **architecture** — map `x86_64` → `"x86_64-linux"`, `aarch64` → `"aarch64-linux"`
 - **repo root** — current working directory (should contain `flake.nix` or be the target dir)
 
 Tell the user what you detected:
-> "I detected hostname **X**, user **Y**, boot mode **Z**. I'll use these as defaults."
+> "I detected hostname **X**, user **Y**, boot mode **Z**, architecture **A**. I'll use these as defaults."
 
 ### Phase 2: Gather Configuration
 
@@ -88,11 +93,6 @@ Present the available modules with recommended defaults:
 
 Ask: "Which modules would you like to change from these defaults?"
 
-#### AI Provider
-- Ask: "Which AI provider? (Anthropic / OpenAI / custom)"
-- Ask for the API key.
-- Ask for the model name (provide sensible default per provider).
-
 ### Phase 3: Generate Hardware Config
 
 Run hardware detection:
@@ -125,7 +125,7 @@ Using `templates/default/flake.nix` and `templates/default/nixpi-config.nix` as 
 
   outputs = { self, nixpi, nixpkgs, nixpkgs-unstable, ... }:
     let
-      system = "x86_64-linux";
+      system = "<SYSTEM>";  # "x86_64-linux" or "aarch64-linux"
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
@@ -144,7 +144,7 @@ Using `templates/default/flake.nix` and `templates/default/nixpi-config.nix` as 
 }
 ```
 
-Replace `<HOSTNAME>` with the user's chosen hostname.
+Replace `<HOSTNAME>` with the user's chosen hostname and `<SYSTEM>` with the detected architecture.
 
 #### `nixpi-config.nix`
 ```nix
@@ -155,6 +155,9 @@ Replace `<HOSTNAME>` with the user's chosen hostname.
   networking.hostName = "<HOSTNAME>";
   nixpi.primaryUser = "<USERNAME>";
   nixpi.timeZone = "<TIMEZONE>";
+
+  # --- Path override ---
+  # nixpi.repoRoot = "<REPO_ROOT>";  # generate when pwd differs from /home/<USERNAME>/Nixpi
 
   # --- Boot loader ---
   # (UEFI or BIOS block based on detection)
@@ -171,6 +174,8 @@ Replace `<HOSTNAME>` with the user's chosen hostname.
 }
 ```
 
+If the current working directory is `/home/<USERNAME>/Nixpi`, leave `nixpi.repoRoot` commented out (it matches the default). Otherwise, uncomment it and set it to the actual `pwd`.
+
 Show the user the generated files and ask for confirmation before writing.
 
 ### Phase 5: Write Files + Initialize
@@ -178,26 +183,9 @@ Show the user the generated files and ask for confirmation before writing.
 After user confirmation:
 
 1. Write `flake.nix`, `hardware.nix`, and `nixpi-config.nix` to the repo root.
-2. Store the API key:
+2. Initialize git repo and stage files:
    ```bash
-   sudo install -d -m 0700 /etc/nixpi/secrets
-   # Write the appropriate env var (e.g. ANTHROPIC_API_KEY=sk-...)
-   sudo tee /etc/nixpi/secrets/ai-provider.env <<< '<KEY_VAR>=<KEY_VALUE>'
-   sudo chmod 600 /etc/nixpi/secrets/ai-provider.env
-   ```
-3. Seed Pi settings if not present:
-   ```bash
-   mkdir -p .pi/agent
-   cat > .pi/agent/settings.json <<'JSON'
-   {
-     "skills": ["./infra/pi/skills"],
-     "packages": []
-   }
-   JSON
-   ```
-4. Initialize git repo:
-   ```bash
-   git init && git add -A
+   git init && git add -A && git commit -m "Initial Nixpi configuration"
    ```
 
 ### Phase 6: Apply
@@ -237,7 +225,6 @@ If the rebuild fails:
    Timezone:     <timezone>
    Boot mode:    <UEFI/BIOS>
    Modules:      <enabled list>
-   AI provider:  <provider>
    Config dir:   <path>
    ```
 4. Remind the user:
@@ -270,7 +257,10 @@ If you see "GRUB is enabled but no boot devices are configured":
 Ensure all config files are staged: `git add -A`
 
 ### Flakes not enabled
-Run the bootstrap script first: `./scripts/bootstrap.sh`
+Add to your NixOS configuration and rebuild:
+```nix
+nix.settings.experimental-features = [ "nix-command" "flakes" ];
+```
 
 ## Safety Notes
 - Do not run destructive disk commands.

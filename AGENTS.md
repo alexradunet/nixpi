@@ -72,14 +72,14 @@ Related: [Contributing](./CONTRIBUTING.md) · [Source of Truth](./docs/meta/SOUR
 - Pi is the internal engine, used by `nixpi` under the hood (not exposed as a user-facing command).
 - `nixpi` is the only user-facing assistant CLI (single instance) built declaratively in `base.nix`.
 - Services run as the `nixpi-agent` system user (not the human user). Agent state: `/var/lib/nixpi/agent/`. The primary user gets read access via the `nixpi` group.
-- Secrets are in `/etc/nixpi/secrets/` (root:root 0700). The `piWrapper` sources `ai-provider.env` for API key injection.
+- Secrets are in `/etc/nixpi/secrets/` (root:root 0700).
 - System prompts/settings are seeded by NixOS activation script in `base.nix`.
 - Update path: bump Pi package version in `base.nix` then `sudo nixos-rebuild switch --flake .`.
 
 ## NixOS Module System
 - Services are extracted into toggleable modules in `infra/nixos/modules/` with `nixpi.<service>.enable` flags.
 - Available modules: `tailscale`, `ttyd`, `syncthing`, `desktop`, `passwordPolicy`, `heartbeat`, `matrix`, `objects`.
-- `nixpi setup` launches the install-nixpi skill for conversational hostname, username, AI provider, and module configuration.
+- `nixpi setup` launches the install-nixpi skill for conversational hostname, username, and module configuration.
 - The flake exports individual `nixosModules` (`.default`, `.base`, `.tailscale`, etc.) for external consumption.
 
 ## Agent Behavior in This Repo

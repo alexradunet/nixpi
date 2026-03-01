@@ -83,14 +83,6 @@ let
     text = ''
       ${npmEnvSetup}
 
-      # Source API key from secrets if available
-      if [ -f /etc/nixpi/secrets/ai-provider.env ]; then
-        set -a
-        # shellcheck source=/dev/null
-        . /etc/nixpi/secrets/ai-provider.env
-        set +a
-      fi
-
       # Pin package version to keep behavior stable across rebuilds.
       exec npx --yes @mariozechner/pi-coding-agent@${config.nixpi.piAgentVersion} "$@"
     '';

@@ -33,7 +33,7 @@ Nixpi is an AI-first operating environment built on NixOS. The AI agent is the p
 | Tailscale | `modules/tailscale.nix` | `nixpi.tailscale.enable` | VPN for secure remote access |
 | Syncthing | `modules/syncthing.nix` | `nixpi.syncthing.enable` | File sync; GUI + sync ports are Tailscale-only |
 | Password Policy | `modules/password-policy.nix` | `nixpi.passwordPolicy.enable` | Enforces password policy for the primary user |
-| nixpi | `base.nix` — `nixpiCli` | always on | Primary CLI wrapper (`nixpi`); sources secrets from `/etc/nixpi/secrets/` |
+| nixpi | `base.nix` — `nixpiCli` | always on | Primary CLI wrapper (`nixpi`) |
 | claude | `base.nix` — `environment.systemPackages` | always on | Claude Code CLI (`claude`) from nixpkgs unstable binary package |
 
 ## Access Methods
@@ -93,14 +93,10 @@ Nixpi/
         syncthing.nix          # File sync (nixpi.syncthing.enable)
         desktop.nix            # GNOME desktop + VS Code + Chromium (nixpi.desktop.enable)
         password-policy.nix    # Password policy (nixpi.passwordPolicy.enable)
-      hosts/
-        nixpi.nix              # Physical machine hardware (boot, disk, CPU)
-        nixos.nix              # NixOS host configuration
     pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
     nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
     matrix-setup.sh            # One-shot Matrix account provisioning
-    bootstrap.sh               # Enable flakes + clone + launch Pi setup skill
     test.sh                    # Run repository shell test suite
     check.sh                   # Run tests + flake checks
     verify-nixpi.sh            # Post-rebuild nixpi wrapper smoke test
@@ -121,33 +117,26 @@ Nixpi/
 
 ## Getting Started
 
-### Flake template (recommended)
+### Fresh install
 
-Scaffold a new Nixpi configuration from the flake template:
+Scaffold a Nixpi configuration directory and run guided setup:
 
 ```bash
+mkdir ~/Nixpi && cd ~/Nixpi
 nix flake init -t github:alexradunet/nixpi
 ```
 
-Then run the conversational setup to configure hostname, username, AI provider, and module selection:
+On a fresh system, `nixpi` is not available yet. Run the setup skill directly:
 
 ```bash
-nixpi setup
+nix shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill ./infra/pi/skills/install-nixpi/SKILL.md
 ```
+
+After the first successful rebuild, `nixpi` becomes a system command. For future reconfiguration: `nixpi setup`.
 
 First-run detection uses `/etc/nixpi/.setup-complete` to determine if setup has been completed.
 
-### Bootstrap (fresh NixOS)
-
-For a full reinstall on a fresh NixOS install, see [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md).
-
-Fresh-install one-shot (assumes `git` is absent and flakes are disabled by default):
-
-```bash
-nix --extra-experimental-features "nix-command flakes" shell nixpkgs#git -c git clone https://github.com/alexradunet/nixpi.git Nixpi && cd ~/Nixpi && sudo ./scripts/bootstrap.sh
-```
-
-The bootstrap script enables flakes, clones the repo, then launches Pi with the `install-nixpi` skill for conversational first-time setup. Pi handles hardware detection, config generation, and the first rebuild.
+For a detailed step-by-step checklist, see [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md).
 
 ### Rebuild NixOS after config changes
 
@@ -215,17 +204,11 @@ nixpi rollback [--yes]
 
 Services run as the `nixpi-agent` system user. Agent state is stored at `/var/lib/nixpi/agent/`. The primary user gets read access via the `nixpi` group.
 
-Secrets are managed in `/etc/nixpi/secrets/` (root:root 0700). The `piWrapper` sources `ai-provider.env` for API key injection.
-
-Optional host override (if you need a different layout):
+Optional overrides in `nixpi-config.nix`:
 
 ```nix
-# infra/nixos/hosts/<hostname>.nix
-{ config, ... }:
-{
-  nixpi.repoRoot = "/home/<user>/Nixpi";
-  nixpi.primaryUserDisplayName = "Alex";
-}
+nixpi.repoRoot = "/home/<user>/Nixpi";  # if not using ~/Nixpi/
+nixpi.primaryUserDisplayName = "Alex";
 ```
 
 ### Is Nixpi preinstalled?
@@ -291,13 +274,15 @@ See the full runtime and evolution workflow in the [Operating Model](./docs/runt
 
 ## Adding a New Machine
 
-The flake auto-discovers hosts from `infra/nixos/hosts/`. Run `nixpi setup` on the new machine — Pi handles hardware detection, config generation, and the first rebuild:
+On the new machine, scaffold from the flake template and run the guided setup:
 
 ```bash
+mkdir ~/Nixpi && cd ~/Nixpi
+nix flake init -t github:alexradunet/nixpi
 nixpi setup
 ```
 
-On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
+Pi handles hardware detection, config generation, and the first rebuild. On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
 
 ## Updating Claude Code
 

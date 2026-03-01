@@ -54,7 +54,7 @@ If you prefer to do it yourself, follow these steps.
 
 ### 1. Enable the Matrix channel
 
-Edit your host config (e.g. `infra/nixos/hosts/nixos.nix`):
+Edit your `nixpi-config.nix`:
 
 ```nix
 nixpi.channels.matrix = {

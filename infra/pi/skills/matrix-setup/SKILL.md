@@ -26,7 +26,7 @@ Use this skill when the user wants to set up the Matrix messaging channel on the
 1. Confirm we are inside the Nixpi repo root (`~/Nixpi`).
 2. Read the current Matrix channel config:
    ```bash
-   cat infra/nixos/hosts/$(hostname).nix
+   cat nixpi-config.nix
    ```
 3. Show the user the current Matrix module settings:
    - `serverName` (default: `nixpi.local`)
@@ -48,7 +48,7 @@ Use this skill when the user wants to set up the Matrix messaging channel on the
    ```
 6. Check if registration is currently enabled:
    ```bash
-   grep -q 'allowRegistration = true' infra/nixos/hosts/$(hostname).nix && echo "enabled" || echo "disabled"
+   grep -q 'allowRegistration = true' nixpi-config.nix && echo "enabled" || echo "disabled"
    ```
 7. If registration is not enabled, explain why it's needed and show the change:
    - "I need to temporarily enable Matrix account registration to create your accounts."

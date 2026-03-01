@@ -16,11 +16,7 @@
     let
       lib = nixpkgs.lib;
       supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
-      system = "x86_64-linux"; # Default for nixosConfigurations; hosts override via nixpkgs.hostPlatform
-      pkgsUnstable = import nixpkgs-unstable {
-        inherit system;
-        config.allowUnfree = true;
-      };
+      system = "x86_64-linux";
 
       # Lightweight package set for VM tests. Uses stable nixpkgs with a
       # claude-code-bin stub so tests never pull the full unstable closure.
@@ -33,29 +29,6 @@
       mkVmTest = testFile: pkgsForTests.testers.runNixOSTest (import testFile {
         inherit pkgsUnstableForTests;
       });
-
-      # Auto-discover hosts: every .nix file in hosts/ becomes a NixOS config.
-      # Adding a new file (e.g. hosts/mybox.nix) automatically registers it —
-      # no need to touch flake.nix.
-      hostDir = ./infra/nixos/hosts;
-      hostFiles = builtins.readDir hostDir;
-      hostNames = map (lib.removeSuffix ".nix")
-        (builtins.filter (n: lib.hasSuffix ".nix" n)
-          (builtins.attrNames hostFiles));
-
-      # mkHost builds a full NixOS system for a given hostname.
-      # nixosSystem takes a list of "modules" — each module is a file that
-      # declares part of the system config. NixOS deep-merges them all together.
-      mkHost = name: nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit pkgsUnstable;
-        };
-        modules = [
-          ./infra/nixos/base.nix
-          (hostDir + "/${name}.nix")
-        ];
-      };
     in {
       # A dev shell is a temporary environment with specific tools available.
       # `nix develop` drops you into it without installing anything globally.
@@ -110,11 +83,6 @@
         path = ./templates/default;
         description = "Nixpi server configuration scaffold";
       };
-
-      # genAttrs turns a list of names into an attribute set by applying a
-      # function to each name. This produces { nixpi = mkHost "nixpi"; ... }
-      # for every host discovered above.
-      nixosConfigurations = lib.genAttrs hostNames mkHost;
 
       # NixOS VM integration tests. Each test boots a QEMU VM and asserts
       # runtime behavior (services, firewall, users, activation scripts).

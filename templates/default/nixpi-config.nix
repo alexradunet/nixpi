@@ -17,6 +17,9 @@
   # boot.loader.grub.enable = true;
   # boot.loader.grub.devices = [ "/dev/sda" ];  # adjust to your disk
 
+  # --- Path override ---
+  # nixpi.repoRoot = "/home/youruser/Nixpi";  # uncomment if not using ~/Nixpi/
+
   # --- Modules (toggle on/off) ---
   nixpi.tailscale.enable = true;
   nixpi.syncthing.enable = true;

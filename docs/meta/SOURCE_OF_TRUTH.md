@@ -24,7 +24,7 @@ This document defines canonical sources when information conflicts.
 - Each optional service module in `infra/nixos/modules/` is the canonical source for its service configuration (Tailscale, Syncthing, ttyd, desktop, password-policy, matrix, heartbeat, objects).
 - Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
 - Pi agent state lives at `/var/lib/nixpi/agent/` (owned by `nixpi-agent` system user).
-- Secrets (API keys, tokens) are stored at `/etc/nixpi/secrets/` (root:root, mode 0700).
+- Secrets are stored at `/etc/nixpi/secrets/` (root:root, mode 0700).
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 
 ## Generated Artifacts Policy

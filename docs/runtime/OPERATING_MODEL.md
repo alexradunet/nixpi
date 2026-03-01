@@ -14,14 +14,13 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 No for core Nixpi.
 
 `nixpi` and `claude` are installed declaratively via NixOS (`base.nix` for core config; individual services live in toggleable modules under `infra/nixos/modules/` -- e.g. `tailscale.nix`, `ttyd.nix`, `syncthing.nix`, `desktop.nix`, `password-policy.nix`). Claude uses nixpkgs `claude-code-bin`.
-For fresh installs, use the bootstrap flow in [`REINSTALL.md`](./REINSTALL.md), which assumes no `git` and no flakes by default.
-The bootstrap script runs as root and launches Pi with the install-nixpi skill for conversational first-run configuration.
+For fresh installs, use the flake template flow in [`REINSTALL.md`](./REINSTALL.md): `nix flake init -t github:alexradunet/nixpi` then run the setup skill via npx (since `nixpi` is not yet available on a fresh system).
 After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow
 1. User boots Nixpi and can complete local HDMI onboarding through desktop UI (GNOME by default; disable with `nixpi.desktop.enable = false` on machines with an existing desktop).
 2. User launches Nixpi with `nixpi`.
-3. User configures provider/auth as needed.
+3. User configures API keys as needed.
 4. User adds/updates pinned extension sources with `nixpi npm install <package@version>` and runs `nixpi npm sync` when needed.
 5. Hermes (Runtime) runs in background and waits for events/tasks/channels.
 
@@ -33,11 +32,11 @@ After the first rebuild, both commands are available (`nixpi` and `claude`).
 - Declarative profile defaults are seeded from `infra/nixos/base.nix`; services are configured via toggleable modules in `infra/nixos/modules/`.
 - Declarative extension sources are tracked in `infra/pi/extensions/packages.json`.
 - Pi agent state is stored at `/var/lib/nixpi/agent/`, owned by the `nixpi-agent` system user.
-- Secrets (API keys, tokens) are stored under `/etc/nixpi/secrets/` (root:root, mode 0700). The Pi wrapper sources `/etc/nixpi/secrets/ai-provider.env` for provider credentials.
+- Secrets are stored under `/etc/nixpi/secrets/` (root:root, mode 0700).
 - Repo-local `.pi/settings.json` is development convenience for this repository and is not the production system source of truth.
 
-### Optional path overrides (per host)
-If a host needs a different repository/profile location, override these Nix options in `infra/nixos/hosts/<hostname>.nix`:
+### Optional path overrides
+If a host needs a different repository/profile location, override these Nix options in `nixpi-config.nix`:
 - `nixpi.repoRoot`
 - `nixpi.piDir`
 
