@@ -45,19 +45,25 @@ assert_file_not_contains "$SKILL" 'ai-provider.env'
 # --- Templates still exist ---
 assert_file_exists "templates/default/flake.nix"
 assert_file_exists "templates/default/nixpi-config.nix"
+assert_file_exists "templates/default/README.md"
+assert_executable "templates/default/scripts/install-nixpi-skill.sh"
 
 # --- nixpi-cli.sh setup case uses Pi skill ---
 assert_file_contains "$CLI" 'install-nixpi/SKILL.md'
+assert_file_contains "$CLI" 'resolve_skill_path'
+assert_file_contains "$CLI" 'NIXPI_STORE_SKILLS_DIR'
 CLI_CONTENT="$(<"$CLI")"
 assert_not_contains "$CLI_CONTENT" 'nixpi-setup.sh'
 
 # --- base.nix: no dialog dependency, no ai-provider sourcing ---
 BASE_CONTENT="$(<"$BASE")"
+assert_file_contains "$BASE" 'NIXPI_STORE_SKILLS_DIR'
 assert_not_contains "$BASE_CONTENT" 'pkgs.dialog'
 assert_not_contains "$BASE_CONTENT" 'ai-provider.env'
 
 # --- Stale reference checks ---
 README_CONTENT="$(<"$README")"
+assert_file_contains "$README" './scripts/install-nixpi-skill.sh'
 assert_not_contains "$README_CONTENT" 'nixpi-setup.sh'
 assert_not_contains "$README_CONTENT" 'add-host.sh'
 assert_not_contains "$README_CONTENT" 'bootstrap-fresh-nixos'
@@ -65,6 +71,7 @@ assert_not_contains "$README_CONTENT" 'bootstrap.sh'
 assert_not_contains "$README_CONTENT" 'ai-provider'
 
 REINSTALL_CONTENT="$(<"$REINSTALL")"
+assert_file_contains "$REINSTALL" './scripts/install-nixpi-skill.sh'
 assert_not_contains "$REINSTALL_CONTENT" 'nixpi-setup.sh'
 assert_not_contains "$REINSTALL_CONTENT" 'add-host.sh'
 assert_not_contains "$REINSTALL_CONTENT" 'bootstrap-fresh-nixos'

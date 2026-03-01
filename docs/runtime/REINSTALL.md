@@ -30,10 +30,19 @@ nix flake init -t github:alexradunet/nixpi
 
 ## 2) First-time guided setup
 
-On a fresh system `nixpi` is not available yet. Run the setup skill directly via npx:
+On a fresh system `nixpi` is not available yet. Use the template helper script:
 
 ```bash
-nix shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill ./infra/pi/skills/install-nixpi/SKILL.md
+./scripts/install-nixpi-skill.sh
+```
+
+This resolves the install skill from the flake source in `/nix/store`, so it works in template-only scaffolds where `./infra/pi/skills/...` does not exist.
+
+Manual fallback (equivalent):
+
+```bash
+NIXPI_SRC=$(nix --extra-experimental-features 'nix-command flakes' eval --impure --raw --expr '(builtins.getFlake "github:alexradunet/nixpi").outPath')
+nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill "$NIXPI_SRC/infra/pi/skills/install-nixpi/SKILL.md"
 # NOTE: The version above (0.55.3) should match `nixpi.piAgentVersion` in infra/nixos/base.nix.
 # Check the current value there before running this command.
 ```
@@ -64,6 +73,12 @@ Confirm first-run detection marker exists:
 ```bash
 ls -la /etc/nixpi/.setup-complete
 ```
+
+### Common error: `skill path does not exist`
+
+Cause: `nix flake init -t ...` creates a minimal scaffold and does not include the full upstream `infra/pi/skills/...` tree.
+
+Fix: run `./scripts/install-nixpi-skill.sh` (recommended) or use the manual `/nix/store` command shown above.
 
 ## 4) Set up Matrix channel (optional)
 

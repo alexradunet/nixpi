@@ -56,6 +56,11 @@ sync_manifest_to_profile() {
 
   validate_manifest_sources
 
+  local skills_path="$REPO_ROOT/infra/pi/skills"
+  if [ ! -d "$skills_path" ] && [ -n "${NIXPI_STORE_SKILLS_DIR:-}" ] && [ -d "$NIXPI_STORE_SKILLS_DIR" ]; then
+    skills_path="$NIXPI_STORE_SKILLS_DIR"
+  fi
+
   manifest_json="$(jq -c '{ packages: (.packages // []) }' "$EXTENSIONS_MANIFEST")"
   mkdir -p "$PI_DIR"
 
@@ -65,7 +70,7 @@ sync_manifest_to_profile() {
       .packages = ($manifest.packages // [])
     ' "$PI_DIR/settings.json" > "$tmp_settings"
   else
-    jq --argjson manifest "$manifest_json" --arg skillsPath "$REPO_ROOT/infra/pi/skills" -n '
+    jq --argjson manifest "$manifest_json" --arg skillsPath "$skills_path" -n '
       {
         skills: [$skillsPath],
         packages: ($manifest.packages // [])
@@ -145,6 +150,31 @@ run_rollback() {
   )
 
   echo "nixpi rollback completed successfully."
+}
+
+resolve_skill_path() {
+  local relative_path="$1"
+  local repo_path="$REPO_ROOT/infra/pi/skills/$relative_path"
+
+  if [ -f "$repo_path" ]; then
+    printf '%s\n' "$repo_path"
+    return 0
+  fi
+
+  if [ -n "${NIXPI_STORE_SKILLS_DIR:-}" ]; then
+    local store_path="$NIXPI_STORE_SKILLS_DIR/$relative_path"
+    if [ -f "$store_path" ]; then
+      printf '%s\n' "$store_path"
+      return 0
+    fi
+  fi
+
+  echo "Could not locate skill: $relative_path" >&2
+  echo "Checked: $repo_path" >&2
+  if [ -n "${NIXPI_STORE_SKILLS_DIR:-}" ]; then
+    echo "Checked: $NIXPI_STORE_SKILLS_DIR/$relative_path" >&2
+  fi
+  return 1
 }
 
 case "${1-}" in
@@ -246,7 +276,8 @@ EOF
   setup)
     shift || true
     export PI_CODING_AGENT_DIR="$PI_DIR"
-    exec "$PI_BIN" --skill "$REPO_ROOT/infra/pi/skills/install-nixpi/SKILL.md" "$@"
+    setup_skill_path="$(resolve_skill_path "install-nixpi/SKILL.md")" || exit 1
+    exec "$PI_BIN" --skill "$setup_skill_path" "$@"
     ;;
   *)
     export PI_CODING_AGENT_DIR="$PI_DIR"

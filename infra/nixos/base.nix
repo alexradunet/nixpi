@@ -66,10 +66,8 @@ let
     builtins.match "^npm:(@[^/]+/[^@]+|[^@/][^@]*)@[0-9]+\\.[0-9]+\\.[0-9]+([-.+][0-9A-Za-z.-]+)*$" source
     != null;
   extensionPackagesArePinned = builtins.all isPinnedNpmSource extensionPackages;
-  settingsSeedJson = builtins.toJSON {
-    skills = [ "${repoRoot}/infra/pi/skills" ];
-    packages = extensionPackages;
-  };
+  storeSkillsDir = "${../pi/skills}";
+  settingsSeedPackagesJson = builtins.toJSON extensionPackages;
 
   # Shared npm environment setup for all Pi-based wrappers.
   # Suppresses noise, isolates cache/prefix to per-user Nixpi dirs.
@@ -107,6 +105,7 @@ let
       PI_BIN="${piWrapper}/bin/pi"
       PI_DIR="${piDir}"
       REPO_ROOT="${repoRoot}"
+      NIXPI_STORE_SKILLS_DIR="${storeSkillsDir}"
       EXTENSIONS_MANIFEST="$REPO_ROOT/infra/pi/extensions/packages.json"
     ''
     + builtins.readFile ./scripts/nixpi-cli.sh;
@@ -459,8 +458,19 @@ in
           # Seed settings if absent.
           # Single instance preloads Nixpi skills plus declarative extension sources.
           if [ ! -f "$PI_DIR/settings.json" ]; then
-            cat > "$PI_DIR/settings.json" <<'JSONEOF'
-      ${settingsSeedJson}
+            REPO_SKILLS_DIR="${repoRoot}/infra/pi/skills"
+            STORE_SKILLS_DIR="${storeSkillsDir}"
+            if [ -d "$REPO_SKILLS_DIR" ]; then
+              SKILLS_DIR="$REPO_SKILLS_DIR"
+            else
+              SKILLS_DIR="$STORE_SKILLS_DIR"
+            fi
+
+            cat > "$PI_DIR/settings.json" <<JSONEOF
+      {
+        "skills": ["$SKILLS_DIR"],
+        "packages": ${settingsSeedPackagesJson}
+      }
       JSONEOF
           fi
           if [ -f "$PI_DIR/settings.json" ]; then

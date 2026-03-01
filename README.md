@@ -96,6 +96,7 @@ Nixpi/
         password-policy.nix    # Password policy (nixpi.passwordPolicy.enable)
     pi/skills/                 # Nixpi skills directory (canonical index: docs/agents/SKILLS.md)
   scripts/
+    install-nixpi-skill.sh     # Launch Pi with install skill from flake source (/nix/store fallback)
     nixpi-object.sh            # Generic CRUD for flat-file objects (requires yq-go + jq)
     matrix-setup.sh            # One-shot Matrix account provisioning
     test.sh                    # Run repository shell test suite
@@ -115,6 +116,7 @@ Nixpi/
 - If subflakes are introduced later, root flake remains the primary pre-release interface.
 - The flake exports `nixosModules` for individual consumption: `.default`, `.base`, `.tailscale`, `.syncthing`, `.ttyd`, `.matrix`, `.heartbeat`, `.objects`, `.passwordPolicy`, `.desktop`.
 - A flake template is available via `nix flake init -t github:alexradunet/nixpi`.
+- The template is intentionally minimal (config scaffold only) and does not copy the full upstream repository tree.
 
 ## Getting Started
 
@@ -127,10 +129,19 @@ mkdir ~/Nixpi && cd ~/Nixpi
 nix flake init -t github:alexradunet/nixpi
 ```
 
-On a fresh system, `nixpi` is not available yet. Run the setup skill directly:
+On a fresh system, `nixpi` is not available yet. Use the template helper (recommended):
 
 ```bash
-nix shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill ./infra/pi/skills/install-nixpi/SKILL.md
+./scripts/install-nixpi-skill.sh
+```
+
+This resolves the install skill from the flake source in `/nix/store`, so it works even in template-only scaffolds that do not contain `./infra/pi/skills/...`.
+
+Manual equivalent:
+
+```bash
+NIXPI_SRC=$(nix --extra-experimental-features 'nix-command flakes' eval --impure --raw --expr '(builtins.getFlake "github:alexradunet/nixpi").outPath')
+nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#nodejs_22 -c npx --yes @mariozechner/pi-coding-agent@0.55.3 --skill "$NIXPI_SRC/infra/pi/skills/install-nixpi/SKILL.md"
 ```
 
 After the first successful rebuild, `nixpi` becomes a system command. For future reconfiguration: `nixpi setup`.
@@ -138,6 +149,8 @@ After the first successful rebuild, `nixpi` becomes a system command. For future
 First-run detection uses `/etc/nixpi/.setup-complete` to determine if setup has been completed.
 
 For a detailed step-by-step checklist, see [`docs/runtime/REINSTALL.md`](./docs/runtime/REINSTALL.md).
+
+If you hit `skill path does not exist`, you are likely using the minimal template (not a full clone). Run `./scripts/install-nixpi-skill.sh` to load the skill from `/nix/store`.
 
 ### Rebuild NixOS after config changes
 
@@ -276,15 +289,15 @@ See the full runtime and evolution workflow in the [Operating Model](./docs/runt
 
 ## Adding a New Machine
 
-On the new machine, scaffold from the flake template and run the guided setup:
+On the new machine, scaffold from the flake template and run the guided setup helper:
 
 ```bash
 mkdir ~/Nixpi && cd ~/Nixpi
 nix flake init -t github:alexradunet/nixpi
-nixpi setup
+./scripts/install-nixpi-skill.sh
 ```
 
-Pi handles hardware detection, config generation, and the first rebuild. On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
+After the first successful rebuild, `nixpi setup` is available for reconfiguration. On subsequent rebuilds, `sudo nixos-rebuild switch --flake .` auto-selects the config by hostname.
 
 ## Updating Claude Code
 

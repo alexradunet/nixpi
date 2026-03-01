@@ -16,7 +16,7 @@ This document defines how Nixpi runs on user systems and how Nixpi evolves safel
 No for core Nixpi.
 
 `nixpi` and `claude` are installed declaratively via NixOS (`base.nix` for core config; individual services live in toggleable modules under `infra/nixos/modules/` -- e.g. `tailscale.nix`, `ttyd.nix`, `syncthing.nix`, `desktop.nix`, `password-policy.nix`). Claude uses nixpkgs `claude-code-bin`.
-For fresh installs, use the flake template flow in [`REINSTALL.md`](./REINSTALL.md): `nix flake init -t github:alexradunet/nixpi` then run the setup skill via npx (since `nixpi` is not yet available on a fresh system).
+For fresh installs, use the flake template flow in [`REINSTALL.md`](./REINSTALL.md): `nix flake init -t github:alexradunet/nixpi` then run `./scripts/install-nixpi-skill.sh` (since `nixpi` is not yet available on a fresh system).
 After the first rebuild, both commands are available (`nixpi` and `claude`).
 
 ### First-boot expected flow
