@@ -446,14 +446,20 @@ in
     # - settings.json is seeded write-once to avoid clobbering runtime/user state.
     system.activationScripts.piConfig = lib.stringAfter [ "users" ] ''
           PI_DIR="${piDir}"
+          PI_PROJECT_DIR="''${PI_DIR%/*}"
 
-          install -d -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
+          # Keep Pi runtime state writable by both nixpi-agent services and the
+          # interactive primary user (both are in group "nixpi").
+          install -d -m 2775 -o ${primaryUser} -g nixpi "$PI_PROJECT_DIR"
+          install -d -m 2775 -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"
+          install -d -m 2775 -o ${config.nixpi.assistantUser} -g nixpi "$PI_DIR"/{sessions,extensions,skills,prompts,themes}
 
           # Keep SYSTEM.md in sync with declarative policy/prompt content.
           cat > "$PI_DIR/SYSTEM.md" <<'SYSEOF'
       ${piSystemPrompt}
       SYSEOF
           chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/SYSTEM.md"
+          chmod 0664 "$PI_DIR/SYSTEM.md"
 
           # Seed settings if absent.
           # Single instance preloads Nixpi skills plus declarative extension sources.
@@ -475,6 +481,7 @@ in
           fi
           if [ -f "$PI_DIR/settings.json" ]; then
             chown ${config.nixpi.assistantUser}:nixpi "$PI_DIR/settings.json"
+            chmod 0664 "$PI_DIR/settings.json"
           fi
     '';
 

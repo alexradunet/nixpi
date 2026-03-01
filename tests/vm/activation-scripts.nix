@@ -17,16 +17,22 @@
     for subdir in ["sessions", "extensions", "skills", "prompts", "themes"]:
         machine.succeed(f"test -d {pi_dir}/{subdir}")
 
-    # Subdirectories are owned by nixpi-agent (activation script sets -o on these)
-    machine.succeed(f"stat -c '%U' {pi_dir}/sessions | grep -q nixpi-agent")
+    # Shared-write ownership for interactive user + nixpi-agent services.
+    machine.succeed(f"stat -c '%U:%G' {pi_dir} | grep -q '^nixpi-agent:nixpi$'")
+    machine.succeed(f"stat -c '%a' {pi_dir} | grep -q '^2775$'")
+
+    # Subdirectories are owned by nixpi-agent and inherit nixpi group.
+    machine.succeed(f"stat -c '%U:%G' {pi_dir}/sessions | grep -q '^nixpi-agent:nixpi$'")
+    machine.succeed(f"stat -c '%a' {pi_dir}/sessions | grep -q '^2775$'")
 
     # SYSTEM.md was created with expected content
     machine.succeed(f"test -f {pi_dir}/SYSTEM.md")
     system_md = machine.succeed(f"cat {pi_dir}/SYSTEM.md")
     assert "NixOS" in system_md, "SYSTEM.md missing NixOS reference"
 
-    # settings.json was seeded
+    # settings.json was seeded and remains group-writable for shared access.
     machine.succeed(f"test -f {pi_dir}/settings.json")
+    machine.succeed(f"stat -c '%U:%G %a' {pi_dir}/settings.json | grep -q '^nixpi-agent:nixpi 664$'")
     settings = machine.succeed(f"cat {pi_dir}/settings.json")
     assert "skills" in settings, "settings.json missing skills key"
 

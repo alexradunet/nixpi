@@ -285,6 +285,22 @@ Add to your NixOS configuration and rebuild:
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 ```
 
+### `nixpi` fails with EACCES under `.pi/agent`
+
+If `nixpi` reports permission errors such as:
+
+- `permission denied, mkdir .../settings.json.lock`
+- `permission denied, mkdir .../sessions/...`
+
+run a rebuild so activation scripts normalize ownership/modes, then refresh your login groups:
+
+```bash
+sudo nixos-rebuild switch --flake .
+newgrp nixpi
+```
+
+If `newgrp` is inconvenient, log out and back in.
+
 ## Safety Notes
 
 - Do not run destructive disk commands.
